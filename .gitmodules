@@ -1,0 +1,3 @@
+[submodule "wrapos-apps"]
+	path = wrapos-apps
+	url = https://github.com/wraplabsinc/wrapos-apps.git
