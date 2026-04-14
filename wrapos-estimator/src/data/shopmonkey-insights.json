@@ -1,0 +1,3161 @@
+{
+  "_meta": {
+    "source": "shopmonkey-api",
+    "fetchedAt": "2026-04-13T18:50:06.069Z",
+    "orderCount": 50,
+    "dateRange": {
+      "earliest": "2022-04-22T19:29:00.000Z",
+      "latest": null
+    },
+    "note": "Real paid order data used for WrapMind AI learning. Customer PII limited to first name only."
+  },
+  "pricingStats": {
+    "avgOrderTotal": 4101,
+    "minOrderTotal": 102.18,
+    "maxOrderTotal": 24994,
+    "avgLaborHours": 21.25,
+    "avgDiscount": 12,
+    "avgDiscountPct": 8,
+    "totalRevenue": 205046,
+    "orderCount": 50
+  },
+  "topServices": [
+    {
+      "name": "Fee - Credit Card Transaction",
+      "count": 28
+    },
+    {
+      "name": "Clear Bra - XPEL Ultimate Fusion - Full Front Clip",
+      "count": 5
+    },
+    {
+      "name": "Clear Bra - XPEL Ultimate Plus - Full Front Clip",
+      "count": 5
+    },
+    {
+      "name": "Vinyl Wrap - Color Change",
+      "count": 3
+    },
+    {
+      "name": "Vinyl Wrap - Commercial",
+      "count": 2
+    },
+    {
+      "name": "Vinyl Wrap - Partial Wrap",
+      "count": 2
+    },
+    {
+      "name": "Labor - Wrap/Film Removal",
+      "count": 2
+    },
+    {
+      "name": "Ceramic Coating - 3 Year Coverage",
+      "count": 2
+    },
+    {
+      "name": "Ceramic Window Tint",
+      "count": 2
+    },
+    {
+      "name": "Discount - Multi-Service",
+      "count": 2
+    },
+    {
+      "name": "Labor - Graphic Design",
+      "count": 2
+    },
+    {
+      "name": "Blackout Package",
+      "count": 2
+    },
+    {
+      "name": "Clear Bra - XPEL Stealth - Partial",
+      "count": 1
+    },
+    {
+      "name": "Commercial Graphics Installation",
+      "count": 1
+    },
+    {
+      "name": "Front Windshield Tint",
+      "count": 1
+    },
+    {
+      "name": "OPTION #1 - Color Change - Inozetek PPF (Satin Black)",
+      "count": 1
+    },
+    {
+      "name": "OPTION #2 - Color Change - 3M 2080 Series Vinyl Wrap (Satin Black)",
+      "count": 1
+    },
+    {
+      "name": "Satin Black Vinyl - Wall Decals",
+      "count": 1
+    },
+    {
+      "name": "Powder Coat Wheels",
+      "count": 1
+    },
+    {
+      "name": "Porsche Decal",
+      "count": 1
+    },
+    {
+      "name": "XPEL XR Plus Ceramic Tint - Full Vehicle (+Windshield)",
+      "count": 1
+    },
+    {
+      "name": "Full Vehicle Color Change",
+      "count": 1
+    },
+    {
+      "name": "Graphics & Decals",
+      "count": 1
+    },
+    {
+      "name": "3.5% Credit Card Fee",
+      "count": 1
+    },
+    {
+      "name": "Full Service - Oil Change, All Fluids and Filters Replaced",
+      "count": 1
+    },
+    {
+      "name": "Ultimate Fusion PPF - Full Vehicle Protection",
+      "count": 1
+    },
+    {
+      "name": "Single Stage Paint Correction",
+      "count": 1
+    },
+    {
+      "name": "Credit Card Fee",
+      "count": 1
+    },
+    {
+      "name": "Window Tint - Full Vehicle + Windshield",
+      "count": 1
+    },
+    {
+      "name": "Headlight Restoration + Protection",
+      "count": 1
+    }
+  ],
+  "topMaterials": [
+    {
+      "name": "XPEL Ultimate Fusion - Using Modified Kits from XPEL's Design Access Program (/yd)",
+      "count": 5
+    },
+    {
+      "name": "XPEL Ultimate Plus - Using Modified Kits from XPEL's Design Access Program (/yd)",
+      "count": 5
+    },
+    {
+      "name": "Ceramic Coating (/bottle)",
+      "count": 3
+    },
+    {
+      "name": "XPEL Ultimate Plus - Using Modified Kits From XPEL's Design Access Program (/yd)",
+      "count": 2
+    },
+    {
+      "name": "Materials - 3M 2080 Gloss Black (/yd)",
+      "count": 2
+    },
+    {
+      "name": "Materials - 3M 2080 Series Gloss Black (/yd)",
+      "count": 2
+    },
+    {
+      "name": "Materials - 3M Gloss Black (/yd)",
+      "count": 1
+    },
+    {
+      "name": "Materials - Hexis Drosera Green Gloss (/yd)",
+      "count": 1
+    },
+    {
+      "name": "XPEL Prime XR Plus - 70%",
+      "count": 1
+    },
+    {
+      "name": "Materials - 3M 2080 Series (Satin Black) - 1x Roll",
+      "count": 1
+    },
+    {
+      "name": "Inozetek PPF (Satin Black) - 1x Roll",
+      "count": 1
+    },
+    {
+      "name": "Materials - 3M Satin Black (/yd)",
+      "count": 1
+    },
+    {
+      "name": "Materials - 3M Satin Black",
+      "count": 1
+    },
+    {
+      "name": " Materials - 3M Sunflower Yellow -1.5x Roll",
+      "count": 1
+    },
+    {
+      "name": "Gas ",
+      "count": 1
+    },
+    {
+      "name": "Advanced Formula - Part #BGMOA",
+      "count": 1
+    },
+    {
+      "name": "Aftermarket Floor Mats",
+      "count": 1
+    },
+    {
+      "name": "Aftermarket Visor Mirror",
+      "count": 1
+    },
+    {
+      "name": "New Battery - Part #H8",
+      "count": 1
+    },
+    {
+      "name": "Fuel Conditioner - Part #44K",
+      "count": 1
+    },
+    {
+      "name": "Washer Fluid - Part #WS",
+      "count": 1
+    },
+    {
+      "name": "Engine Air Filter - Part #5000-322268",
+      "count": 1
+    },
+    {
+      "name": "Cabin Filter - Part #LR036369",
+      "count": 1
+    },
+    {
+      "name": "Pickup and Travel Time",
+      "count": 1
+    },
+    {
+      "name": "Castrol Edge - 5W30",
+      "count": 1
+    },
+    {
+      "name": "Oil Filter Kit  - Part #FL2021",
+      "count": 1
+    },
+    {
+      "name": "Ultimate Fusion PPF- 1x Roll - 50' x 60\"",
+      "count": 1
+    },
+    {
+      "name": "Materials - 3M 2080 Series Gloss White",
+      "count": 1
+    },
+    {
+      "name": "XPEL Ultimate Fusion",
+      "count": 1
+    },
+    {
+      "name": "New Vehicle Battery ",
+      "count": 1
+    }
+  ],
+  "topVehicles": [
+    {
+      "name": "2025 Tesla Model Y",
+      "count": 2
+    },
+    {
+      "name": "2023 Tesla Model Y",
+      "count": 2
+    },
+    {
+      "name": "2022 BMW M5 CS",
+      "count": 1
+    },
+    {
+      "name": "2025 Ford Transit-250",
+      "count": 1
+    },
+    {
+      "name": "2010 Honda Ridgeline RT",
+      "count": 1
+    },
+    {
+      "name": "2024 Tesla 3",
+      "count": 1
+    },
+    {
+      "name": "2019 Acura RDX SH-AWD",
+      "count": 1
+    },
+    {
+      "name": "2020 Honda Civic Sport",
+      "count": 1
+    },
+    {
+      "name": "2014 Ford F-150 XL",
+      "count": 1
+    },
+    {
+      "name": "2008 LAND ROVER Range Rover Sport",
+      "count": 1
+    },
+    {
+      "name": "2018 Porsche 911 GT3",
+      "count": 1
+    },
+    {
+      "name": "2006 Chevrolet Silverado 1500 LS",
+      "count": 1
+    },
+    {
+      "name": "2022 Lexus RX350",
+      "count": 1
+    },
+    {
+      "name": "2022 Ford Sprinter EXT",
+      "count": 1
+    },
+    {
+      "name": "2021 Volkswagen Golf R",
+      "count": 1
+    },
+    {
+      "name": "2024 Chevy Corvette",
+      "count": 1
+    },
+    {
+      "name": "2021 LEXUS RX",
+      "count": 1
+    },
+    {
+      "name": "1983 Mercedes-Benz 380SL Base",
+      "count": 1
+    },
+    {
+      "name": "2024 Dodge Durango R/T",
+      "count": 1
+    },
+    {
+      "name": "2022 Mercedes-Benz SL55 AMG 4Matic",
+      "count": 1
+    }
+  ],
+  "orders": [
+    {
+      "orderNumber": "3415",
+      "orderId": "f2e7ebfb-f876-4b41-910d-230841be9341",
+      "createdDate": "2025-07-14T17:50:34.984Z",
+      "fullyPaidDate": "2025-07-16T20:09:00.837Z",
+      "invoicedDate": "2025-07-14T17:56:13.786Z",
+      "status": "Invoice",
+      "vehicle": "2022 BMW M5 CS",
+      "vehicleId": "8fa9022d-d52f-4af2-981d-b711bfceb814",
+      "mileageIn": null,
+      "mileageOut": null,
+      "customerFirstName": "Trisha",
+      "customerId": "1f251f50-281f-416c-aedc-15e6033722b4",
+      "totalDollars": 612.54,
+      "partsDollars": 170,
+      "laborDollars": 390,
+      "feesDollars": 20.71,
+      "taxDollars": 12.33,
+      "discountDollars": 0,
+      "discountPercent": 0,
+      "shopSuppliesDollars": 19.5,
+      "paidCostDollars": 612.54,
+      "totalLaborHours": 2,
+      "services": [
+        {
+          "name": "Clear Bra - XPEL Stealth - Partial",
+          "laborDollars": 0,
+          "totalDollars": 591.83
+        },
+        {
+          "name": "Fee - Credit Card Transaction",
+          "laborDollars": 0,
+          "totalDollars": 20.71
+        }
+      ],
+      "parts": [
+        {
+          "name": "XPEL Ultimate Plus - Using Modified Kits From XPEL's Design Access Program (/yd)",
+          "quantity": 2,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": null
+        }
+      ],
+      "labels": []
+    },
+    {
+      "orderNumber": "3200",
+      "orderId": "f367429c-e78a-4ee8-bdd4-4e2d0772e1e0",
+      "createdDate": "2025-01-27T17:29:25.961Z",
+      "fullyPaidDate": "2025-01-31T08:00:00.000Z",
+      "invoicedDate": "2025-02-12T22:40:05.027Z",
+      "status": "Invoice",
+      "vehicle": "2025 Ford Transit-250",
+      "vehicleId": "c3f2cdd0-f4c0-4fd3-84c0-f4f89132b56e",
+      "mileageIn": null,
+      "mileageOut": null,
+      "customerFirstName": "Ivan",
+      "customerId": "da6ae33e-e2db-4c35-9d67-325031dd2552",
+      "totalDollars": 1250.22,
+      "partsDollars": 294,
+      "laborDollars": 934.9,
+      "feesDollars": 0,
+      "taxDollars": 21.32,
+      "discountDollars": 98.1,
+      "discountPercent": 7.3926,
+      "shopSuppliesDollars": 0,
+      "paidCostDollars": 1250.22,
+      "totalLaborHours": 8.088000000000001,
+      "services": [
+        {
+          "name": "Commercial Graphics Installation",
+          "laborDollars": 0,
+          "totalDollars": 897.26
+        },
+        {
+          "name": "Front Windshield Tint",
+          "laborDollars": 0,
+          "totalDollars": 352.96
+        }
+      ],
+      "parts": [
+        {
+          "name": "Materials - 3M Gloss Black (/yd)",
+          "quantity": 3,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": null
+        },
+        {
+          "name": "Materials - Hexis Drosera Green Gloss (/yd)",
+          "quantity": 1,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": null
+        },
+        {
+          "name": "XPEL Prime XR Plus - 70%",
+          "quantity": 2,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": null
+        }
+      ],
+      "labels": []
+    },
+    {
+      "orderNumber": "3444",
+      "orderId": "f36c76a0-a171-4079-999d-2925f3bbb8f1",
+      "createdDate": "2025-07-28T17:33:13.465Z",
+      "fullyPaidDate": null,
+      "invoicedDate": null,
+      "status": "Estimate",
+      "vehicle": "2010 Honda Ridgeline RT",
+      "vehicleId": "01877744-6d71-47b3-8b5b-e90488a2ca0c",
+      "mileageIn": null,
+      "mileageOut": null,
+      "customerFirstName": "Michael",
+      "customerId": "25fe6176-f3d6-4c95-b1ca-b13983aa6f82",
+      "totalDollars": 13128.38,
+      "partsDollars": 3150,
+      "laborDollars": 9500,
+      "feesDollars": 0,
+      "taxDollars": 228.38,
+      "discountDollars": 0,
+      "discountPercent": 0,
+      "shopSuppliesDollars": 250,
+      "paidCostDollars": 0,
+      "totalLaborHours": 76,
+      "services": [
+        {
+          "name": "OPTION #1 - Color Change - Inozetek PPF (Satin Black)",
+          "laborDollars": 0,
+          "totalDollars": 8163.13
+        },
+        {
+          "name": "OPTION #2 - Color Change - 3M 2080 Series Vinyl Wrap (Satin Black)",
+          "laborDollars": 0,
+          "totalDollars": 4965.25
+        },
+        {
+          "name": "Fee - Credit Card Transaction",
+          "laborDollars": 0,
+          "totalDollars": 0
+        }
+      ],
+      "parts": [
+        {
+          "name": "Materials - 3M 2080 Series (Satin Black) - 1x Roll",
+          "quantity": 1,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": null
+        },
+        {
+          "name": "Inozetek PPF (Satin Black) - 1x Roll",
+          "quantity": 25,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": null
+        }
+      ],
+      "labels": []
+    },
+    {
+      "orderNumber": "3065",
+      "orderId": "f44be8cd-4018-479c-9e9d-4aaba9a0cf88",
+      "createdDate": "2024-10-01T22:47:43.117Z",
+      "fullyPaidDate": null,
+      "invoicedDate": null,
+      "status": "Estimate",
+      "vehicle": null,
+      "vehicleId": null,
+      "mileageIn": null,
+      "mileageOut": null,
+      "customerFirstName": "Terry",
+      "customerId": "74b46662-581c-46d8-9d43-870ffe2aec33",
+      "totalDollars": 1285.66,
+      "partsDollars": 616,
+      "laborDollars": 625,
+      "feesDollars": 0,
+      "taxDollars": 44.66,
+      "discountDollars": 0,
+      "discountPercent": 0,
+      "shopSuppliesDollars": 0,
+      "paidCostDollars": 0,
+      "totalLaborHours": 5,
+      "services": [
+        {
+          "name": "Satin Black Vinyl - Wall Decals",
+          "laborDollars": 0,
+          "totalDollars": 1285.66
+        }
+      ],
+      "parts": [
+        {
+          "name": "Materials - 3M Satin Black (/yd)",
+          "quantity": 11,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": null
+        }
+      ],
+      "labels": []
+    },
+    {
+      "orderNumber": "3351",
+      "orderId": "7e8862ec-d2d0-46c9-a5ca-03d778f9221b",
+      "createdDate": "2025-05-31T22:30:10.026Z",
+      "fullyPaidDate": null,
+      "invoicedDate": null,
+      "status": "Estimate",
+      "vehicle": "2024 Tesla 3",
+      "vehicleId": "a929ef7c-360f-40e3-8d58-024dd6baf576",
+      "mileageIn": null,
+      "mileageOut": null,
+      "customerFirstName": "Steve",
+      "customerId": "c82f6511-9991-4739-9f3c-e24266a48b37",
+      "totalDollars": 2228.15,
+      "partsDollars": 480,
+      "laborDollars": 1560,
+      "feesDollars": 75.35,
+      "taxDollars": 34.8,
+      "discountDollars": 0,
+      "discountPercent": 0,
+      "shopSuppliesDollars": 78,
+      "paidCostDollars": 0,
+      "totalLaborHours": 8,
+      "services": [
+        {
+          "name": "Clear Bra - XPEL Ultimate Fusion - Full Front Clip",
+          "laborDollars": 0,
+          "totalDollars": 2152.8
+        },
+        {
+          "name": "Fee - Credit Card Transaction",
+          "laborDollars": 0,
+          "totalDollars": 75.35
+        }
+      ],
+      "parts": [
+        {
+          "name": "XPEL Ultimate Fusion - Using Modified Kits from XPEL's Design Access Program (/yd)",
+          "quantity": 6,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": null
+        }
+      ],
+      "labels": [
+        {
+          "color": "purple",
+          "id": "624396dfbbbbf937742a5299",
+          "name": "PPF",
+          "saved": true
+        }
+      ]
+    },
+    {
+      "orderNumber": "3230",
+      "orderId": "7ea518ca-dc8e-4fc3-955a-2c7262f91130",
+      "createdDate": "2025-02-14T18:39:00.594Z",
+      "fullyPaidDate": "2025-03-26T07:00:00.000Z",
+      "invoicedDate": "2025-02-14T21:20:35.092Z",
+      "status": "Invoice",
+      "vehicle": "2019 Acura RDX SH-AWD",
+      "vehicleId": "74690578-f85d-4f87-88fe-4a567e5bab33",
+      "mileageIn": null,
+      "mileageOut": null,
+      "customerFirstName": "Majd",
+      "customerId": "b7616e3e-e84f-4103-9cba-5ea594fe0099",
+      "totalDollars": 1138.69,
+      "partsDollars": 30,
+      "laborDollars": 1068,
+      "feesDollars": 38.51,
+      "taxDollars": 2.18,
+      "discountDollars": 0,
+      "discountPercent": 0,
+      "shopSuppliesDollars": 0,
+      "paidCostDollars": 1138.69,
+      "totalLaborHours": 8.544,
+      "services": [
+        {
+          "name": "Powder Coat Wheels",
+          "laborDollars": 0,
+          "totalDollars": 940
+        },
+        {
+          "name": "Porsche Decal",
+          "laborDollars": 0,
+          "totalDollars": 160.18
+        },
+        {
+          "name": "Fee - Credit Card Transaction",
+          "laborDollars": 0,
+          "totalDollars": 38.51
+        }
+      ],
+      "parts": [
+        {
+          "name": "Materials - 3M Satin Black",
+          "quantity": 1,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": null
+        }
+      ],
+      "labels": []
+    },
+    {
+      "orderNumber": "3694",
+      "orderId": "7ed30ea0-331a-46ea-9b7f-35e85f504551",
+      "createdDate": "2026-01-30T00:00:40.127Z",
+      "fullyPaidDate": null,
+      "invoicedDate": null,
+      "status": "Estimate",
+      "vehicle": "2020 Honda Civic Sport",
+      "vehicleId": "bc28cd24-517e-4743-9023-741a4f250dac",
+      "mileageIn": null,
+      "mileageOut": null,
+      "customerFirstName": "Angelo",
+      "customerId": "ee98f166-d4b8-4473-9f31-2369f65c6e2a",
+      "totalDollars": 1035,
+      "partsDollars": 0,
+      "laborDollars": 1000,
+      "feesDollars": 35,
+      "taxDollars": 0,
+      "discountDollars": 0,
+      "discountPercent": 0,
+      "shopSuppliesDollars": 0,
+      "paidCostDollars": 0,
+      "totalLaborHours": 8,
+      "services": [
+        {
+          "name": "XPEL XR Plus Ceramic Tint - Full Vehicle (+Windshield)",
+          "laborDollars": 0,
+          "totalDollars": 1000
+        },
+        {
+          "name": "Fee - Credit Card Transaction",
+          "laborDollars": 0,
+          "totalDollars": 35
+        }
+      ],
+      "parts": [],
+      "labels": []
+    },
+    {
+      "orderNumber": "3117",
+      "orderId": "d54571ab-1264-4840-8263-2724b5f1fb63",
+      "createdDate": "2024-11-14T23:39:34.084Z",
+      "fullyPaidDate": null,
+      "invoicedDate": null,
+      "status": "Estimate",
+      "vehicle": "2014 Ford F-150 XL",
+      "vehicleId": "a0244e9d-e69d-4e9b-a2f7-370d02588c1e",
+      "mileageIn": null,
+      "mileageOut": null,
+      "customerFirstName": "Kurt",
+      "customerId": "7cabe402-54b3-42d7-bae2-b49059c468ed",
+      "totalDollars": 6615.4,
+      "partsDollars": 1040,
+      "laborDollars": 5500,
+      "feesDollars": 0,
+      "taxDollars": 75.4,
+      "discountDollars": 0,
+      "discountPercent": 0,
+      "shopSuppliesDollars": 0,
+      "paidCostDollars": 0,
+      "totalLaborHours": 44,
+      "services": [
+        {
+          "name": "Full Vehicle Color Change",
+          "laborDollars": 0,
+          "totalDollars": 5865.4
+        },
+        {
+          "name": "Graphics & Decals",
+          "laborDollars": 0,
+          "totalDollars": 750
+        },
+        {
+          "name": "3.5% Credit Card Fee",
+          "laborDollars": 0,
+          "totalDollars": 0
+        }
+      ],
+      "parts": [
+        {
+          "name": " Materials - 3M Sunflower Yellow -1.5x Roll",
+          "quantity": 1,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": null
+        }
+      ],
+      "labels": []
+    },
+    {
+      "orderNumber": "3191",
+      "orderId": "d562021a-80ab-42b6-9242-b4a92481fd3f",
+      "createdDate": "2025-01-17T20:24:38.391Z",
+      "fullyPaidDate": "2025-01-18T00:10:00.095Z",
+      "invoicedDate": "2025-01-17T23:59:10.150Z",
+      "status": "Invoice",
+      "vehicle": "2008 LAND ROVER Range Rover Sport",
+      "vehicleId": "6419f770bae982f35789e69c",
+      "mileageIn": null,
+      "mileageOut": null,
+      "customerFirstName": "Jamie",
+      "customerId": "6419f5a8000db240a8ee449e",
+      "totalDollars": 1656.3,
+      "partsDollars": 1142.47,
+      "laborDollars": 375,
+      "feesDollars": 56,
+      "taxDollars": 82.83,
+      "discountDollars": 0,
+      "discountPercent": 0,
+      "shopSuppliesDollars": 0,
+      "paidCostDollars": 1656.3,
+      "totalLaborHours": 3,
+      "services": [
+        {
+          "name": "Full Service - Oil Change, All Fluids and Filters Replaced",
+          "laborDollars": 0,
+          "totalDollars": 1600.3
+        },
+        {
+          "name": "Fee - Credit Card Transaction",
+          "laborDollars": 0,
+          "totalDollars": 56
+        }
+      ],
+      "parts": [
+        {
+          "name": "Gas ",
+          "quantity": 1,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": null
+        },
+        {
+          "name": "Advanced Formula - Part #BGMOA",
+          "quantity": 1,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": null
+        },
+        {
+          "name": "Aftermarket Floor Mats",
+          "quantity": 1,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": null
+        },
+        {
+          "name": "Aftermarket Visor Mirror",
+          "quantity": 1,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": null
+        },
+        {
+          "name": "New Battery - Part #H8",
+          "quantity": 1,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": null
+        },
+        {
+          "name": "Fuel Conditioner - Part #44K",
+          "quantity": 1,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": null
+        },
+        {
+          "name": "Washer Fluid - Part #WS",
+          "quantity": 1,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": null
+        },
+        {
+          "name": "Engine Air Filter - Part #5000-322268",
+          "quantity": 2,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": null
+        },
+        {
+          "name": "Cabin Filter - Part #LR036369",
+          "quantity": 1,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": null
+        },
+        {
+          "name": "Pickup and Travel Time",
+          "quantity": 1,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": null
+        },
+        {
+          "name": "Castrol Edge - 5W30",
+          "quantity": 8,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": null
+        },
+        {
+          "name": "Oil Filter Kit  - Part #FL2021",
+          "quantity": 1,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": null
+        }
+      ],
+      "labels": []
+    },
+    {
+      "orderNumber": "3136",
+      "orderId": "d57cfc26-8795-4e95-8896-667f7621eb29",
+      "createdDate": "2024-12-02T19:20:48.627Z",
+      "fullyPaidDate": "2024-12-04T08:00:00.000Z",
+      "invoicedDate": "2024-12-04T18:55:40.757Z",
+      "status": "Invoice",
+      "vehicle": "2018 Porsche 911 GT3",
+      "vehicleId": "6a1f65cc-dc81-4949-9cb3-6c94185580c2",
+      "mileageIn": null,
+      "mileageOut": null,
+      "customerFirstName": "John",
+      "customerId": "8b2be63f-b860-4cde-bb7e-2d3cd100e580",
+      "totalDollars": 7301.23,
+      "partsDollars": 1445,
+      "laborDollars": 5505,
+      "feesDollars": 246.47,
+      "taxDollars": 104.76,
+      "discountDollars": 300,
+      "discountPercent": 4.1379,
+      "shopSuppliesDollars": 0,
+      "paidCostDollars": 7301.23,
+      "totalLaborHours": 33,
+      "services": [
+        {
+          "name": "Ultimate Fusion PPF - Full Vehicle Protection",
+          "laborDollars": 0,
+          "totalDollars": 6354.76
+        },
+        {
+          "name": "Single Stage Paint Correction",
+          "laborDollars": 0,
+          "totalDollars": 700
+        },
+        {
+          "name": "Credit Card Fee",
+          "laborDollars": 0,
+          "totalDollars": 246.47
+        }
+      ],
+      "parts": [
+        {
+          "name": "Ultimate Fusion PPF- 1x Roll - 50' x 60\"",
+          "quantity": 17,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": null
+        }
+      ],
+      "labels": []
+    },
+    {
+      "orderNumber": "3767",
+      "orderId": "d59928d5-44d0-4f64-957f-54e6313fb731",
+      "createdDate": "2026-03-20T17:17:36.965Z",
+      "fullyPaidDate": "2026-03-20T07:00:00.000Z",
+      "invoicedDate": "2026-03-20T17:31:28.892Z",
+      "status": "Invoice",
+      "vehicle": "2006 Chevrolet Silverado 1500 LS",
+      "vehicleId": "1c08ea25-a265-4de4-815e-b905c3a7b9d0",
+      "mileageIn": null,
+      "mileageOut": null,
+      "customerFirstName": "Scott",
+      "customerId": "9e01507c-e42b-4702-af7c-fd24f5cf7f57",
+      "totalDollars": 905.62,
+      "partsDollars": 0,
+      "laborDollars": 875,
+      "feesDollars": 30.62,
+      "taxDollars": 0,
+      "discountDollars": 0,
+      "discountPercent": 0,
+      "shopSuppliesDollars": 0,
+      "paidCostDollars": 905.62,
+      "totalLaborHours": 7,
+      "services": [
+        {
+          "name": "Window Tint - Full Vehicle + Windshield",
+          "laborDollars": 0,
+          "totalDollars": 475
+        },
+        {
+          "name": "Headlight Restoration + Protection",
+          "laborDollars": 0,
+          "totalDollars": 400
+        },
+        {
+          "name": "Fee - Credit Card Transaction",
+          "laborDollars": 0,
+          "totalDollars": 30.62
+        }
+      ],
+      "parts": [],
+      "labels": []
+    },
+    {
+      "orderNumber": "3554",
+      "orderId": "d61b4707-54e2-44f6-b775-8305de8729c8",
+      "createdDate": "2025-09-25T21:29:50.836Z",
+      "fullyPaidDate": null,
+      "invoicedDate": null,
+      "status": "Estimate",
+      "vehicle": "2022 Lexus RX350",
+      "vehicleId": "dd8828ad-b41f-4272-9a2b-57a0b05b0ff3",
+      "mileageIn": null,
+      "mileageOut": null,
+      "customerFirstName": "Robert",
+      "customerId": "ade33b29-2f10-418d-ac53-c43a6507c786",
+      "totalDollars": 1138,
+      "partsDollars": 0,
+      "laborDollars": 1100,
+      "feesDollars": 38,
+      "taxDollars": 0,
+      "discountDollars": 0,
+      "discountPercent": 0,
+      "shopSuppliesDollars": 0,
+      "paidCostDollars": 0,
+      "totalLaborHours": 8.8,
+      "services": [
+        {
+          "name": "XPEL Prime XR Plus - Full Vehicle (No Sunroof)",
+          "laborDollars": 0,
+          "totalDollars": 1100
+        },
+        {
+          "laborDollars": 0,
+          "totalDollars": 0
+        },
+        {
+          "name": "Fee - Credit Card Transaction",
+          "laborDollars": 0,
+          "totalDollars": 38
+        }
+      ],
+      "parts": [],
+      "labels": []
+    },
+    {
+      "orderNumber": "2829",
+      "orderId": "657781ffe429345e552d0325",
+      "createdDate": "2023-12-11T21:41:19.322Z",
+      "fullyPaidDate": "2023-12-19T17:52:45.941Z",
+      "invoicedDate": "2023-12-19T17:52:33.618Z",
+      "status": "Invoice",
+      "vehicle": "2022 Ford Sprinter EXT",
+      "vehicleId": "6424c99d5c3974fe5b55186b",
+      "mileageIn": null,
+      "mileageOut": null,
+      "customerFirstName": "Kyle",
+      "customerId": "63c82a90f338b27854dc5a82",
+      "totalDollars": 1119.57,
+      "partsDollars": 432,
+      "laborDollars": 625,
+      "feesDollars": 0,
+      "taxDollars": 31.32,
+      "discountDollars": 0,
+      "discountPercent": 0,
+      "shopSuppliesDollars": 31.25,
+      "paidCostDollars": 1119.57,
+      "totalLaborHours": 5,
+      "services": [
+        {
+          "name": "Vinyl Wrap - Commercial",
+          "laborDollars": 0,
+          "totalDollars": 1119.56
+        },
+        {
+          "name": "Fee - Credit Card Transaction",
+          "laborDollars": 0,
+          "totalDollars": 0
+        }
+      ],
+      "parts": [
+        {
+          "name": "Materials - 3M 2080 Series Gloss White",
+          "quantity": 9,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": ""
+        }
+      ],
+      "labels": []
+    },
+    {
+      "orderNumber": "2830",
+      "orderId": "6577af62a9a985e12bb9471c",
+      "createdDate": "2023-12-12T00:54:58.844Z",
+      "fullyPaidDate": null,
+      "invoicedDate": null,
+      "status": "Estimate",
+      "vehicle": "2021 Volkswagen Golf R",
+      "vehicleId": "6577af9f876e63c08747f08b",
+      "mileageIn": null,
+      "mileageOut": null,
+      "customerFirstName": "Kevin",
+      "customerId": "6577af816cd2e762a9e76efb",
+      "totalDollars": 1986.03,
+      "partsDollars": 290,
+      "laborDollars": 1675,
+      "feesDollars": 0,
+      "taxDollars": 21.03,
+      "discountDollars": 0,
+      "discountPercent": 0,
+      "shopSuppliesDollars": 0,
+      "paidCostDollars": 0,
+      "totalLaborHours": 13.4,
+      "services": [
+        {
+          "name": "Vinyl Wrap - Partial Wrap",
+          "laborDollars": 0,
+          "totalDollars": 651.96
+        },
+        {
+          "name": "Labor - Wrap/Film Removal",
+          "laborDollars": 0,
+          "totalDollars": 125
+        },
+        {
+          "name": "Ceramic Coating - 3 Year Coverage",
+          "laborDollars": 0,
+          "totalDollars": 1209.06
+        }
+      ],
+      "parts": [
+        {
+          "name": "Materials - 3M 2080 Gloss Black (/yd)",
+          "quantity": 3,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": ""
+        },
+        {
+          "name": "Ceramic Coating (/bottle)",
+          "quantity": 1,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": ""
+        }
+      ],
+      "labels": [
+        {
+          "color": "blue",
+          "id": "624396faebb36fb05b493e29",
+          "name": "Partial Wrap",
+          "saved": true
+        },
+        {
+          "color": "orange",
+          "id": "6243972588de8a2a0fff8af3",
+          "name": "Ceramic Coating",
+          "saved": true
+        }
+      ]
+    },
+    {
+      "orderNumber": "2831",
+      "orderId": "657a2ac75736032c1b6279e9",
+      "createdDate": "2023-12-13T22:05:59.012Z",
+      "fullyPaidDate": "2023-12-13T23:46:32.832Z",
+      "invoicedDate": "2023-12-13T22:14:31.790Z",
+      "status": "Invoice",
+      "vehicle": "2024 Chevy Corvette",
+      "vehicleId": "657a2af7e00b888052533f2f",
+      "mileageIn": null,
+      "mileageOut": null,
+      "customerFirstName": "Patrick",
+      "customerId": "657a2ad78645ac3303758053",
+      "totalDollars": 3564.8,
+      "partsDollars": 480,
+      "laborDollars": 3050,
+      "feesDollars": 0,
+      "taxDollars": 34.8,
+      "discountDollars": 0,
+      "discountPercent": 0,
+      "shopSuppliesDollars": 0,
+      "paidCostDollars": 3564.8,
+      "totalLaborHours": 19.517948717948716,
+      "services": [
+        {
+          "name": "Ceramic Coating - 3 Year Coverage",
+          "laborDollars": 0,
+          "totalDollars": 750
+        },
+        {
+          "name": "Clear Bra - XPEL Ultimate Fusion - Full Front Clip",
+          "laborDollars": 0,
+          "totalDollars": 2214.8
+        },
+        {
+          "name": "Window Tint - Ceramic - Full Vehicle",
+          "laborDollars": 0,
+          "totalDollars": 600
+        }
+      ],
+      "parts": [
+        {
+          "name": "XPEL Ultimate Fusion - Using Modified Kits from XPEL's Design Access Program (/yd)",
+          "quantity": 6,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": ""
+        }
+      ],
+      "labels": []
+    },
+    {
+      "orderNumber": "2832",
+      "orderId": "657a2ea5bb47852520b7b34a",
+      "createdDate": "2023-12-13T22:22:29.607Z",
+      "fullyPaidDate": null,
+      "invoicedDate": "2023-12-13T22:27:00.182Z",
+      "status": "Invoice",
+      "vehicle": "2021 LEXUS RX",
+      "vehicleId": "657a2ed3cf50870778145935",
+      "mileageIn": null,
+      "mileageOut": null,
+      "customerFirstName": "Louise",
+      "customerId": "625f02b3bf64a07493cb7a0c",
+      "totalDollars": 102.18,
+      "partsDollars": 30,
+      "laborDollars": 70,
+      "feesDollars": 0,
+      "taxDollars": 2.18,
+      "discountDollars": 0,
+      "discountPercent": 0,
+      "shopSuppliesDollars": 0,
+      "paidCostDollars": 0,
+      "totalLaborHours": 0,
+      "services": [
+        {
+          "name": "Clear Bra - XPEL Ultimate Fusion - Full Front Clip",
+          "laborDollars": 0,
+          "totalDollars": 102.18
+        }
+      ],
+      "parts": [
+        {
+          "name": "XPEL Ultimate Fusion",
+          "quantity": 6,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": ""
+        }
+      ],
+      "labels": []
+    },
+    {
+      "orderNumber": "3099",
+      "orderId": "6f66aa4b-8381-484d-afe8-c03c74c2056d",
+      "createdDate": "2024-10-30T18:11:07.370Z",
+      "fullyPaidDate": "2024-11-06T22:39:30.764Z",
+      "invoicedDate": "2024-11-06T22:08:08.184Z",
+      "status": "Invoice",
+      "vehicle": "1983 Mercedes-Benz 380SL Base",
+      "vehicleId": "8084ccdf-7cd6-4de0-b8e2-93687415803f",
+      "mileageIn": null,
+      "mileageOut": null,
+      "customerFirstName": "Kevin",
+      "customerId": "e94626ca-ebf9-4573-909b-57d18d097c29",
+      "totalDollars": 404.99,
+      "partsDollars": 225,
+      "laborDollars": 150,
+      "feesDollars": 13.68,
+      "taxDollars": 16.31,
+      "discountDollars": 0,
+      "discountPercent": 0,
+      "shopSuppliesDollars": 0,
+      "paidCostDollars": 404.99,
+      "totalLaborHours": 1.2000000000000002,
+      "services": [
+        {
+          "name": "Exterior & Interior Detail ",
+          "laborDollars": 0,
+          "totalDollars": 391.31
+        },
+        {
+          "name": "Fee - Credit Card Transaction",
+          "laborDollars": 0,
+          "totalDollars": 13.68
+        }
+      ],
+      "parts": [
+        {
+          "name": "New Vehicle Battery ",
+          "quantity": 1,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": null
+        }
+      ],
+      "labels": []
+    },
+    {
+      "orderNumber": "3178",
+      "orderId": "6f853f35-3349-4564-b6dc-dc3075d63f6f",
+      "createdDate": "2025-01-02T17:30:59.004Z",
+      "fullyPaidDate": "2025-01-03T08:00:00.000Z",
+      "invoicedDate": "2025-01-23T23:15:46.981Z",
+      "status": "Invoice",
+      "vehicle": "2024 Dodge Durango R/T",
+      "vehicleId": "0e421b41-3f80-435c-96fb-c7953e788f09",
+      "mileageIn": null,
+      "mileageOut": null,
+      "customerFirstName": "David",
+      "customerId": "9f0e88e2-143a-4933-8ad6-e3e7c91b2d69",
+      "totalDollars": 931.5,
+      "partsDollars": 0,
+      "laborDollars": 900,
+      "feesDollars": 31.5,
+      "taxDollars": 0,
+      "discountDollars": 0,
+      "discountPercent": 0,
+      "shopSuppliesDollars": 0,
+      "paidCostDollars": 931.5,
+      "totalLaborHours": 7.2,
+      "services": [
+        {
+          "name": "Ceramic Window Tint",
+          "laborDollars": 0,
+          "totalDollars": 900
+        },
+        {
+          "name": "Fee - Credit Card Transaction",
+          "laborDollars": 0,
+          "totalDollars": 31.5
+        }
+      ],
+      "parts": [],
+      "labels": [
+        {
+          "color": "gray",
+          "id": "624397196770458c93bc7d99",
+          "name": "Tint",
+          "saved": true
+        }
+      ]
+    },
+    {
+      "orderNumber": "3543",
+      "orderId": "eb363787-fd40-456b-8a95-160683977193",
+      "createdDate": "2025-09-19T15:53:24.504Z",
+      "fullyPaidDate": null,
+      "invoicedDate": null,
+      "status": "Estimate",
+      "vehicle": "2022 Mercedes-Benz SL55 AMG 4Matic",
+      "vehicleId": "283e4891-0c89-43eb-9e4a-cd5ded07baaa",
+      "mileageIn": null,
+      "mileageOut": null,
+      "customerFirstName": "Oliver",
+      "customerId": "a62e6bac-8624-40a7-b896-156eb3d8d5bc",
+      "totalDollars": 12667.5,
+      "partsDollars": 3000,
+      "laborDollars": 9200,
+      "feesDollars": 0,
+      "taxDollars": 217.5,
+      "discountDollars": 0,
+      "discountPercent": 0,
+      "shopSuppliesDollars": 250,
+      "paidCostDollars": 0,
+      "totalLaborHours": 73.6,
+      "services": [
+        {
+          "name": "OPTION #1 - Color Change - Inozetek PPF ",
+          "laborDollars": 0,
+          "totalDollars": 7495
+        },
+        {
+          "name": "OPTION #2 - Color Change - 3M 2080 Series Vinyl Wrap ",
+          "laborDollars": 0,
+          "totalDollars": 5172.5
+        },
+        {
+          "name": "Fee - Credit Card Transaction",
+          "laborDollars": 0,
+          "totalDollars": 0
+        }
+      ],
+      "parts": [
+        {
+          "name": "Materials - 3M 2080 Series (Matte Grey) - 1x Roll",
+          "quantity": 1,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": null
+        },
+        {
+          "name": "Inozetek PPF (Matte Grey) - 1x Roll",
+          "quantity": 25,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": null
+        }
+      ],
+      "labels": []
+    },
+    {
+      "orderNumber": "3281",
+      "orderId": "cbb9738f-8360-44b0-a10a-c4feeac8d307",
+      "createdDate": "2025-04-07T23:24:04.334Z",
+      "fullyPaidDate": null,
+      "invoicedDate": null,
+      "status": "Estimate",
+      "vehicle": "2025 Tesla Model Y",
+      "vehicleId": "9a087054-f2ef-4ad0-9d67-e4a2514ab2e4",
+      "mileageIn": null,
+      "mileageOut": null,
+      "customerFirstName": "Alex",
+      "customerId": "ba1c5999-337e-490c-a5ee-4763345a3c01",
+      "totalDollars": 5760.03,
+      "partsDollars": 900,
+      "laborDollars": 4600,
+      "feesDollars": 194.78,
+      "taxDollars": 65.25,
+      "discountDollars": 0,
+      "discountPercent": 0,
+      "shopSuppliesDollars": 0,
+      "paidCostDollars": 0,
+      "totalLaborHours": 36.8,
+      "services": [
+        {
+          "name": "Vinyl Wrap - Color Change",
+          "laborDollars": 0,
+          "totalDollars": 4465.25
+        },
+        {
+          "name": "Ceramic Window Tint",
+          "laborDollars": 0,
+          "totalDollars": 1100
+        },
+        {
+          "name": "Fee - Credit Card Transaction",
+          "laborDollars": 0,
+          "totalDollars": 194.78
+        }
+      ],
+      "parts": [
+        {
+          "name": "Materials - 3M 2080 Series - Matte Pine Green",
+          "quantity": 1,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": "M206"
+        }
+      ],
+      "labels": []
+    },
+    {
+      "orderNumber": "3037",
+      "orderId": "cbcc0ee8-a018-45fd-99e8-be605fc9f54d",
+      "createdDate": "2024-08-15T23:31:01.094Z",
+      "fullyPaidDate": "2024-08-16T19:45:39.828Z",
+      "invoicedDate": "2024-08-15T23:34:10.624Z",
+      "status": "Invoice",
+      "vehicle": "2024 Ford Ranger Raptor",
+      "vehicleId": "63348ac5f0b1528f64b0d2ed",
+      "mileageIn": null,
+      "mileageOut": null,
+      "customerFirstName": "Tanner",
+      "customerId": "633488e22dcac5bd76317038",
+      "totalDollars": 850,
+      "partsDollars": 0,
+      "laborDollars": 850,
+      "feesDollars": 0,
+      "taxDollars": 0,
+      "discountDollars": 0,
+      "discountPercent": 0,
+      "shopSuppliesDollars": 0,
+      "paidCostDollars": 850,
+      "totalLaborHours": 6.8,
+      "services": [
+        {
+          "name": "Ceramic Tint - Full Vehicle",
+          "laborDollars": 0,
+          "totalDollars": 850
+        }
+      ],
+      "parts": [],
+      "labels": []
+    },
+    {
+      "orderNumber": "3387",
+      "orderId": "cbef66f8-b766-438f-b043-27ab944f5c5d",
+      "createdDate": "2025-07-03T00:45:40.154Z",
+      "fullyPaidDate": "2025-11-08T21:38:01.446Z",
+      "invoicedDate": "2025-07-24T15:55:06.076Z",
+      "status": "Invoice",
+      "vehicle": "2011 Audi R8 Base",
+      "vehicleId": "e274d034-f182-4c44-a991-904e0f909d31",
+      "mileageIn": 67231,
+      "mileageOut": null,
+      "customerFirstName": "Hayden",
+      "customerId": "7d528261-c366-4778-ad8f-65aacf104062",
+      "totalDollars": 7791.75,
+      "partsDollars": 1800,
+      "laborDollars": 8111.25,
+      "feesDollars": -2500,
+      "taxDollars": 130.5,
+      "discountDollars": 775,
+      "discountPercent": 7.2523,
+      "shopSuppliesDollars": 250,
+      "paidCostDollars": 7791.75,
+      "totalLaborHours": 57.650000000000006,
+      "services": [
+        {
+          "name": "Color Change PPF - Inozetek",
+          "laborDollars": 0,
+          "totalDollars": 8791.75
+        },
+        {
+          "name": "Removal",
+          "laborDollars": 0,
+          "totalDollars": 1500
+        },
+        {
+          "name": "Complimentary Service",
+          "laborDollars": 0,
+          "totalDollars": 0
+        },
+        {
+          "name": "Discount - Multi-Service",
+          "laborDollars": 0,
+          "totalDollars": -2500
+        },
+        {
+          "name": "Fee - Credit Card Transaction",
+          "laborDollars": 0,
+          "totalDollars": 0
+        }
+      ],
+      "parts": [
+        {
+          "name": "Materials - Inoztek Celestial Unicorn PPF (/yd)",
+          "quantity": 20,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": null
+        }
+      ],
+      "labels": [
+        {
+          "color": "aqua",
+          "id": "bc11503e-bc14-48d8-9cc3-89b4cad43603",
+          "name": "Color PPF",
+          "saved": true
+        }
+      ]
+    },
+    {
+      "orderNumber": "3675",
+      "orderId": "cc126f5f-1e15-4ef4-b30e-f039c544f740",
+      "createdDate": "2026-01-15T00:09:00.422Z",
+      "fullyPaidDate": "2026-01-30T00:21:25.513Z",
+      "invoicedDate": "2026-01-15T00:42:11.448Z",
+      "status": "Invoice",
+      "vehicle": "2013 Cadillac ATS Premium",
+      "vehicleId": "16ef6d91-9b48-4108-a099-a7fd750d8593",
+      "mileageIn": null,
+      "mileageOut": null,
+      "customerFirstName": "Nathan",
+      "customerId": "845e4cc0-cec5-4134-a73b-27123f177bb8",
+      "totalDollars": 728.12,
+      "partsDollars": 0,
+      "laborDollars": 670,
+      "feesDollars": 24.62,
+      "taxDollars": 0,
+      "discountDollars": 0,
+      "discountPercent": 0,
+      "shopSuppliesDollars": 33.5,
+      "paidCostDollars": 728.12,
+      "totalLaborHours": 5.36,
+      "services": [
+        {
+          "name": "Vinyl Wrap - Partial",
+          "laborDollars": 0,
+          "totalDollars": 703.5
+        },
+        {
+          "name": "Fee - Credit Card Transaction",
+          "laborDollars": 0,
+          "totalDollars": 24.62
+        }
+      ],
+      "parts": [
+        {
+          "name": "Materials - Provided By Client (3M)",
+          "quantity": 1,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": null
+        }
+      ],
+      "labels": []
+    },
+    {
+      "orderNumber": "3422",
+      "orderId": "cc7dd3b6-df70-4fd3-812c-e9b3e80b1bc8",
+      "createdDate": "2025-07-21T16:17:08.595Z",
+      "fullyPaidDate": null,
+      "invoicedDate": null,
+      "status": "Estimate",
+      "vehicle": "2026 Tesla Model Y",
+      "vehicleId": "e0c0aa5e-d187-4259-b68b-9dac40e12e52",
+      "mileageIn": null,
+      "mileageOut": null,
+      "customerFirstName": "Raymond",
+      "customerId": "827b0d1b-e809-431f-8860-9fb1091c2c8d",
+      "totalDollars": 1890,
+      "partsDollars": 0,
+      "laborDollars": 1800,
+      "feesDollars": 0,
+      "taxDollars": 0,
+      "discountDollars": 0,
+      "discountPercent": 0,
+      "shopSuppliesDollars": 90,
+      "paidCostDollars": 0,
+      "totalLaborHours": 14.4,
+      "services": [
+        {
+          "name": "Window Tint - Ceramic- Full Vehicle",
+          "laborDollars": 0,
+          "totalDollars": 840
+        },
+        {
+          "name": "Window Tint - Ceramic -  Full Vehicle (Incl. Windshield)",
+          "laborDollars": 0,
+          "totalDollars": 1050
+        },
+        {
+          "name": "Fee - Credit Card Transaction",
+          "laborDollars": 0,
+          "totalDollars": 0
+        }
+      ],
+      "parts": [],
+      "labels": []
+    },
+    {
+      "orderNumber": "2726",
+      "orderId": "64e3f0063e10edae19f2acb7",
+      "createdDate": "2023-08-21T23:15:18.875Z",
+      "fullyPaidDate": "2023-08-21T23:31:30.795Z",
+      "invoicedDate": "2023-08-21T23:19:27.462Z",
+      "status": "Invoice",
+      "vehicle": "2023 Ram 3500",
+      "vehicleId": "64e3f0603c74ae8fa6660c5f",
+      "mileageIn": null,
+      "mileageOut": null,
+      "customerFirstName": "Charlie",
+      "customerId": "64e3f04f5a90af5708bfc07f",
+      "totalDollars": 1138.5,
+      "partsDollars": 0,
+      "laborDollars": 1100,
+      "feesDollars": 38.5,
+      "taxDollars": 0,
+      "discountDollars": 0,
+      "discountPercent": 0,
+      "shopSuppliesDollars": 0,
+      "paidCostDollars": 1138.5,
+      "totalLaborHours": 8.8,
+      "services": [
+        {
+          "name": "Window Tint - Ceramic -  Full Vehicle",
+          "laborDollars": 0,
+          "totalDollars": 1100
+        },
+        {
+          "name": "Fee - Credit Card Transaction",
+          "laborDollars": 0,
+          "totalDollars": 38.5
+        }
+      ],
+      "parts": [],
+      "labels": [
+        {
+          "color": "gray",
+          "id": "624397196770458c93bc7d99",
+          "name": "Tint",
+          "saved": true
+        }
+      ]
+    },
+    {
+      "orderNumber": "2727",
+      "orderId": "64e64daa227e643941c57185",
+      "createdDate": "2023-08-23T18:19:22.823Z",
+      "fullyPaidDate": "2023-08-23T22:29:25.747Z",
+      "invoicedDate": "2023-08-23T18:24:11.214Z",
+      "status": "Invoice",
+      "vehicle": "2023 Tesla Model Y",
+      "vehicleId": "64e64dd85f283482d3274372",
+      "mileageIn": null,
+      "mileageOut": null,
+      "customerFirstName": "Jeff",
+      "customerId": "64e64dc5fce3d79991de9900",
+      "totalDollars": 2309.8,
+      "partsDollars": 480,
+      "laborDollars": 1795,
+      "feesDollars": 0,
+      "taxDollars": 34.8,
+      "discountDollars": 0,
+      "discountPercent": 0,
+      "shopSuppliesDollars": 0,
+      "paidCostDollars": 2309.8,
+      "totalLaborHours": 10.138461538461538,
+      "services": [
+        {
+          "name": "Clear Bra - XPEL Ultimate Plus - Full Front Clip",
+          "laborDollars": 0,
+          "totalDollars": 1984.8
+        },
+        {
+          "name": "Window Tint - Ceramic - Tesla Y -  Front 2 Windows",
+          "laborDollars": 0,
+          "totalDollars": 325
+        }
+      ],
+      "parts": [
+        {
+          "name": "XPEL Ultimate Plus - Using Modified Kits from XPEL's Design Access Program (/yd)",
+          "quantity": 6,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": ""
+        }
+      ],
+      "labels": [
+        {
+          "color": "gray",
+          "id": "624397196770458c93bc7d99",
+          "name": "Tint",
+          "saved": true
+        },
+        {
+          "color": "purple",
+          "id": "624396dfbbbbf937742a5299",
+          "name": "PPF",
+          "saved": true
+        }
+      ]
+    },
+    {
+      "orderNumber": "2728",
+      "orderId": "64e65c4b3dc11d5c252c9b67",
+      "createdDate": "2023-08-23T19:21:47.786Z",
+      "fullyPaidDate": "2023-09-12T21:09:05.270Z",
+      "invoicedDate": "2023-08-23T23:43:59.297Z",
+      "status": "Invoice",
+      "vehicle": "2022 Dodge Charger Hellcat Jailbreak",
+      "vehicleId": "64e65c74ec9afc328e228f03",
+      "mileageIn": null,
+      "mileageOut": null,
+      "customerFirstName": "Shawn",
+      "customerId": "62506ef2ceb5692228337ba4",
+      "totalDollars": 5139.44,
+      "partsDollars": 698.85,
+      "laborDollars": 4216.15,
+      "feesDollars": 173.77,
+      "taxDollars": 50.67,
+      "discountDollars": 1000,
+      "discountPercent": 16.9062,
+      "shopSuppliesDollars": 0,
+      "paidCostDollars": 5139.44,
+      "totalLaborHours": 36.26153846153846,
+      "services": [
+        {
+          "name": "Ceramic Coating - 5 Year Coverage",
+          "laborDollars": 0,
+          "totalDollars": 1408.83
+        },
+        {
+          "name": "Clear Bra - XPEL Ultimate Fusion - Full Front Clip",
+          "laborDollars": 0,
+          "totalDollars": 2106.84
+        },
+        {
+          "name": "Assorted Ceramic Coatings",
+          "laborDollars": 0,
+          "totalDollars": 700
+        },
+        {
+          "name": "Window Tint - Ceramic - Sedan -  Full Vehicle (No Windshield)",
+          "laborDollars": 0,
+          "totalDollars": 750
+        },
+        {
+          "name": "Fee - Credit Card Transaction",
+          "laborDollars": 0,
+          "totalDollars": 173.77
+        }
+      ],
+      "parts": [
+        {
+          "name": "Ceramic Coating (/bottle)",
+          "quantity": 1,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": ""
+        },
+        {
+          "name": "XPEL Ultimate Fusion - Using Modified Kits from XPEL's Design Access Program (/yd)",
+          "quantity": 8,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": ""
+        }
+      ],
+      "labels": [
+        {
+          "color": "gray",
+          "id": "624397196770458c93bc7d99",
+          "name": "Tint",
+          "saved": true
+        },
+        {
+          "color": "orange",
+          "id": "6243972588de8a2a0fff8af3",
+          "name": "Ceramic Coating",
+          "saved": true
+        },
+        {
+          "color": "purple",
+          "id": "624396dfbbbbf937742a5299",
+          "name": "PPF",
+          "saved": true
+        }
+      ]
+    },
+    {
+      "orderNumber": "2730",
+      "orderId": "64e6a21ac6a6a02151df9b9d",
+      "createdDate": "2023-08-24T00:19:38.098Z",
+      "fullyPaidDate": null,
+      "invoicedDate": null,
+      "status": "Estimate",
+      "vehicle": "2019 Ford F-350",
+      "vehicleId": "64e6a255d02db751fa2103a8",
+      "mileageIn": null,
+      "mileageOut": null,
+      "customerFirstName": "Scott",
+      "customerId": "64e6a234550b5422057499f6",
+      "totalDollars": 1662.27,
+      "partsDollars": 195,
+      "laborDollars": 1412.5,
+      "feesDollars": 0,
+      "taxDollars": 14.14,
+      "discountDollars": 0,
+      "discountPercent": 0,
+      "shopSuppliesDollars": 40.63,
+      "paidCostDollars": 0,
+      "totalLaborHours": 0,
+      "services": [
+        {
+          "name": "Labor - Graphic Design",
+          "laborDollars": 0,
+          "totalDollars": 600
+        },
+        {
+          "name": "Labor - Wrap/Film Removal",
+          "laborDollars": 0,
+          "totalDollars": 525
+        },
+        {
+          "name": "Vinyl Wrap - Commercial",
+          "laborDollars": 0,
+          "totalDollars": 537.27
+        }
+      ],
+      "parts": [
+        {
+          "name": "Materials - 3M Matte Black",
+          "quantity": 3,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": ""
+        }
+      ],
+      "labels": [
+        {
+          "color": "green",
+          "id": "6243972d88de8a3513ff8af8",
+          "name": "Commercial",
+          "saved": true
+        }
+      ]
+    },
+    {
+      "orderNumber": "2577",
+      "orderId": "63fd26c222dc5a63a9002d59",
+      "createdDate": "2023-02-27T21:55:14.095Z",
+      "fullyPaidDate": null,
+      "invoicedDate": null,
+      "status": "Estimate",
+      "vehicle": "2020 Audi Q8",
+      "vehicleId": "63fd26f69c3b33043e5da296",
+      "mileageIn": null,
+      "mileageOut": null,
+      "customerFirstName": "Matt",
+      "customerId": "63222386404ad09e41d9a70e",
+      "totalDollars": 4634.19,
+      "partsDollars": 747.5,
+      "laborDollars": 3650,
+      "feesDollars": 158.51,
+      "taxDollars": 54.19,
+      "discountDollars": 0,
+      "discountPercent": 0,
+      "shopSuppliesDollars": 182.5,
+      "paidCostDollars": 0,
+      "totalLaborHours": 29.2,
+      "services": [
+        {
+          "name": "Vinyl Wrap - Color Change",
+          "laborDollars": 0,
+          "totalDollars": 4634.19
+        },
+        {
+          "name": "Fee - Credit Card Transaction",
+          "laborDollars": 0,
+          "totalDollars": 158.5
+        }
+      ],
+      "parts": [
+        {
+          "name": "Materials - 3M 2080 Series Satin Black",
+          "quantity": 1,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": ""
+        }
+      ],
+      "labels": [
+        {
+          "color": "aqua",
+          "id": "624396d567704593d7bc7d83",
+          "name": "Color Change",
+          "saved": true
+        }
+      ]
+    },
+    {
+      "orderNumber": "2578",
+      "orderId": "63fe54902bc8a039bc8d1548",
+      "createdDate": "2023-02-28T19:22:56.724Z",
+      "fullyPaidDate": null,
+      "invoicedDate": null,
+      "status": "Estimate",
+      "vehicle": "2023 Land Rover Range Rover",
+      "vehicleId": "63ac878af449ea082c5239b9",
+      "mileageIn": null,
+      "mileageOut": null,
+      "customerFirstName": "Antonio",
+      "customerId": "628e79c295119f6ecc2ac409",
+      "totalDollars": 2357.55,
+      "partsDollars": 480,
+      "laborDollars": 1755,
+      "feesDollars": 0,
+      "taxDollars": 34.8,
+      "discountDollars": 0,
+      "discountPercent": 0,
+      "shopSuppliesDollars": 87.75,
+      "paidCostDollars": 0,
+      "totalLaborHours": 34,
+      "services": [
+        {
+          "name": "Clear Bra - XPEL Ultimate Plus - Full Front Clip",
+          "laborDollars": 0,
+          "totalDollars": 2357.55
+        },
+        {
+          "name": "Clear Bra - XPEL Ultimate Plus - Full Vehicle Protection",
+          "laborDollars": 0,
+          "totalDollars": 6668.51
+        }
+      ],
+      "parts": [
+        {
+          "name": "XPEL Ultimate Plus - Using Modified Kits from XPEL's Design Access Program (/yd)",
+          "quantity": 6,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": ""
+        },
+        {
+          "name": "XPEL Ultimate Plus - Using Modified Kits From XPEL's Design Access Program (/yd)",
+          "quantity": 17,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": ""
+        }
+      ],
+      "labels": [
+        {
+          "color": "purple",
+          "id": "624396dfbbbbf937742a5299",
+          "name": "PPF",
+          "saved": true
+        }
+      ]
+    },
+    {
+      "orderNumber": "3040",
+      "orderId": "c86bc456-8577-4251-a5cd-f98d1c6cf589",
+      "createdDate": "2024-08-19T21:01:30.187Z",
+      "fullyPaidDate": "2024-08-21T22:32:26.501Z",
+      "invoicedDate": "2024-08-20T18:19:34.448Z",
+      "status": "Invoice",
+      "vehicle": "2024 Tesla Cybertruck Base",
+      "vehicleId": "b68b8570-274c-47d4-a442-fb10a27f9e9f",
+      "mileageIn": null,
+      "mileageOut": null,
+      "customerFirstName": "Anunaya",
+      "customerId": "183fe9a6-8ba6-46c1-8021-ecd07b13c900",
+      "totalDollars": 6500,
+      "partsDollars": 2199.97,
+      "laborDollars": 4140.53,
+      "feesDollars": 0,
+      "taxDollars": 159.5,
+      "discountDollars": 0,
+      "discountPercent": 0,
+      "shopSuppliesDollars": 0,
+      "paidCostDollars": 6500,
+      "totalLaborHours": 33.12424,
+      "services": [
+        {
+          "name": "Reviver Digital License Plate - Package 3 ",
+          "laborDollars": 0,
+          "totalDollars": 0
+        },
+        {
+          "name": "Window Tint - Ceramic Window Tint ",
+          "laborDollars": 0,
+          "totalDollars": 1000
+        },
+        {
+          "name": "PPF Color Change - GSWF Satin Black PPF - Full Vehicle Protection",
+          "laborDollars": 0,
+          "totalDollars": 5500
+        }
+      ],
+      "parts": [
+        {
+          "name": "Materials - GSWF Satin Black PPF ",
+          "quantity": 17,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": null
+        }
+      ],
+      "labels": []
+    },
+    {
+      "orderNumber": "3102",
+      "orderId": "c8d25115-ed84-40a4-ac77-f7fcde8be36d",
+      "createdDate": "2024-11-02T00:59:09.130Z",
+      "fullyPaidDate": "2024-11-01T07:00:00.000Z",
+      "invoicedDate": "2024-11-02T01:03:32.713Z",
+      "status": "Invoice",
+      "vehicle": null,
+      "vehicleId": null,
+      "mileageIn": null,
+      "mileageOut": null,
+      "customerFirstName": "Joe",
+      "customerId": "2e92c8ff-4631-4e4b-92da-2a40bde29c9e",
+      "totalDollars": 982.31,
+      "partsDollars": 146.68,
+      "laborDollars": 825,
+      "feesDollars": 0,
+      "taxDollars": 10.63,
+      "discountDollars": 0,
+      "discountPercent": 0,
+      "shopSuppliesDollars": 0,
+      "paidCostDollars": 982.31,
+      "totalLaborHours": 4.230769230769231,
+      "services": [
+        {
+          "name": "Clear Bra - XPEL Ultimate Fusion - Full Front Clip",
+          "laborDollars": 0,
+          "totalDollars": 982.31
+        }
+      ],
+      "parts": [
+        {
+          "name": "XPEL Ultimate Fusion - Using Modified Kits from XPEL's Design Access Program (/yd)",
+          "quantity": 4,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": null
+        }
+      ],
+      "labels": []
+    },
+    {
+      "orderNumber": "3369",
+      "orderId": "c93c07fc-0feb-4f04-816c-38d64e335b85",
+      "createdDate": "2025-06-23T22:26:10.473Z",
+      "fullyPaidDate": null,
+      "invoicedDate": null,
+      "status": "Estimate",
+      "vehicle": "2025 Ford F-450 Super Duty XL",
+      "vehicleId": "97c9ae08-e87f-4fdb-83e0-8a106b9c3e12",
+      "mileageIn": null,
+      "mileageOut": null,
+      "customerFirstName": "George",
+      "customerId": "fa46418f-5b69-440c-b226-4ba2d2c8b571",
+      "totalDollars": 3647.73,
+      "partsDollars": 947.5,
+      "laborDollars": 2388.75,
+      "feesDollars": 123.35,
+      "taxDollars": 68.69,
+      "discountDollars": 0,
+      "discountPercent": 0,
+      "shopSuppliesDollars": 119.44,
+      "paidCostDollars": 0,
+      "totalLaborHours": 12.25,
+      "services": [
+        {
+          "name": "Clear Bra - XPEL Ultimate Plus - Full Front Clip",
+          "laborDollars": 0,
+          "totalDollars": 2203.99
+        },
+        {
+          "name": "Clear Bra - XPEL Ultimate Plus - Leading Edges Vehicle Protection",
+          "laborDollars": 0,
+          "totalDollars": 1320.39
+        },
+        {
+          "name": "Fee - Credit Card Transaction",
+          "laborDollars": 0,
+          "totalDollars": 123.35
+        }
+      ],
+      "parts": [
+        {
+          "name": "XPEL Ultimate Plus - Using Modified Kits from XPEL's Design Access Program (/yd)",
+          "quantity": 6,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": null
+        },
+        {
+          "name": "XPEL Ultimate Fusion - Using Modified Kits from XPEL's Design Access Program (/yd)",
+          "quantity": 5.5,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": null
+        }
+      ],
+      "labels": []
+    },
+    {
+      "orderNumber": "3616",
+      "orderId": "c969e62a-08c2-46c7-8bba-6a63646e8360",
+      "createdDate": "2025-11-19T17:47:18.055Z",
+      "fullyPaidDate": "2025-11-26T00:38:45.217Z",
+      "invoicedDate": "2025-11-19T18:52:13.970Z",
+      "status": "Invoice",
+      "vehicle": "2019 Tesla X",
+      "vehicleId": "e97fc33d-3813-46a6-b4d4-483681156020",
+      "mileageIn": null,
+      "mileageOut": null,
+      "customerFirstName": "Joshua",
+      "customerId": "dadf36a7-5f9f-4e3b-82b5-4c155420cd98",
+      "totalDollars": 1078.27,
+      "partsDollars": 0,
+      "laborDollars": 1050,
+      "feesDollars": 23.27,
+      "taxDollars": 0,
+      "discountDollars": 62.5,
+      "discountPercent": 5.618,
+      "shopSuppliesDollars": 5,
+      "paidCostDollars": 1078.27,
+      "totalLaborHours": 8.9,
+      "services": [
+        {
+          "name": " XPEL Ultimate Plus - Partial Protection",
+          "laborDollars": 0,
+          "totalDollars": 950
+        },
+        {
+          "name": "Partial Blackout",
+          "laborDollars": 0,
+          "totalDollars": 105
+        },
+        {
+          "name": "Complementary Service",
+          "laborDollars": 0,
+          "totalDollars": 0
+        },
+        {
+          "name": "Fee - Credit Card Transaction",
+          "laborDollars": 0,
+          "totalDollars": 23.27
+        }
+      ],
+      "parts": [],
+      "labels": []
+    },
+    {
+      "orderNumber": "3783",
+      "orderId": "c97201bf-d5ac-48cb-84e0-afb3ebb8be57",
+      "createdDate": "2026-03-28T00:39:04.022Z",
+      "fullyPaidDate": "2026-03-28T00:46:44.684Z",
+      "invoicedDate": "2026-03-28T00:39:04.022Z",
+      "status": "Invoice",
+      "vehicle": "2011 Honda Element LX",
+      "vehicleId": "09ccebfd-7593-4a43-9613-642ccea29202",
+      "mileageIn": null,
+      "mileageOut": null,
+      "customerFirstName": "Scott",
+      "customerId": "9e01507c-e42b-4702-af7c-fd24f5cf7f57",
+      "totalDollars": 169.5,
+      "partsDollars": 0,
+      "laborDollars": 162.5,
+      "feesDollars": 7,
+      "taxDollars": 0,
+      "discountDollars": 0,
+      "discountPercent": 0,
+      "shopSuppliesDollars": 0,
+      "paidCostDollars": 169.5,
+      "totalLaborHours": 1.3,
+      "services": [
+        {
+          "name": "Window Tint",
+          "laborDollars": 0,
+          "totalDollars": 162.5
+        },
+        {
+          "name": "Fee - Credit Card Transaction",
+          "laborDollars": 0,
+          "totalDollars": 7
+        }
+      ],
+      "parts": [],
+      "labels": []
+    },
+    {
+      "orderNumber": "3204",
+      "orderId": "ca4e4733-fe2f-4b80-93aa-37465093bcb2",
+      "createdDate": "2025-01-29T19:20:48.928Z",
+      "fullyPaidDate": null,
+      "invoicedDate": null,
+      "status": "Estimate",
+      "vehicle": "2005 Freightliner XC Formed Rail Base",
+      "vehicleId": "c8f59fa7-588f-4419-a249-b76d9cf4fd63",
+      "mileageIn": null,
+      "mileageOut": null,
+      "customerFirstName": "James",
+      "customerId": "5c33943b-66fc-49e4-85a7-716aa1ae27b9",
+      "totalDollars": 24994,
+      "partsDollars": 7086.25,
+      "laborDollars": 17394,
+      "feesDollars": 0,
+      "taxDollars": 513.75,
+      "discountDollars": 0,
+      "discountPercent": 0,
+      "shopSuppliesDollars": 0,
+      "paidCostDollars": 0,
+      "totalLaborHours": 75.576,
+      "services": [
+        {
+          "name": "Full Vehicle Colored PPF - 12 Year Warranty/Lifetime Installation Guarantee ",
+          "laborDollars": 0,
+          "totalDollars": 24994
+        }
+      ],
+      "parts": [
+        {
+          "name": "Headlights and Taillight Smoke - Dark Smoke",
+          "quantity": 1,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": null
+        },
+        {
+          "name": "GSWF Satin White PPF - 12 Year Warranty (5' x 59' Roll)",
+          "quantity": 4,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": null
+        }
+      ],
+      "labels": []
+    },
+    {
+      "orderNumber": "2295",
+      "orderId": "626187c54713325306c6c44f",
+      "createdDate": "2022-04-21T16:35:17.076Z",
+      "fullyPaidDate": "2022-04-22T19:29:00.000Z",
+      "invoicedDate": "2022-04-21T16:52:49.845Z",
+      "status": "Invoice",
+      "vehicle": "2022 Tesla Model Y",
+      "vehicleId": "62475f4d88149ed7f0251a1c",
+      "mileageIn": null,
+      "mileageOut": null,
+      "customerFirstName": "Rocio",
+      "customerId": "625498f31cc3dc0d232364b7",
+      "totalDollars": 759.37,
+      "partsDollars": 175,
+      "laborDollars": 520,
+      "feesDollars": 25.68,
+      "taxDollars": 12.69,
+      "discountDollars": 0,
+      "discountPercent": 0,
+      "shopSuppliesDollars": 26,
+      "paidCostDollars": 759.37,
+      "totalLaborHours": 4.16,
+      "services": [
+        {
+          "name": "XPEL Paint Protection Film",
+          "laborDollars": 0,
+          "totalDollars": 628.69
+        },
+        {
+          "name": "Blackout",
+          "laborDollars": 0,
+          "totalDollars": 105
+        },
+        {
+          "name": "Credit Card Transaction Fee",
+          "laborDollars": 0,
+          "totalDollars": 25.68
+        }
+      ],
+      "parts": [
+        {
+          "name": "Materials - XPEL Ultimate Plus - 1x Rear Bumper",
+          "quantity": 1,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": ""
+        }
+      ],
+      "labels": [
+        {
+          "color": "black",
+          "id": "624396ea28cff8b0e43b7c71",
+          "name": "Blackout",
+          "saved": true
+        },
+        {
+          "color": "purple",
+          "id": "624396dfbbbbf937742a5299",
+          "name": "PPF",
+          "saved": true
+        }
+      ]
+    },
+    {
+      "orderNumber": "3661",
+      "orderId": "e64cdfa2-7b39-4131-a2a1-7205df820f0e",
+      "createdDate": "2025-12-31T22:08:13.207Z",
+      "fullyPaidDate": null,
+      "invoicedDate": null,
+      "status": "Estimate",
+      "vehicle": "2026 Porsche Macan S",
+      "vehicleId": "c582f260-27d3-44ca-b280-6195b3430e19",
+      "mileageIn": null,
+      "mileageOut": null,
+      "customerFirstName": "Craig",
+      "customerId": "eff58df3-9f11-4b3e-9474-f2da50424ab0",
+      "totalDollars": 5133.05,
+      "partsDollars": 854.98,
+      "laborDollars": 3850,
+      "feesDollars": 173.58,
+      "taxDollars": 61.99,
+      "discountDollars": 0,
+      "discountPercent": 0,
+      "shopSuppliesDollars": 192.5,
+      "paidCostDollars": 0,
+      "totalLaborHours": 25.05641025641026,
+      "services": [
+        {
+          "name": "XPEL Ultimate Plus - Full Front Clip",
+          "laborDollars": 0,
+          "totalDollars": 2716.67
+        },
+        {
+          "name": "XPEL Fusion Plus Ceramic Coating - 4-Year Warranty",
+          "laborDollars": 0,
+          "totalDollars": 2242.8
+        },
+        {
+          "name": "Fee - Credit Card Transaction",
+          "laborDollars": 0,
+          "totalDollars": 173.58
+        }
+      ],
+      "parts": [
+        {
+          "name": "Materials - XPEL Fusion Plus Ceramic Coating",
+          "quantity": 1,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": null
+        },
+        {
+          "name": "XPEL Ultimate Plus - Using Modified Kits from XPEL's Design Access Program",
+          "quantity": 6,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": null
+        }
+      ],
+      "labels": [
+        {
+          "color": "orange",
+          "id": "6243972588de8a2a0fff8af3",
+          "name": "Ceramic Coating",
+          "saved": true
+        },
+        {
+          "color": "purple",
+          "id": "624396dfbbbbf937742a5299",
+          "name": "PPF",
+          "saved": true
+        },
+        {
+          "color": "yellow",
+          "id": "6243973cc22a2dd92acba70b",
+          "name": "Other",
+          "saved": true
+        }
+      ]
+    },
+    {
+      "orderNumber": "3054",
+      "orderId": "e66431ad-a200-4832-9c88-eb036d38358a",
+      "createdDate": "2024-09-11T21:04:52.732Z",
+      "fullyPaidDate": null,
+      "invoicedDate": null,
+      "status": "Estimate",
+      "vehicle": "2020 Lamborghini Urus Base",
+      "vehicleId": "1777648f-2b14-49f6-a7a3-7c0939a3559e",
+      "mileageIn": null,
+      "mileageOut": null,
+      "customerFirstName": "GP",
+      "customerId": "65e11d6052f4483df7ef46ed",
+      "totalDollars": 14945.33,
+      "partsDollars": 3970,
+      "laborDollars": 10687.5,
+      "feesDollars": 0,
+      "taxDollars": 287.83,
+      "discountDollars": 0,
+      "discountPercent": 0,
+      "shopSuppliesDollars": 0,
+      "paidCostDollars": 0,
+      "totalLaborHours": 85.5,
+      "services": [
+        {
+          "name": "Partial Wrap - One Side + Driver Door",
+          "laborDollars": 0,
+          "totalDollars": 3041.43
+        },
+        {
+          "name": "Full Vehicle Satin Black PPF - 10 Year Manufacturer Warranty",
+          "laborDollars": 0,
+          "totalDollars": 11903.9
+        }
+      ],
+      "parts": [
+        {
+          "name": "Materials - Avery SW900 Satin Black (/yd)",
+          "quantity": 6,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": null
+        },
+        {
+          "name": "Materials - Satin Black PPF - 2x Rolls",
+          "quantity": 2,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": null
+        }
+      ],
+      "labels": []
+    },
+    {
+      "orderNumber": "3457",
+      "orderId": "e7164f46-7f26-4fe5-9332-597f4fe3eb3e",
+      "createdDate": "2025-07-31T20:28:56.263Z",
+      "fullyPaidDate": null,
+      "invoicedDate": null,
+      "status": "Estimate",
+      "vehicle": "2017 Volkswagen GTI SE",
+      "vehicleId": "0de5e668-3e7b-49a0-80ff-08ed18458e76",
+      "mileageIn": null,
+      "mileageOut": null,
+      "customerFirstName": "Cesar",
+      "customerId": "24e9fa2e-6cfa-437c-8b38-725dd90feeda",
+      "totalDollars": 12378.38,
+      "partsDollars": 3150,
+      "laborDollars": 8750,
+      "feesDollars": 0,
+      "taxDollars": 228.38,
+      "discountDollars": 0,
+      "discountPercent": 0,
+      "shopSuppliesDollars": 250,
+      "paidCostDollars": 0,
+      "totalLaborHours": 70,
+      "services": [
+        {
+          "name": "OPTION #1 - Color Change - Inozetek PPF (COLOR TBD)",
+          "laborDollars": 0,
+          "totalDollars": 7663.13
+        },
+        {
+          "name": "OPTION #2 - Color Change - 3M 2080 Series Vinyl Wrap (COLOR TBD)",
+          "laborDollars": 0,
+          "totalDollars": 4715.25
+        }
+      ],
+      "parts": [
+        {
+          "name": "Inozetek PPF (COLOR TBD) - 1x Roll",
+          "quantity": 25,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": null
+        },
+        {
+          "name": "Materials - 3M 2080 Series (COLOR TBD) - 1x Roll",
+          "quantity": 1,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": null
+        }
+      ],
+      "labels": []
+    },
+    {
+      "orderNumber": "3397",
+      "orderId": "e78f9816-0074-470f-906d-57a1684f9178",
+      "createdDate": "2025-07-08T00:32:50.101Z",
+      "fullyPaidDate": null,
+      "invoicedDate": null,
+      "status": "Estimate",
+      "vehicle": "2025 Toyota 4Runner Limited",
+      "vehicleId": "8f128d84-9752-4342-b95c-8824e929ccd1",
+      "mileageIn": null,
+      "mileageOut": null,
+      "customerFirstName": "Kiran",
+      "customerId": "6c9c4043-63e0-45a0-b72c-c5620a184249",
+      "totalDollars": 15854.5,
+      "partsDollars": 4200,
+      "laborDollars": 11100,
+      "feesDollars": 0,
+      "taxDollars": 304.5,
+      "discountDollars": 0,
+      "discountPercent": 0,
+      "shopSuppliesDollars": 250,
+      "paidCostDollars": 0,
+      "totalLaborHours": 56.92307692307692,
+      "services": [
+        {
+          "name": "OPTION #1 - Full Vehicle PPF - XPEL Ultimate Plus (Gloss)",
+          "laborDollars": 0,
+          "totalDollars": 7752.25
+        },
+        {
+          "name": "OPTION #2 - Full Vehicle PPF - XPEL Stealth (Satin)",
+          "laborDollars": 0,
+          "totalDollars": 8102.25
+        },
+        {
+          "name": "Fee - Credit Card Transaction",
+          "laborDollars": 0,
+          "totalDollars": 0
+        }
+      ],
+      "parts": [
+        {
+          "name": "XPEL Stealth (Satin)",
+          "quantity": 1,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": null
+        },
+        {
+          "name": "XPEL Ultimate Plus (Gloss)",
+          "quantity": 1,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": null
+        }
+      ],
+      "labels": []
+    },
+    {
+      "orderNumber": "3541",
+      "orderId": "e795e13f-057e-4f61-9de7-ff136e374775",
+      "createdDate": "2025-09-19T00:05:25.501Z",
+      "fullyPaidDate": null,
+      "invoicedDate": null,
+      "status": "Estimate",
+      "vehicle": "2026 Honda HR-V LX",
+      "vehicleId": "3af7d9a7-68c6-402f-a41c-355e89159ee7",
+      "mileageIn": null,
+      "mileageOut": null,
+      "customerFirstName": "Ricardo",
+      "customerId": "98cc7300-92c4-4f7f-b02a-aae08070e205",
+      "totalDollars": 543.37,
+      "partsDollars": 0,
+      "laborDollars": 500,
+      "feesDollars": 18.37,
+      "taxDollars": 0,
+      "discountDollars": 0,
+      "discountPercent": 0,
+      "shopSuppliesDollars": 25,
+      "paidCostDollars": 0,
+      "totalLaborHours": 4,
+      "services": [
+        {
+          "name": "Blackout Package ",
+          "laborDollars": 0,
+          "totalDollars": 525
+        },
+        {
+          "name": "Fee - Credit Card Transaction",
+          "laborDollars": 0,
+          "totalDollars": 18.37
+        }
+      ],
+      "parts": [],
+      "labels": []
+    },
+    {
+      "orderNumber": "2708",
+      "orderId": "64c812e15fdc950f989e5c47",
+      "createdDate": "2023-07-31T20:00:33.213Z",
+      "fullyPaidDate": null,
+      "invoicedDate": "2023-07-31T20:02:44.625Z",
+      "status": "Invoice",
+      "vehicle": "2015 Cadillac Escalade",
+      "vehicleId": "64c81302303f19bf16768895",
+      "mileageIn": null,
+      "mileageOut": null,
+      "customerFirstName": "Louise",
+      "customerId": "625f02b3bf64a07493cb7a0c",
+      "totalDollars": 615,
+      "partsDollars": 165,
+      "laborDollars": 450,
+      "feesDollars": 0,
+      "taxDollars": 0,
+      "discountDollars": 0,
+      "discountPercent": 0,
+      "shopSuppliesDollars": 0,
+      "paidCostDollars": 0,
+      "totalLaborHours": 0,
+      "services": [
+        {
+          "name": "Vinyl Wrap - Partial Wrap",
+          "laborDollars": 0,
+          "totalDollars": 615
+        }
+      ],
+      "parts": [
+        {
+          "name": "Materials - 3M 2080 Satin Black (/yd)",
+          "quantity": 3,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": ""
+        }
+      ],
+      "labels": []
+    },
+    {
+      "orderNumber": "2709",
+      "orderId": "64c82f89a9463a826d70cb92",
+      "createdDate": "2023-07-31T22:02:49.431Z",
+      "fullyPaidDate": "2023-08-04T15:50:00.000Z",
+      "invoicedDate": "2023-07-31T22:24:07.164Z",
+      "status": "Invoice",
+      "vehicle": "2024 BMW M2 Competition",
+      "vehicleId": "64c82fb4a9463a4dda70cba1",
+      "mileageIn": null,
+      "mileageOut": null,
+      "customerFirstName": "Shane",
+      "customerId": "64c82fa038481af4cf3231e4",
+      "totalDollars": 3194.23,
+      "partsDollars": 610,
+      "laborDollars": 2540,
+      "feesDollars": 0,
+      "taxDollars": 44.23,
+      "discountDollars": 0,
+      "discountPercent": 0,
+      "shopSuppliesDollars": 0,
+      "paidCostDollars": 3194.23,
+      "totalLaborHours": 15.466666666666667,
+      "services": [
+        {
+          "name": "Ceramic Coating - 2 Year Coverage",
+          "laborDollars": 0,
+          "totalDollars": 903.63
+        },
+        {
+          "name": "Clear Bra - XPEL Ultimate Plus - Full Front Clip",
+          "laborDollars": 0,
+          "totalDollars": 2290.6
+        }
+      ],
+      "parts": [
+        {
+          "name": "Ceramic Coating (/bottle)",
+          "quantity": 1,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": ""
+        },
+        {
+          "name": "XPEL Ultimate Plus - Using Modified Kits from XPEL's Design Access Program (/yd)",
+          "quantity": 7,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": ""
+        }
+      ],
+      "labels": [
+        {
+          "color": "orange",
+          "id": "6243972588de8a2a0fff8af3",
+          "name": "Ceramic Coating",
+          "saved": true
+        },
+        {
+          "color": "purple",
+          "id": "624396dfbbbbf937742a5299",
+          "name": "PPF",
+          "saved": true
+        }
+      ]
+    },
+    {
+      "orderNumber": "2710",
+      "orderId": "64c9535bcb2f565ff44d1cb9",
+      "createdDate": "2023-08-01T18:47:55.433Z",
+      "fullyPaidDate": "2023-09-08T17:10:08.496Z",
+      "invoicedDate": "2023-08-01T21:50:02.503Z",
+      "status": "Invoice",
+      "vehicle": "2023 BMW X6M",
+      "vehicleId": "64c953ccd9869b20bf60b3a0",
+      "mileageIn": null,
+      "mileageOut": null,
+      "customerFirstName": "Robert",
+      "customerId": "63065a3c74f6102aa37a7c47",
+      "totalDollars": 13754.13,
+      "partsDollars": 6022.5,
+      "laborDollars": 6870,
+      "feesDollars": 425,
+      "taxDollars": 436.63,
+      "discountDollars": 0,
+      "discountPercent": 0,
+      "shopSuppliesDollars": 0,
+      "paidCostDollars": 13754.13,
+      "totalLaborHours": 54.96,
+      "services": [
+        {
+          "name": "Vinyl Wrap - Color Change",
+          "laborDollars": 0,
+          "totalDollars": 4801.69
+        },
+        {
+          "name": "Window Tint - Ceramic - SUV -  Front x2 Windows",
+          "laborDollars": 0,
+          "totalDollars": 375
+        },
+        {
+          "name": "Blackout Package",
+          "laborDollars": 0,
+          "totalDollars": 459.06
+        },
+        {
+          "name": "Smoked Lights",
+          "laborDollars": 0,
+          "totalDollars": 405.8
+        },
+        {
+          "name": "Lowering Spring - Eibach Lowering Springs",
+          "laborDollars": 0,
+          "totalDollars": 2136.25
+        },
+        {
+          "name": "Carbon Fiber Body Kit",
+          "laborDollars": 0,
+          "totalDollars": 1143.57
+        },
+        {
+          "name": "Vossen Wheels - Satin Bronze - Custom Offsets",
+          "laborDollars": 0,
+          "totalDollars": 4432.75
+        }
+      ],
+      "parts": [
+        {
+          "name": "Materials - APA Satin Graphite Grey Metallic",
+          "quantity": 1,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": ""
+        },
+        {
+          "name": "MagnaTuning Aero Kit - X6M - Includes: 2x Side Skirts, 1x Front Splitter, 1x Rear Diffuser",
+          "quantity": 1,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": ""
+        },
+        {
+          "name": "Vossen HF-2 22\" Wheels - 2x Rear Wheels",
+          "quantity": 2,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": ""
+        },
+        {
+          "name": "Vossen HF-2 21\" Wheels - 2x Front Wheels",
+          "quantity": 2,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": ""
+        },
+        {
+          "name": "Materials - 3M 2080 Series Gloss Black (/yd)",
+          "quantity": 4,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": ""
+        },
+        {
+          "name": "Materials - APA Dark (/yd)",
+          "quantity": 2,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": ""
+        },
+        {
+          "name": "Eibach Lowering Springs",
+          "quantity": 1,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": ""
+        }
+      ],
+      "labels": [
+        {
+          "color": "aqua",
+          "id": "624396d567704593d7bc7d83",
+          "name": "Color Change",
+          "saved": true
+        },
+        {
+          "color": "black",
+          "id": "624396ea28cff8b0e43b7c71",
+          "name": "Blackout",
+          "saved": true
+        },
+        {
+          "color": "gray",
+          "id": "624397196770458c93bc7d99",
+          "name": "Tint",
+          "saved": true
+        },
+        {
+          "color": "yellow",
+          "id": "6243973cc22a2dd92acba70b",
+          "name": "Other",
+          "saved": true
+        }
+      ]
+    },
+    {
+      "orderNumber": "3087",
+      "orderId": "64caffe6-b266-456f-8dab-b1a972294f94",
+      "createdDate": "2024-10-25T17:39:39.895Z",
+      "fullyPaidDate": null,
+      "invoicedDate": null,
+      "status": "Estimate",
+      "vehicle": "2025 Tesla Model Y",
+      "vehicleId": "9a087054-f2ef-4ad0-9d67-e4a2514ab2e4",
+      "mileageIn": null,
+      "mileageOut": null,
+      "customerFirstName": "Tracy",
+      "customerId": "6e8a7e29-fbe3-4ac8-9604-381661d5e618",
+      "totalDollars": 2737.84,
+      "partsDollars": 615.12,
+      "laborDollars": 2078.12,
+      "feesDollars": 0,
+      "taxDollars": 44.6,
+      "discountDollars": 141.76,
+      "discountPercent": 5.0004,
+      "shopSuppliesDollars": 0,
+      "paidCostDollars": 0,
+      "totalLaborHours": 17.5,
+      "services": [
+        {
+          "name": "Full Front Clip PPF Package",
+          "laborDollars": 0,
+          "totalDollars": 1885.25
+        },
+        {
+          "name": "Interior Ceramic Coating",
+          "laborDollars": 0,
+          "totalDollars": 356.25
+        },
+        {
+          "name": "Partial Vehicle Wrap - Pillar Delete",
+          "laborDollars": 0,
+          "totalDollars": 496.34
+        }
+      ],
+      "parts": [
+        {
+          "name": "Materials - 3M Satin Black (/yd) ",
+          "quantity": 2.5,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": null
+        },
+        {
+          "name": "Materials - XPEL Ultimate Fusion (/yd)",
+          "quantity": 6,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": null
+        }
+      ],
+      "labels": []
+    },
+    {
+      "orderNumber": "2546",
+      "orderId": "63c97302a7ce18722f6a73f7",
+      "createdDate": "2023-01-19T16:42:42.052Z",
+      "fullyPaidDate": "2023-01-20T01:13:06.178Z",
+      "invoicedDate": "2023-01-19T17:17:40.258Z",
+      "status": "Invoice",
+      "vehicle": "2023 Tesla Model Y",
+      "vehicleId": "63c973d1a7ce188f6d6a7588",
+      "mileageIn": null,
+      "mileageOut": null,
+      "customerFirstName": "Carl",
+      "customerId": "63c863134cd64629bb1d9fb9",
+      "totalDollars": 137.11,
+      "partsDollars": 55,
+      "laborDollars": 70,
+      "feesDollars": 4.62,
+      "taxDollars": 3.99,
+      "discountDollars": 0,
+      "discountPercent": 0,
+      "shopSuppliesDollars": 3.5,
+      "paidCostDollars": 137.11,
+      "totalLaborHours": 0.56,
+      "services": [
+        {
+          "name": "Custom Overlays - 4x Wheel Caps",
+          "laborDollars": 0,
+          "totalDollars": 132.49
+        },
+        {
+          "name": "Fee - Credit Card Transaction",
+          "laborDollars": 0,
+          "totalDollars": 4.62
+        }
+      ],
+      "parts": [
+        {
+          "name": "Materials - Avery Gloss Cardinal Red (/yd)",
+          "quantity": 1,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": ""
+        }
+      ],
+      "labels": [
+        {
+          "color": "yellow",
+          "id": "6243973cc22a2dd92acba70b",
+          "name": "Other",
+          "saved": true
+        }
+      ]
+    },
+    {
+      "orderNumber": "2547",
+      "orderId": "63c97b3fcc19d403b76925ad",
+      "createdDate": "2023-01-19T17:17:51.250Z",
+      "fullyPaidDate": "2023-02-11T00:39:54.387Z",
+      "invoicedDate": "2023-01-19T17:25:56.330Z",
+      "status": "Invoice",
+      "vehicle": "2023 Tesla Model S",
+      "vehicleId": "63c97b692e6ec38a120cfd4e",
+      "mileageIn": null,
+      "mileageOut": null,
+      "customerFirstName": "Dre",
+      "customerId": "63c97b59daa40cdcbb308f31",
+      "totalDollars": 3511.5,
+      "partsDollars": 590,
+      "laborDollars": 2910,
+      "feesDollars": -31.28,
+      "taxDollars": 42.78,
+      "discountDollars": 0,
+      "discountPercent": 0,
+      "shopSuppliesDollars": 0,
+      "paidCostDollars": 3511.5,
+      "totalLaborHours": 18.34051282051282,
+      "services": [
+        {
+          "name": "Partial Wrap - Two-Tone Tesla",
+          "laborDollars": 0,
+          "totalDollars": 357.98
+        },
+        {
+          "name": "Clear Bra - XPEL Ultimate Plus - Full Front Clip",
+          "laborDollars": 0,
+          "totalDollars": 2234.8
+        },
+        {
+          "name": "Window Tint - Ceramic - Tesla S -  Full Vehicle (No Windshield)",
+          "laborDollars": 0,
+          "totalDollars": 950
+        },
+        {
+          "name": "Discount - Multi-Service",
+          "laborDollars": 0,
+          "totalDollars": -150
+        },
+        {
+          "name": "Fee - Credit Card Transaction",
+          "laborDollars": 0,
+          "totalDollars": 118.72
+        }
+      ],
+      "parts": [
+        {
+          "name": "Materials - 3M 2080 Gloss Black (/yd)",
+          "quantity": 2,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": ""
+        },
+        {
+          "name": "XPEL Ultimate Plus - Using Modified Kits from XPEL's Design Access Program (/yd)",
+          "quantity": 6,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": ""
+        }
+      ],
+      "labels": [
+        {
+          "color": "blue",
+          "id": "624396faebb36fb05b493e29",
+          "name": "Partial Wrap",
+          "saved": true
+        },
+        {
+          "color": "gray",
+          "id": "624397196770458c93bc7d99",
+          "name": "Tint",
+          "saved": true
+        },
+        {
+          "color": "purple",
+          "id": "624396dfbbbbf937742a5299",
+          "name": "PPF",
+          "saved": true
+        }
+      ]
+    },
+    {
+      "orderNumber": "2548",
+      "orderId": "63c9b06d9562a99d57d99ad9",
+      "createdDate": "2023-01-19T21:04:45.465Z",
+      "fullyPaidDate": "2023-01-20T00:51:25.338Z",
+      "invoicedDate": "2023-01-20T00:00:46.525Z",
+      "status": "Invoice",
+      "vehicle": null,
+      "vehicleId": null,
+      "mileageIn": null,
+      "mileageOut": null,
+      "customerFirstName": "Jake",
+      "customerId": "63c9b09ec7af8de68aa1f54a",
+      "totalDollars": 400.37,
+      "partsDollars": 265,
+      "laborDollars": 0,
+      "feesDollars": 116.16,
+      "taxDollars": 19.21,
+      "discountDollars": 0,
+      "discountPercent": 0,
+      "shopSuppliesDollars": 0,
+      "paidCostDollars": 400.37,
+      "totalLaborHours": 1.5,
+      "services": [
+        {
+          "name": "Labor - Graphic Design",
+          "laborDollars": 0,
+          "totalDollars": 225
+        },
+        {
+          "name": "Custom Die Cut Decals",
+          "laborDollars": 0,
+          "totalDollars": 284.21
+        },
+        {
+          "name": "Rush Fee",
+          "laborDollars": 0,
+          "totalDollars": 150
+        },
+        {
+          "name": "Fee - Credit Card Transaction",
+          "laborDollars": 0,
+          "totalDollars": 14
+        },
+        {
+          "name": "Discount",
+          "laborDollars": 0,
+          "totalDollars": -47.84
+        }
+      ],
+      "parts": [
+        {
+          "name": "4x \"Bobby Deerfield\" Logos at 4\" High",
+          "quantity": 4,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": ""
+        },
+        {
+          "name": "3x \"Todd Gerstenberger\" at 4\" High",
+          "quantity": 3,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": ""
+        },
+        {
+          "name": "6x 16\" x 11\" Racing Number",
+          "quantity": 6,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": ""
+        }
+      ],
+      "labels": []
+    },
+    {
+      "orderNumber": "2549",
+      "orderId": "63d060866b896a134408baeb",
+      "createdDate": "2023-01-24T22:49:42.382Z",
+      "fullyPaidDate": "2023-01-25T21:53:34.933Z",
+      "invoicedDate": "2023-01-25T20:18:19.362Z",
+      "status": "Invoice",
+      "vehicle": "2018 Tesla S 75D",
+      "vehicleId": "62b0c7fa21d273494c62acbf",
+      "mileageIn": null,
+      "mileageOut": null,
+      "customerFirstName": "Kyle",
+      "customerId": "62b0c7d48c7787c4b9c75ffc",
+      "totalDollars": 376.78,
+      "partsDollars": 62.5,
+      "laborDollars": 295,
+      "feesDollars": 0,
+      "taxDollars": 4.53,
+      "discountDollars": 0,
+      "discountPercent": 0,
+      "shopSuppliesDollars": 14.75,
+      "paidCostDollars": 376.78,
+      "totalLaborHours": 2.3600000000000003,
+      "services": [
+        {
+          "name": "Blackout Package",
+          "laborDollars": 0,
+          "totalDollars": 376.78
+        }
+      ],
+      "parts": [
+        {
+          "name": "Materials - 3M 2080 Series Gloss Black (/yd)",
+          "quantity": 2,
+          "unitCostDollars": 0,
+          "totalDollars": 0,
+          "partNumber": ""
+        }
+      ],
+      "labels": [
+        {
+          "color": "blue",
+          "id": "624396faebb36fb05b493e29",
+          "name": "Partial Wrap",
+          "saved": true
+        }
+      ]
+    }
+  ]
+}

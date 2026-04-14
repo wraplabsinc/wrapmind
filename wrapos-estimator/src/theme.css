@@ -1,0 +1,179 @@
+/* ── Base CSS custom properties ──────────────────────────────────────────── */
+:root {
+  /* Legacy tokens (kept for compatibility) */
+  --bg-primary:   #F8FAFE;
+  --bg-secondary: #ffffff;
+  --border-color: #E5E7EB;
+  --text-primary: #0F1923;
+  --text-muted:   #64748B;
+
+  /* Accent (overridden by ThemeContext) */
+  --accent-primary: #2E8BF0;
+  --accent-light:   #EFF6FF;
+  --accent-ring:    #BFDBFE;
+
+  /* Whole-environment backgrounds (overridden by ThemeContext) */
+  --wm-bg-primary:   #F8FAFE;
+  --wm-bg-secondary: #ffffff;
+  --wm-bg-border:    #E5E7EB;
+
+  /* Scrollbar (overridden by ThemeContext to match nav theme) */
+  --wm-scrollbar-thumb: #d1d5db;
+  --wm-scrollbar-hover: #9ca3af;
+
+  /* Typography (overridden by ThemeContext) */
+  --wm-font-size-base: 14px;
+  --wm-font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.dark {
+  --bg-primary:   #0F1923;
+  --bg-secondary: #1B2A3E;
+  --border-color: #243348;
+  --text-primary: #F8FAFE;
+  --text-muted:   #7D93AE;
+  --accent-primary: #2E8BF0;
+  --accent-light:   rgba(46, 139, 240, 0.12);
+  --accent-ring:    rgba(46, 139, 240, 0.35);
+
+  --wm-bg-primary:   #0F1923;
+  --wm-bg-secondary: #1B2A3E;
+  --wm-bg-border:    #243348;
+
+  --wm-scrollbar-thumb: #243348;
+  --wm-scrollbar-hover: #7D93AE;
+}
+
+/* ── Dynamic scrollbars (respond to nav theme) ───────────────────────────── */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--wm-scrollbar-thumb) transparent;
+}
+*::-webkit-scrollbar       { width: 6px; height: 6px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb {
+  background-color: var(--wm-scrollbar-thumb);
+  border-radius: 3px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background-color: var(--wm-scrollbar-hover);
+}
+
+/* ── Site-wide accent color propagation ──────────────────────────────────── */
+/*
+ * These rules make every hardcoded Tailwind accent class respond to
+ * --accent-primary, so switching accent or nav theme changes buttons,
+ * borders, active states, and focus rings throughout the whole app.
+ */
+
+/* Solid backgrounds */
+.bg-\[#2E8BF0\]             { background-color: var(--accent-primary) !important; }
+.hover\:bg-\[#1a7ae0\]:hover { background-color: color-mix(in srgb, var(--accent-primary) 82%, #000) !important; }
+
+/* Opacity-modified backgrounds */
+.bg-\[#2E8BF0\]\/3  { background-color: color-mix(in srgb, var(--accent-primary) 3%,  transparent) !important; }
+.bg-\[#2E8BF0\]\/5  { background-color: color-mix(in srgb, var(--accent-primary) 5%,  transparent) !important; }
+.bg-\[#2E8BF0\]\/8  { background-color: color-mix(in srgb, var(--accent-primary) 8%,  transparent) !important; }
+.bg-\[#2E8BF0\]\/10 { background-color: color-mix(in srgb, var(--accent-primary) 10%, transparent) !important; }
+.bg-\[#2E8BF0\]\/12 { background-color: color-mix(in srgb, var(--accent-primary) 12%, transparent) !important; }
+.bg-\[#2E8BF0\]\/15 { background-color: color-mix(in srgb, var(--accent-primary) 15%, transparent) !important; }
+.bg-\[#2E8BF0\]\/20 { background-color: color-mix(in srgb, var(--accent-primary) 20%, transparent) !important; }
+
+/* Text */
+.text-\[#2E8BF0\]             { color: var(--accent-primary) !important; }
+.hover\:text-\[#2E8BF0\]:hover { color: var(--accent-primary) !important; }
+.dark .dark\:text-\[#2E8BF0\]  { color: var(--accent-primary) !important; }
+
+/* Borders */
+.border-\[#2E8BF0\]              { border-color: var(--accent-primary) !important; }
+.hover\:border-\[#2E8BF0\]:hover  { border-color: var(--accent-primary) !important; }
+.focus\:border-\[#2E8BF0\]:focus  { border-color: var(--accent-primary) !important; }
+
+/* Opacity-modified borders */
+.border-\[#2E8BF0\]\/20 { border-color: color-mix(in srgb, var(--accent-primary) 20%, transparent) !important; }
+.border-\[#2E8BF0\]\/30 { border-color: color-mix(in srgb, var(--accent-primary) 30%, transparent) !important; }
+.border-\[#2E8BF0\]\/40 { border-color: color-mix(in srgb, var(--accent-primary) 40%, transparent) !important; }
+.border-\[#2E8BF0\]\/50 { border-color: color-mix(in srgb, var(--accent-primary) 50%, transparent) !important; }
+
+/* Focus rings */
+.focus\:ring-\[#2E8BF0\]:focus  { --tw-ring-color: var(--accent-primary) !important; }
+.ring-\[#2E8BF0\]               { --tw-ring-color: var(--accent-primary) !important; }
+
+/* Outline */
+.outline-\[#2E8BF0\] { outline-color: var(--accent-primary) !important; }
+
+/* ── Whole-environment backgrounds (respond to nav theme) ─────────────────── */
+/*
+ * These make the main content area and cards change color when switching
+ * nav themes. --wm-bg-primary / --wm-bg-secondary are set by ThemeContext.
+ */
+
+/* Dark mode: main content bg */
+.dark .dark\:bg-\[#0F1923\] { background-color: var(--wm-bg-primary)   !important; }
+/* Dark mode: card / surface bg */
+.dark .dark\:bg-\[#1B2A3E\] { background-color: var(--wm-bg-secondary) !important; }
+/* Dark mode: hover bg */
+.dark .dark\:hover\:bg-\[#243348\]:hover { background-color: var(--wm-bg-border) !important; }
+/* Dark mode: interactive areas */
+.dark .dark\:bg-\[#243348\] { background-color: var(--wm-bg-border) !important; }
+/* Dark mode: borders */
+.dark .dark\:border-\[#243348\] { border-color: var(--wm-bg-border) !important; }
+
+/* Light mode: main content bg follows wm-bg-primary (stays #F8FAFE by default) */
+.bg-\[#F8FAFE\] { background-color: var(--wm-bg-primary) !important; }
+
+/* ── Print styles ────────────────────────────────────────────────────────── */
+/* Hide all chrome (nav, sidebar, chat widget, ticker, action bars) when printing.
+   Only the main content area and client-facing pricing are visible on the printed page. */
+@media print {
+  /* Navigation rails and sidebars */
+  nav,
+  aside,
+  [data-sidenav],
+  .wrapmind-widget,
+  /* Ticker bar */
+  [data-ticker],
+  /* Mobile bottom nav */
+  .mobile-bottom-nav,
+  /* Header bars */
+  header,
+  /* Buttons that aren't part of print content */
+  button:not([data-print-visible]),
+  /* Toast / overlay containers */
+  [role="dialog"],
+  [role="alertdialog"],
+  /* Generic no-print utility */
+  .no-print {
+    display: none !important;
+  }
+
+  /* Reset page background to white */
+  html, body, #root {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  /* Ensure the estimate/print content fills the page */
+  .print-content,
+  main {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Force color-accurate backgrounds for price rows */
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
+/* ── Accent hover tokens — override hardcoded hover hex ─────────────────── */
+/* These ensure hover states also update when accent changes */
+[class*="hover:bg-\[#1a7ae0\]"]:hover,
+[class*="hover\:bg-\[#1a7ae0\]"]:hover { background-color: var(--accent-hover) !important; }
+[class*="focus:border-\[#2E8BF0\]"]:focus,
+[class*="focus\:border-\[#2E8BF0\]"]:focus { border-color: var(--accent-primary) !important; }
+[class*="focus:ring-\[#2E8BF0\]"]:focus,
+[class*="focus\:ring-\[#2E8BF0\]"]:focus { --tw-ring-color: var(--accent-ring) !important; }

@@ -1,0 +1,396 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&family=Lora:ital,wght@0,400;0,500;1,400&display=swap');
+@import "tailwindcss";
+@import "./theme.css";
+
+@variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-midnight: #0F1923;
+  --color-graphite: #1B2A3E;
+  --color-signal: #2E8BF0;
+  --color-cyan: #00D4FF;
+  --color-ice: #F8FAFE;
+}
+
+@layer base {
+  :root {
+    --color-primary: #111827;
+    --color-primary-light: #1f2937;
+    --color-accent: #2E8BF0;
+    --color-accent-light: #3b82f6;
+    --accent-primary: #2E8BF0;
+    --accent-light: rgba(46, 139, 240, 0.12);
+    --accent-ring: rgba(46, 139, 240, 0.35);
+    /* Design system tokens */
+    --wm-radius-sm:            6px;
+    --wm-radius-md:            8px;
+    --wm-radius-lg:            12px;
+    --wm-card-px:              1.25rem;
+    --wm-card-py:              0.875rem;
+    --wm-row-py:               0.5rem;
+    --wm-list-gap:             0.625rem;
+    --wm-card-shadow:          none;
+    --wm-card-border-width:    1px;
+    --wm-card-border-color:    #e5e7eb;
+  }
+
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html {
+    touch-action: manipulation;
+    /* Font size is driven by --wm-font-size-base set by ThemeContext */
+    font-size: var(--wm-font-size-base, 14px);
+  }
+
+  body {
+    margin: 0;
+    padding-top: 0;
+    /* Font family driven by --wm-font-family set by ThemeContext */
+    font-family: var(--wm-font-family, 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overscroll-behavior: none;
+    /* Background driven by --wm-bg-primary set by ThemeContext */
+    background: var(--wm-bg-primary, #0F1923);
+    color: var(--text-primary, #F8FAFE);
+    font-size: var(--wm-font-size-base, 14px);
+  }
+
+  .font-mono {
+    font-family: 'JetBrains Mono', 'Courier New', monospace !important;
+  }
+
+  /* 16px minimum prevents iOS auto-zoom on focus; scales up with larger font settings */
+  input, select, textarea {
+    font-size: max(16px, var(--wm-font-size-base, 14px)) !important;
+  }
+  button {
+    font-size: inherit;
+  }
+}
+
+
+.dark {
+  color-scheme: dark;
+}
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* ── Nav theme CSS variables (defaults = WrapMind preset) ────────────────── */
+:root {
+  --wm-nav-bg:          #1B2A3E;
+  --wm-nav-border:      #243348;
+  --wm-nav-text:        #7D93AE;
+  --wm-nav-text-active: #F8FAFE;
+  --wm-nav-hover-bg:    rgba(36,51,72,0.9);
+  --wm-nav-active-bg:   rgba(46,139,240,0.15);
+  --wm-nav-accent:      #2E8BF0;
+}
+
+/* Nav item base + hover + active states via CSS vars */
+.wm-nav-item {
+  color: var(--wm-nav-text);
+  border-radius: var(--wm-radius-sm, 0.375rem);
+  transition: background-color 0.12s, color 0.12s;
+}
+.wm-nav-item:hover {
+  background-color: var(--wm-nav-hover-bg);
+  color: var(--wm-nav-text-active);
+}
+.wm-nav-active {
+  background-color: var(--wm-nav-active-bg) !important;
+  color: var(--wm-nav-accent) !important;
+  font-weight: 500;
+}
+
+/* ── Theme-reactive button classes ─────────────────────────────────────── */
+.wm-btn-primary {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.375rem;
+  height: 1.75rem; padding: 0 0.75rem; border-radius: var(--wm-radius-sm, 0.375rem);
+  background-color: var(--btn-primary-bg);
+  color: var(--btn-primary-text, #fff);
+  font-size: 0.75rem; font-weight: 500; white-space: nowrap;
+  border: none; cursor: pointer; transition: background-color 0.15s, opacity 0.15s;
+  flex-shrink: 0;
+}
+.wm-btn-primary:hover { background-color: var(--btn-primary-hover); }
+.wm-btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.wm-btn-outline {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.375rem;
+  height: 1.75rem; padding: 0 0.75rem; border-radius: var(--wm-radius-sm, 0.375rem);
+  background-color: transparent;
+  color: var(--btn-outline-text);
+  border: 1px solid var(--btn-outline-border);
+  font-size: 0.75rem; font-weight: 500; white-space: nowrap;
+  cursor: pointer; transition: background-color 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+}
+.wm-btn-outline:hover { background-color: var(--btn-outline-hover-bg); }
+.wm-btn-outline:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.wm-btn-ghost {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.375rem;
+  height: 1.75rem; padding: 0 0.75rem; border-radius: var(--wm-radius-sm, 0.375rem);
+  background-color: transparent; border: none;
+  color: var(--text-muted, #64748B);
+  font-size: 0.75rem; font-weight: 500; white-space: nowrap;
+  cursor: pointer; transition: background-color 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+.wm-btn-ghost:hover { background-color: var(--btn-ghost-hover-bg); color: var(--text-primary, #0F1923); }
+.wm-btn-ghost:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.wm-btn-danger {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.375rem;
+  height: 1.75rem; padding: 0 0.75rem; border-radius: var(--wm-radius-sm, 0.375rem);
+  background-color: var(--btn-danger-bg, #ef4444); color: #fff;
+  font-size: 0.75rem; font-weight: 500; white-space: nowrap;
+  border: none; cursor: pointer; transition: background-color 0.15s;
+  flex-shrink: 0;
+}
+.wm-btn-danger:hover { background-color: var(--btn-danger-hover, #dc2626); }
+.wm-btn-danger:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.wm-btn-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 2rem; height: 2rem; border-radius: var(--wm-radius-sm, 0.375rem);
+  background-color: transparent; border: none;
+  color: var(--text-muted, #64748B);
+  cursor: pointer; transition: background-color 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+.wm-btn-icon:hover { background-color: var(--btn-ghost-hover-bg); color: var(--text-primary, #0F1923); }
+.wm-btn-icon:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* Size modifiers */
+.wm-btn-sm { height: 1.5rem !important; padding: 0 0.5rem !important; font-size: 0.6875rem !important; }
+.wm-btn-lg { height: 2.25rem !important; padding: 0 1rem !important; font-size: 0.8125rem !important; }
+.wm-btn-icon-sm { width: 1.5rem !important; height: 1.5rem !important; }
+
+/* Input focus token */
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--accent-primary) !important;
+  box-shadow: 0 0 0 2px var(--accent-ring) !important;
+}
+
+@keyframes pulse-badge {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.animate-pulse-badge {
+  animation: pulse-badge 1.5s ease-in-out infinite;
+}
+
+@keyframes waveBar {
+  from { transform: scaleY(0.4); opacity: 0.5; }
+  to   { transform: scaleY(1.0); opacity: 1;   }
+}
+
+/* ── Site-wide animation keyframes ─────────────────────────────────────── */
+
+@keyframes accent-glow {
+  0%, 100% { box-shadow: 0 0 6px 1px var(--accent-ring); }
+  50%       { box-shadow: 0 0 18px 5px var(--accent-ring); }
+}
+
+@keyframes nav-glow {
+  0%, 100% { box-shadow: 0 0 4px 1px rgba(46,139,240,0.25); }
+  50%       { box-shadow: 0 0 12px 3px rgba(46,139,240,0.5); }
+}
+
+@keyframes logo-breathe {
+  0%, 100% { box-shadow: 0 0 0px 0px rgba(46,139,240,0); opacity: 0.9; }
+  50%       { box-shadow: 0 0 10px 4px rgba(46,139,240,0.35); opacity: 1; }
+}
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.88); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-4px); }
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+@keyframes ticker-scroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes pulse-ring {
+  0%   { transform: scale(1);   opacity: 0.8; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+
+/* Feedback widget nudge — 4 pulses then stops */
+@keyframes wm-nudge-ring {
+  0%   { transform: scale(1);   opacity: 0.7; }
+  100% { transform: scale(2.6); opacity: 0;   }
+}
+.wm-nudge-ring::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: inherit;
+  background: var(--accent-primary);
+  animation: wm-nudge-ring 1.4s ease-out 4;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes gradient-x {
+  0%, 100% { background-position: 0% 50%; }
+  50%       { background-position: 100% 50%; }
+}
+
+/* ── Animation utility classes ──────────────────────────────────────────── */
+
+.wm-fade-in-up   { animation: fade-in-up 0.35s ease-out both; }
+.wm-scale-in     { animation: scale-in  0.22s ease-out both; }
+.wm-float        { animation: float     3.5s ease-in-out infinite; }
+.wm-spin-slow    { animation: spin-slow 18s  linear infinite; }
+.wm-glow-accent  { animation: accent-glow 2.8s ease-in-out infinite; }
+.wm-glow-nav     { animation: nav-glow   2.5s ease-in-out infinite; }
+.wm-logo-breathe { animation: logo-breathe 3s ease-in-out infinite; }
+
+/* Staggered entrance for list children — apply to parent, children auto-stagger */
+.wm-stagger > * { animation: fade-in-up 0.35s ease-out both; }
+.wm-stagger > *:nth-child(1)  { animation-delay: 0.03s; }
+.wm-stagger > *:nth-child(2)  { animation-delay: 0.06s; }
+.wm-stagger > *:nth-child(3)  { animation-delay: 0.09s; }
+.wm-stagger > *:nth-child(4)  { animation-delay: 0.12s; }
+.wm-stagger > *:nth-child(5)  { animation-delay: 0.15s; }
+.wm-stagger > *:nth-child(6)  { animation-delay: 0.18s; }
+.wm-stagger > *:nth-child(7)  { animation-delay: 0.21s; }
+.wm-stagger > *:nth-child(8)  { animation-delay: 0.24s; }
+.wm-stagger > *:nth-child(9)  { animation-delay: 0.27s; }
+.wm-stagger > *:nth-child(10) { animation-delay: 0.30s; }
+
+/* Shimmer skeleton loader */
+.wm-shimmer {
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.06) 50%, transparent 100%);
+  background-size: 400px 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+
+/* Hover card lift + glow */
+.wm-card-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.wm-card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px -4px rgba(0,0,0,0.35), 0 0 0 1px var(--accent-ring);
+}
+
+/* New Estimate button glow */
+.wm-btn-cta-glow {
+  animation: accent-glow 2.8s ease-in-out infinite;
+}
+
+/* Active nav item glow */
+.wm-nav-active-glow {
+  animation: nav-glow 2.5s ease-in-out infinite;
+}
+
+/* Settings button — simple glow on hover, no spin */
+.wm-settings-btn { transition: box-shadow 0.2s ease, opacity 0.2s ease; }
+.wm-settings-btn:hover {
+  box-shadow: 0 0 8px 2px color-mix(in srgb, var(--wm-nav-accent) 45%, transparent);
+}
+
+/* Card style — controlled by CSS vars set in ThemeContext */
+.wm-card {
+  border-radius: var(--wm-radius-md, 8px);
+  box-shadow: var(--wm-card-shadow, none);
+  border-width: var(--wm-card-border-width, 1px);
+  border-style: solid;
+  border-color: var(--wm-card-border-color, #e5e7eb);
+}
+
+.wm-card-header {
+  padding: var(--wm-card-py, 0.875rem) var(--wm-card-px, 1.25rem);
+}
+
+.wm-card-body {
+  padding: var(--wm-card-py, 0.875rem) var(--wm-card-px, 1.25rem);
+}
+
+/* ── High contrast mode ─────────────────────────────────────────────────── */
+.wm-high-contrast {
+  filter: contrast(1.35);
+}
+.wm-high-contrast .wm-card {
+  --wm-card-border-width: 2px !important;
+}
+.wm-high-contrast .wm-nav-item:hover {
+  outline: 2px solid var(--wm-nav-accent);
+  outline-offset: -2px;
+}
+.wm-high-contrast input,
+.wm-high-contrast select,
+.wm-high-contrast textarea {
+  outline: 2px solid var(--accent-primary);
+}
+
+/* ── Reduce motion — toggled via .wm-reduce-motion class on <html> ───── */
+.wm-reduce-motion *,
+.wm-reduce-motion *::before,
+.wm-reduce-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* Pulse ring for online dot */
+.wm-pulse-ring::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: #22c55e;
+  animation: pulse-ring 1.8s ease-out infinite;
+}
+
+/* Ticker strip */
+.wm-ticker-wrap {
+  overflow: hidden;
+  white-space: nowrap;
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 6%, black 94%, transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0%, black 6%, black 94%, transparent 100%);
+}
+.wm-ticker-track {
+  display: inline-flex;
+  animation: ticker-scroll 38s linear infinite;
+}
+.wm-ticker-track:hover { animation-play-state: paused; }
+
+/* Gradient animated background (for hero stat areas) */
+.wm-gradient-animate {
+  background-size: 200% 200%;
+  animation: gradient-x 6s ease infinite;
+}
