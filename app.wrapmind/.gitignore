@@ -1,8 +1,6 @@
 # Environment variables
 .env
-.env.local
 .env.*.local
-
 # Logs
 logs
 *.log
@@ -11,12 +9,10 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
-
 node_modules
 dist
 dist-ssr
 *.local
-
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -28,3 +24,5 @@ dist-ssr
 *.sln
 *.sw?
 scripts/fetch-shopmonkey-invoices.mjs
+
+.env.local
