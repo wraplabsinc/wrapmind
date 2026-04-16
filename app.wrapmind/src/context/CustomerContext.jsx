@@ -25,6 +25,7 @@ import {
 
 const CustomerContext = createContext(null);
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useCustomers() {
   const ctx = useContext(CustomerContext);
   if (!ctx) throw new Error('useCustomers must be used within CustomerProvider');
@@ -121,10 +122,10 @@ export function CustomerProvider({ children }) {
   const { invoices = [] }         = useInvoices();
   const { appointments = [] }     = useScheduling();
 
-  // Apollo mutations
-  const [createCustomerMutation, { loading: creating }] = USE_CREATE_CUSTOMER();
-  const [updateCustomerMutation, { loading: updating }]  = USE_UPDATE_CUSTOMER();
-  const [deleteCustomerMutation, { loading: deleting }]  = USE_DELETE_CUSTOMER();
+  // Apollo mutations — fire-and-forget (optimistic updates already applied to local state)
+  const [createCustomerMutation] = USE_CREATE_CUSTOMER();
+  const [updateCustomerMutation]  = USE_UPDATE_CUSTOMER();
+  const [deleteCustomerMutation] = USE_DELETE_CUSTOMER();
 
   // Persist overrides
   useEffect(() => { saveOverrides(overrides); }, [overrides]);

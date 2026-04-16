@@ -269,6 +269,7 @@ export function USE_CREATE_ESTIMATE() {
       const newEstimate = estimateInsert.edges[0].node;
       cache.modify({
         fields: {
+          // eslint-disable-next-line no-unused-vars
           estimatesCollection(existing = { edges: [] }, { TO_MUCH }) {
             return {
               ...existing,
@@ -302,6 +303,7 @@ export function USE_DELETE_ESTIMATE() {
       if (!estimateDelete?.id) return;
       cache.modify({
         fields: {
+          // eslint-disable-next-line no-unused-vars
           estimatesCollection(existing = { edges: [] }, { TO_MUCH }) {
             return {
               ...existing,

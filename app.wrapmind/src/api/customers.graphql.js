@@ -243,6 +243,7 @@ export function USE_CREATE_CUSTOMER() {
       // Prepend to list cache — append edge to existing collection
       cache.modify({
         fields: {
+          // eslint-disable-next-line no-unused-vars
           customersCollection(existing = { edges: [] }, { TO_MUCH }) {
             return {
               ...existing,
@@ -276,6 +277,7 @@ export function USE_DELETE_CUSTOMER() {
       if (!customerDelete?.id) return;
       cache.modify({
         fields: {
+          // eslint-disable-next-line no-unused-vars
           customersCollection(existing = { edges: [] }, { TO_MUCH }) {
             return {
               ...existing,

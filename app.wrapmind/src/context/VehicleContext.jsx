@@ -13,6 +13,7 @@ import {
 
 const VehicleContext = createContext(null);
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useVehicleContext() {
   const ctx = useContext(VehicleContext);
   if (!ctx) throw new Error('useVehicleContext must be used within VehicleProvider');
@@ -48,10 +49,10 @@ export function VehicleProvider({ children }) {
   // Manual overrides (wrap status edits, notes, tags) stored in localStorage
   const [overrides, setOverrides] = useState(loadOverrides);
 
-  // Apollo mutations
-  const [createVehicleMutation, { loading: creating }] = USE_CREATE_VEHICLE();
-  const [updateVehicleMutation, { loading: updating }]  = USE_UPDATE_VEHICLE();
-  const [deleteVehicleMutation, { loading: deleting }] = USE_DELETE_VEHICLE();
+  // Apollo mutations — fire-and-forget (optimistic updates already applied to local state)
+  const [createVehicleMutation] = USE_CREATE_VEHICLE();
+  const [updateVehicleMutation]  = USE_UPDATE_VEHICLE();
+  const [deleteVehicleMutation] = USE_DELETE_VEHICLE();
 
   // Persist overrides
   useEffect(() => { saveOverrides(overrides); }, [overrides]);

@@ -274,6 +274,7 @@ export function USE_CREATE_VEHICLE() {
       const newVehicle = vehicleInsert.edges[0].node;
       cache.modify({
         fields: {
+          // eslint-disable-next-line no-unused-vars
           vehiclesCollection(existing = { edges: [] }, { TO_MUCH }) {
             return {
               ...existing,
@@ -307,6 +308,7 @@ export function USE_DELETE_VEHICLE() {
       if (!vehicleDelete?.id) return;
       cache.modify({
         fields: {
+          // eslint-disable-next-line no-unused-vars
           vehiclesCollection(existing = { edges: [] }, { TO_MUCH }) {
             return {
               ...existing,
