@@ -54,6 +54,7 @@ import { SchedulingProvider } from './context/SchedulingContext';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import { TickerProvider } from './context/TickerContext';
 import { LocationProvider } from './context/LocationContext';
+import { LeadProvider } from './context/LeadContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import AuthPage from './components/auth/AuthPage';
 import LocationSwitcher from './components/ui/LocationSwitcher';
@@ -1441,19 +1442,21 @@ function FeatureProviders({ children }) {
 function DataProviders({ children }) {
   return (
     <LocationProvider>
-      <EstimateProvider>
-        <InvoiceProvider>
-          <SchedulingProvider>
-            <MarketingProvider>
-              <CustomerProvider>
-                <VehicleProvider>
-                  {children}
-                </VehicleProvider>
-              </CustomerProvider>
-            </MarketingProvider>
-          </SchedulingProvider>
-        </InvoiceProvider>
-      </EstimateProvider>
+      <LeadProvider>
+        <EstimateProvider>
+          <InvoiceProvider>
+            <SchedulingProvider>
+              <MarketingProvider>
+                <CustomerProvider>
+                  <VehicleProvider>
+                    {children}
+                  </VehicleProvider>
+                </CustomerProvider>
+              </MarketingProvider>
+            </SchedulingProvider>
+          </InvoiceProvider>
+        </EstimateProvider>
+      </LeadProvider>
     </LocationProvider>
   );
 }

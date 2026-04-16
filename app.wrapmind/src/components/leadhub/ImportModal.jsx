@@ -100,7 +100,6 @@ export default function ImportModal({
   open,
   onClose,
   onImport,
-  realtimeStatus,
   onToast,
 }) {
   const { orgId } = useAuth();
@@ -397,15 +396,9 @@ export default function ImportModal({
                 icon="bolt"
               >
                 <div className="flex items-center gap-2 mb-2">
-                  <span className={`inline-flex items-center gap-1 text-[10px] font-semibold ${
-                    realtimeStatus === 'SUBSCRIBED' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'
-                  }`}>
-                    <span
-                      className={`w-2 h-2 rounded-full ${
-                        realtimeStatus === 'SUBSCRIBED' ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'
-                      }`}
-                    />
-                    {realtimeStatus === 'SUBSCRIBED' ? 'Connected' : 'Disconnected'}
+                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-red-500">
+                    <span className="w-2 h-2 rounded-full bg-red-500" />
+                    Disconnected
                   </span>
                 </div>
                 <p className="text-[11px] text-[#64748B] dark:text-[#7D93AE] mb-2">

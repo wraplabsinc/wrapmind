@@ -126,16 +126,13 @@ export function LocationProvider({ children }) {
 }
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
+// eslint-disable-next-line react-refresh/only-export-components
 export function useLocations() {
   const ctx = useContext(LocationContext);
   if (!ctx) throw new Error('useLocations must be used within LocationProvider');
   return ctx;
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-// Returns the nickname if set, otherwise falls back to the shop name.
-// Use this everywhere a location name is displayed to the user.
-export function getDisplayName(loc) {
-  if (!loc) return '';
-  return loc.nickname?.trim() || loc.name;
-}
+// Re-export for consumers
+// eslint-disable-next-line react-refresh/only-export-components
+export { getDisplayName } from './getDisplayName.js';

@@ -1,11 +1,11 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import WMIcon from '../ui/WMIcon';
-import { useAuth } from '../../context/AuthContext';
-import { useAuditLog } from '../../context/AuditLogContext';
-import { useRoles, ROLES } from '../../context/RolesContext';
-import { useNotifications } from '../../context/NotificationsContext';
-import { useScheduling } from '../../context/SchedulingContext';
-import { useCustomers } from '../../context/CustomerContext';
+import { useAuditLog } from '../../context/AuditLogContext.jsx';
+import { useRoles, ROLES } from '../../context/RolesContext.jsx';
+import { useNotifications } from '../../context/NotificationsContext.jsx';
+import { useScheduling } from '../../context/SchedulingContext.jsx';
+import { useCustomers } from '../../context/CustomerContext.jsx';
+import { useLeads } from '../../context/LeadContext.jsx';
 import { analyzeCustomerPersonality } from '../../lib/personalityEngine';
 import LeadKanban from './LeadKanban';
 import LeadList from './LeadList';
@@ -14,36 +14,14 @@ import QuickScheduleModal from '../scheduling/QuickScheduleModal';
 import NewLeadModal from './NewLeadModal';
 import ImportModal from './ImportModal';
 import {
-  SEED_LEADS,
   LEAD_STATUSES,
   LEAD_SOURCES,
   PRIORITIES,
   TEAM_MEMBERS,
+  SEED_LEADS,
   formatCurrencyShort,
 } from './leadData';
-import { fetchLeads, subscribeToNewLeads } from '../../lib/leadsDb';
 import Button from '../ui/Button';
-
-const STORAGE_KEY = 'wm-leads-v1';
-
-// ─── Storage helpers ────────────────────────────────────────────────────────
-function loadLeads() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return SEED_LEADS;
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed) || parsed.length === 0) return SEED_LEADS;
-    return parsed;
-  } catch {
-    return SEED_LEADS;
-  }
-}
-
-function saveLeads(leads) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(leads));
-  } catch { /* ignore */ }
-}
 
 // ─── Small icons ────────────────────────────────────────────────────────────
 const SearchIcon = ({ className = 'w-3.5 h-3.5' }) => (
@@ -74,16 +52,26 @@ const ImportIcon = ({ className = 'w-3.5 h-3.5' }) => (
 
 // ─── Main ───────────────────────────────────────────────────────────────────
 export default function LeadHubPage({ onNavigate }) {
-  const { orgId } = useAuth();
   const { addLog } = useAuditLog();
   const { currentRole } = useRoles();
   const { addNotification } = useNotifications();
   const { appointments, addAppointment, technicians, SERVICE_DURATIONS } = useScheduling();
-  const { customers } = useCustomers();
+  const { customers, addCustomer } = useCustomers();
+  const { leads: ctxLeads, addLead, updateLead, deleteLead, convertLeadToWon } = useLeads();
+
   const actor = { role: currentRole, label: ROLES[currentRole]?.label || currentRole };
   const [scheduleLeadFor, setScheduleLeadFor] = useState(null);
 
-  const [leads, setLeads] = useState(() => loadLeads());
+  // Local leads state — sourced from LeadContext (seed or Apollo), synced once
+  const [leads, setLeads] = useState(ctxLeads);
+  const leadsInitRef = useRef(false);
+  useEffect(() => {
+    if (!leadsInitRef.current && ctxLeads.length > 0) {
+      leadsInitRef.current = true;
+      setLeads(ctxLeads);
+    }
+  }, [ctxLeads]);
+
   const [view, setView] = useState('kanban'); // 'kanban' | 'list'
   const [search, setSearch] = useState('');
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -98,14 +86,13 @@ export default function LeadHubPage({ onNavigate }) {
     if (!detailLead) return null;
     const match = customers.find(c =>
       (detailLead.email && c.email?.toLowerCase() === detailLead.email?.toLowerCase()) ||
-      (detailLead.phone && c.phone?.replace(/\D/g, '') === detailLead.phone?.replace(/\D/g, '')) ||
+      (detailLead.phone && c.phone?.replace(/\D/g, '') === c.phone?.replace(/\D/g, '')) ||
       (detailLead.name  && c.name?.toLowerCase()  === detailLead.name?.toLowerCase())
     );
     if (match?.personality) return match.personality;
     return analyzeCustomerPersonality({ name: detailLead.name }, [], [], []);
   }, [detailLead, customers]);
 
-  const [realtimeStatus, setRealtimeStatus] = useState('CONNECTING');
   const [toasts, setToasts] = useState([]);
 
   // Filters
@@ -117,24 +104,6 @@ export default function LeadHubPage({ onNavigate }) {
   const [filterMaxBudget, setFilterMaxBudget] = useState('');
   const [filterHasFollowUp, setFilterHasFollowUp] = useState(false);
 
-  // Persist leads
-  useEffect(() => { saveLeads(leads); }, [leads]);
-
-  // Supabase sync: fetch org-scoped leads when authenticated
-  useEffect(() => {
-    if (!orgId) return;
-    let cancelled = false;
-    (async () => {
-      try {
-        const remote = await fetchLeads(orgId);
-        if (!cancelled && remote.length > 0) setLeads(remote);
-      } catch (err) {
-        console.error('[LeadHub] Supabase fetch failed, using localStorage:', err);
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [orgId]);
-
   // Close filters on outside click
   const filterRef = useRef(null);
   useEffect(() => {
@@ -143,32 +112,6 @@ export default function LeadHubPage({ onNavigate }) {
     document.addEventListener('mousedown', h);
     return () => document.removeEventListener('mousedown', h);
   }, [filtersOpen]);
-
-  // Supabase Realtime subscription (org-scoped)
-  useEffect(() => {
-    const unsubscribe = subscribeToNewLeads(
-      (newLead) => {
-        if (!newLead) return;
-        setLeads(prev => {
-          if (prev.some(l => l.id === newLead.id)) return prev;
-          return [newLead, ...prev];
-        });
-        pushToast({ name: newLead.name, service: newLead.serviceInterest });
-        addLog('DATA', 'LEAD_REALTIME_RECEIVED', {
-          severity: 'info',
-          actor: { role: 'system', label: 'Realtime' },
-          target: newLead.name,
-          details: { lead: newLead.name, service: newLead.serviceInterest },
-        });
-      },
-      (status) => setRealtimeStatus(status),
-      orgId
-    );
-    return () => {
-      try { unsubscribe?.(); } catch { /* ignore */ }
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [orgId]);
 
   // Toasts
   const pushToast = (payload) => {
@@ -215,38 +158,36 @@ export default function LeadHubPage({ onNavigate }) {
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
   const createCustomerFromLead = (lead) => {
-    try {
-      const raw = localStorage.getItem('wm-customers-v1');
-      const parsed = raw ? JSON.parse(raw) : [];
-      const customers = Array.isArray(parsed) ? parsed : [];
-      // Don't create duplicate
-      if (customers.some(c => c.email === lead.email || c.phone === lead.phone)) return;
-      const newCustomer = {
-        id: `c-${Date.now()}`,
-        name: lead.name,
-        firstName: lead.name.split(' ')[0] || '',
-        lastName: lead.name.split(' ').slice(1).join(' ') || '',
-        phone: lead.phone || '',
-        email: lead.email || '',
-        source: lead.source || 'leadhub',
-        tags: lead.budget > 5000 ? ['VIP'] : [],
-        notes: `Converted from lead. Service interest: ${lead.serviceInterest || '—'}`,
-        assignedTo: lead.assignee || 'Unassigned',
-        vehicles: [],
-        totalJobs: 0,
-        totalSpent: 0,
-        lastActivityAt: new Date().toISOString(),
-        createdAt: new Date().toISOString(),
-      };
-      localStorage.setItem('wm-customers-v1', JSON.stringify([newCustomer, ...customers]));
-      addNotification({
-        type: 'lead',
-        title: 'Customer Created',
-        body: `${lead.name} added to Customers from won lead`,
-        link: 'lists-customers',
-        icon: 'user',
-      });
-    } catch { /* ignore */ }
+    // Use CustomerContext to create customer (Apollo-backed), avoid duplicate
+    const existing = customers.some(c =>
+      c.email === lead.email || c.phone === lead.phone
+    );
+    if (existing) return;
+    const newCustomer = {
+      name: lead.name,
+      firstName: lead.name.split(' ')[0] || '',
+      lastName: lead.name.split(' ').slice(1).join(' ') || '',
+      phone: lead.phone || '',
+      email: lead.email || '',
+      source: lead.source || 'leadhub',
+      tags: lead.budget > 5000 ? ['VIP'] : [],
+      notes: `Converted from lead. Service interest: ${lead.serviceInterest || '—'}`,
+      assignedTo: lead.assignee || 'Unassigned',
+      vehicles: [],
+      totalJobs: 0,
+      totalSpent: 0,
+      lastActivityAt: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+    };
+    // CustomerContext.addCustomer handles Apollo persistence
+    addCustomer(newCustomer);
+    addNotification({
+      type: 'lead',
+      title: 'Customer Created',
+      body: `${lead.name} added to Customers from won lead`,
+      link: 'lists-customers',
+      icon: 'user',
+    });
   };
 
   // ─── Handlers ────────────────────────────────────────────────────────────
@@ -257,7 +198,7 @@ export default function LeadHubPage({ onNavigate }) {
       target: lead?.name || '',
       details: {
         lead: lead?.name,
-        vehicle: lead ? `${lead.vehicle.year} ${lead.vehicle.make} ${lead.vehicle.model}` : '',
+        vehicle: lead ? `${lead.vehicle?.year} ${lead.vehicle?.make} ${lead.vehicle?.model}` : '',
         service: lead?.serviceInterest,
         ...extra.details,
       },
@@ -265,12 +206,15 @@ export default function LeadHubPage({ onNavigate }) {
   };
 
   const handleCreateLead = (lead) => {
-    setLeads(prev => [lead, ...prev]);
-    logLeadAction('LEAD_CREATED', lead, { severity: 'success' });
+    const created = addLead(lead);
+    setLeads(prev => [created, ...prev]);
+    logLeadAction('LEAD_CREATED', created, { severity: 'success' });
   };
 
   const handleImportLeads = (imported) => {
-    setLeads(prev => [...imported, ...prev]);
+    const withIds = imported.map(l => ({ ...l, id: l.id || crypto.randomUUID() }));
+    withIds.forEach(l => addLead(l));
+    setLeads(prev => [...withIds, ...prev]);
     addLog('DATA', 'LEADS_IMPORTED', {
       severity: 'success',
       actor,
@@ -280,12 +224,14 @@ export default function LeadHubPage({ onNavigate }) {
   };
 
   const handleDelete = (lead) => {
+    deleteLead(lead.id);
     setLeads(prev => prev.filter(l => l.id !== lead.id));
     if (detailLead?.id === lead.id) setDetailLead(null);
     logLeadAction('LEAD_DELETED', lead, { severity: 'critical' });
   };
 
   const handleArchive = (lead) => {
+    deleteLead(lead.id);
     setLeads(prev => prev.filter(l => l.id !== lead.id));
     if (detailLead?.id === lead.id) setDetailLead(null);
     logLeadAction('LEAD_ARCHIVED', lead, { severity: 'warning' });
@@ -293,7 +239,9 @@ export default function LeadHubPage({ onNavigate }) {
 
   const handleConvert = (lead) => {
     logLeadAction('LEAD_CONVERTED_TO_ESTIMATE', lead, { severity: 'success' });
-    // Mark lead as won
+    // Mark lead as won via context (syncs to Apollo)
+    convertLeadToWon(lead.id);
+    // Update local state
     setLeads(prev => prev.map(l =>
       l.id === lead.id ? { ...l, status: 'won', wonAt: new Date().toISOString() } : l
     ));
@@ -316,6 +264,7 @@ export default function LeadHubPage({ onNavigate }) {
   };
 
   const handleAssign = (lead, assignee) => {
+    updateLead(lead.id, { assignee });
     setLeads(prev => prev.map(l => l.id === lead.id ? { ...l, assignee } : l));
     logLeadAction('LEAD_ASSIGNED', lead, { details: { assignee } });
   };
@@ -326,6 +275,7 @@ export default function LeadHubPage({ onNavigate }) {
 
   const handleSaveLead = (updated) => {
     const prev = leads.find(l => l.id === updated.id);
+    updateLead(updated.id, updated);
     setLeads(prevList => prevList.map(l => l.id === updated.id ? updated : l));
     setDetailLead(updated);
     logLeadAction('LEAD_UPDATED', updated);
@@ -336,6 +286,7 @@ export default function LeadHubPage({ onNavigate }) {
   };
 
   const handleAddActivity = (lead, _activity, updatedLead) => {
+    updateLead(lead.id, updatedLead);
     setLeads(prev => prev.map(l => l.id === lead.id ? updatedLead : l));
   };
 
@@ -354,6 +305,7 @@ export default function LeadHubPage({ onNavigate }) {
   };
 
   const handleListMove = (lead, newStatus) => {
+    updateLead(lead.id, { status: newStatus });
     setLeads(prev => prev.map(l => l.id === lead.id ? { ...l, status: newStatus } : l));
     const fromSt = LEAD_STATUSES.find(s => s.id === lead.status);
     const toSt = LEAD_STATUSES.find(s => s.id === newStatus);
@@ -377,9 +329,13 @@ export default function LeadHubPage({ onNavigate }) {
   [appointments]);
 
   // ─── Stats ───────────────────────────────────────────────────────────────
+  // Stable reference for stats calculation — Date.now() is stable within a render pass
+  // eslint-disable-next-line react-hooks/purity
+  const statsNowRef = useRef(Date.now());
+  const weekAgo = statsNowRef.current - 7 * 24 * 60 * 60 * 1000;
+
   const stats = useMemo(() => {
     const total = leads.length;
-    const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
     const newThisWeek = leads.filter(l => new Date(l.createdAt).getTime() >= weekAgo).length;
     const contacted = leads.filter(l => l.status !== 'new').length;
     const contactedRate = total > 0 ? Math.round((contacted / total) * 100) : 0;
@@ -397,7 +353,7 @@ export default function LeadHubPage({ onNavigate }) {
       .filter(l => !['won', 'lost'].includes(l.status))
       .reduce((s, l) => s + (l.budget || 0), 0);
     return { total, newThisWeek, contactedRate, wonRate, avgResponseDays, pipeline };
-  }, [leads]);
+  }, [leads, weekAgo]);
 
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-[#F8FAFE] dark:bg-[#0F1923]">
@@ -407,21 +363,13 @@ export default function LeadHubPage({ onNavigate }) {
           <div className="flex items-center gap-2 mr-2">
             <h1 className="text-sm font-semibold text-[#0F1923] dark:text-[#F8FAFE]">Lead Hub</h1>
             <span className="text-[10px] text-[#64748B] dark:text-[#7D93AE] hidden sm:inline">Lead Pipeline</span>
-            {/* Live indicator */}
+            {/* Live indicator — realtime subs not yet implemented, shown as offline */}
             <span
-              className={`inline-flex items-center gap-1 text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${
-                realtimeStatus === 'SUBSCRIBED'
-                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                  : 'bg-red-500/10 text-red-500'
-              }`}
-              title={`Realtime: ${realtimeStatus}`}
+              className="inline-flex items-center gap-1 text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-gray-500/10 text-gray-500"
+              title="Realtime: not yet implemented"
             >
-              <span
-                className={`w-1.5 h-1.5 rounded-full ${
-                  realtimeStatus === 'SUBSCRIBED' ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'
-                }`}
-              />
-              {realtimeStatus === 'SUBSCRIBED' ? 'Live' : 'Offline'}
+              <span className="w-1.5 h-1.5 rounded-full bg-gray-500" />
+              Offline
             </span>
           </div>
 
@@ -680,7 +628,6 @@ export default function LeadHubPage({ onNavigate }) {
         open={importOpen}
         onClose={() => setImportOpen(false)}
         onImport={handleImportLeads}
-        realtimeStatus={realtimeStatus}
         onToast={pushToast}
       />
 
