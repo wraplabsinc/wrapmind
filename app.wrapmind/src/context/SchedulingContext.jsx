@@ -1,5 +1,14 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { useLocations } from './LocationContext';
+import { useAuth } from './AuthContext.jsx';
+import {
+  USE_APPOINTMENTS,
+  USE_CREATE_APPOINTMENT,
+  USE_UPDATE_APPOINTMENT,
+  USE_DELETE_APPOINTMENT,
+} from '../api/appointments.graphql.js';
+
+// ─── Constants ────────────────────────────────────────────────────────────────
 
 const STORAGE_KEY  = 'wm-scheduling-v1';
 const TECHS_KEY    = 'wm-scheduling-techs-v1';
@@ -7,14 +16,15 @@ const BLOCKED_KEY  = 'wm-scheduling-blocked-v1';
 const TOKEN_KEY    = 'wm-booking-token';
 
 // Service duration presets in minutes
+// eslint-disable-next-line react-refresh/only-export-components
 export const SERVICE_DURATIONS = {
-  'Full Wrap':      480,
-  'Partial Wrap':   240,
-  'Hood & Roof':    120,
+  'Full Wrap':        480,
+  'Partial Wrap':     240,
+  'Hood & Roof':      120,
   'PPF - Full Front': 180,
   'PPF - Full Body':  600,
-  'Window Tint':     90,
-  'Ceramic Coating': 180,
+  'Window Tint':       90,
+  'Ceramic Coating':  180,
 };
 
 function addMinutes(timeStr, mins) {
@@ -25,12 +35,14 @@ function addMinutes(timeStr, mins) {
   return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function calcEndTime(startTime, service) {
   const dur = SERVICE_DURATIONS[service] || 120;
   return addMinutes(startTime || '09:00', dur);
 }
 
-// Seed data — appointments relative to today
+// ─── Seed data — appointments relative to today ─────────────────────────────
+
 function makeSeedDate(daysFromNow) {
   const d = new Date();
   d.setDate(d.getDate() + daysFromNow);
@@ -39,45 +51,39 @@ function makeSeedDate(daysFromNow) {
 
 const SEED_APPOINTMENTS = [
   {
-    id: 'appt-001',
-    locationId: 'loc-001',
-    customerId: 'c001',
-    customerName: 'Marcus Bell',
-    customerPhone: '(310) 555-0142',
+    id: 'appt-001', locationId: 'loc-001',
+    customerId: 'c001', customerName: 'Marcus Bell', customerPhone: '(310) 555-0142',
     vehicleLabel: '2023 Tesla Model 3',
-    service: 'Full Wrap',
-    estimateId: 'est-001',
-    technicianName: 'Jamie K.',
-    date: makeSeedDate(2),
-    startTime: '09:00',
-    endTime: '17:00',
-    status: 'confirmed',
-    type: 'appointment',
+    service: 'Full Wrap', estimateId: 'est-001', technicianId: 'tech-001',
+    date: makeSeedDate(2), startTime: '09:00', endTime: '17:00',
+    status: 'confirmed', type: 'appointment',
     notes: 'Handle charge port area carefully.',
-    reminderQueued: true,
-    reminderSent: false,
+    reminderQueued: true, reminderSent: false,
     reminderAt: new Date(Date.now() + 1 * 86400000).toISOString(),
     createdAt: new Date().toISOString(),
   },
   {
-    id: 'appt-002',
-    locationId: 'loc-002',
-    customerId: 'c002',
-    customerName: 'Devon Walsh',
-    customerPhone: '(424) 555-0293',
+    id: 'appt-002', locationId: 'loc-002',
+    customerId: 'c002', customerName: 'Devon Walsh', customerPhone: '(424) 555-0293',
     vehicleLabel: '2022 BMW M4',
-    service: 'Full Wrap',
-    estimateId: 'est-002',
-    technicianName: 'Alex R.',
-    date: makeSeedDate(5),
-    startTime: '08:00',
-    endTime: '18:00',
-    status: 'scheduled',
-    type: 'appointment',
+    service: 'Full Wrap', estimateId: 'est-002', technicianId: 'tech-002',
+    date: makeSeedDate(5), startTime: '08:00', endTime: '18:00',
+    status: 'scheduled', type: 'appointment',
     notes: '',
-    reminderQueued: true,
-    reminderSent: false,
+    reminderQueued: true, reminderSent: false,
     reminderAt: new Date(Date.now() + 4 * 86400000).toISOString(),
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: 'appt-003', locationId: 'loc-001',
+    customerId: 'c003', customerName: 'Tina Marsh', customerPhone: '(818) 555-0381',
+    vehicleLabel: '2021 Ford F-150 Raptor',
+    service: 'Hood & Roof', estimateId: 'est-003', technicianId: 'tech-003',
+    date: makeSeedDate(7), startTime: '10:00', endTime: '12:00',
+    status: 'scheduled', type: 'appointment',
+    notes: 'Surface in good condition from prior wrap removal.',
+    reminderQueued: true, reminderSent: false,
+    reminderAt: new Date(Date.now() + 6 * 86400000).toISOString(),
     createdAt: new Date().toISOString(),
   },
 ];
@@ -88,67 +94,97 @@ const SEED_TECHNICIANS = [
   { id: 'tech-003', name: 'Sam T.',   color: '#10B981', active: true },
 ];
 
+// ─── Storage helpers ─────────────────────────────────────────────────────────
+
+function loadFromStorage(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key);
+    if (raw) { const p = JSON.parse(raw); if (Array.isArray(p) && p.length > 0) return p; }
+  } catch { /* ignore */ }
+  return fallback;
+}
+
+function saveToStorage(key, value) {
+  try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* ignore */ }
+}
+
+// ─── Context ─────────────────────────────────────────────────────────────────
+
 const SchedulingContext = createContext(null);
 
 export function SchedulingProvider({ children }) {
+  const { orgId } = useAuth();
   const { activeLocationId } = useLocations();
-  const devAuth = import.meta.env.VITE_DEV_AUTH === '1';
 
+  const isDevAuth = import.meta.env.VITE_DEV_AUTH === '1';
+
+  // Apollo: all appointments for the org
+  const { appointments: apolloAppointments, loading: apolloLoading, error: apolloError, refetch } =
+    USE_APPOINTMENTS({ orgId, first: 300 });
+
+  // Appointments state: Apollo once loaded, otherwise localStorage/seed
   const [appointments, setAppointments] = useState(() => {
-    if (devAuth) return SEED_APPOINTMENTS;
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) { const p = JSON.parse(raw); if (Array.isArray(p) && p.length > 0) return p; }
-    } catch { /* ignore */ }
-    return SEED_APPOINTMENTS;
+    if (isDevAuth) return SEED_APPOINTMENTS;
+    return loadFromStorage(STORAGE_KEY, SEED_APPOINTMENTS);
   });
 
-  const [technicians, setTechnicians] = useState(() => {
-    if (devAuth) return SEED_TECHNICIANS;
-    try {
-      const raw = localStorage.getItem(TECHS_KEY);
-      if (raw) { const p = JSON.parse(raw); if (Array.isArray(p) && p.length > 0) return p; }
-    } catch { /* ignore */ }
-    return SEED_TECHNICIANS;
-  });
+  // Sync Apollo data once (guard with ref)
+  const initRef = useRef(false);
+  useEffect(() => {
+    if (isDevAuth) return;
+    if (!initRef.current && !apolloLoading && !apolloError && apolloAppointments.length > 0) {
+      initRef.current = true;
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setAppointments(apolloAppointments);
+    }
+  }, [apolloLoading, apolloError, apolloAppointments, isDevAuth]);
 
-  const [blockedTimes, setBlockedTimes] = useState(() => {
-    if (devAuth) return [];
-    try {
-      const raw = localStorage.getItem(BLOCKED_KEY);
-      if (raw) return JSON.parse(raw);
-    } catch { /* ignore */ }
-    return [];
-  });
+  // Write-through persistence
+  useEffect(() => {
+    if (!isDevAuth) saveToStorage(STORAGE_KEY, appointments);
+  }, [appointments, isDevAuth]);
+
+  // ── Technicians (local only — no backend table) ─────────────────────────────
+  const [technicians, setTechnicians] = useState(() =>
+    loadFromStorage(TECHS_KEY, SEED_TECHNICIANS)
+  );
 
   useEffect(() => {
-    try { localStorage.setItem(STORAGE_KEY,  JSON.stringify(appointments));  } catch { /* ignore */ }
-  }, [appointments]);
-
-  useEffect(() => {
-    try { localStorage.setItem(TECHS_KEY,    JSON.stringify(technicians));   } catch { /* ignore */ }
+    saveToStorage(TECHS_KEY, technicians);
   }, [technicians]);
 
+  // ── Blocked times (local only — no backend table) ──────────────────────────
+  const [blockedTimes, setBlockedTimes] = useState(() =>
+    loadFromStorage(BLOCKED_KEY, [])
+  );
+
   useEffect(() => {
-    try { localStorage.setItem(BLOCKED_KEY,  JSON.stringify(blockedTimes));  } catch { /* ignore */ }
+    saveToStorage(BLOCKED_KEY, blockedTimes);
   }, [blockedTimes]);
 
-  const filteredAppointments = activeLocationId === 'all'
+  // ── Filtered views ─────────────────────────────────────────────────────────
+  const filteredAppointments = activeLocationId === 'all' || !activeLocationId
     ? appointments
     : appointments.filter(a => !a.locationId || a.locationId === activeLocationId);
 
-  const filteredBlockedTimes = activeLocationId === 'all'
+  const filteredBlockedTimes = activeLocationId === 'all' || !activeLocationId
     ? blockedTimes
     : blockedTimes.filter(b => !b.locationId || b.locationId === activeLocationId);
 
+  // ── Apollo mutations ───────────────────────────────────────────────────────
+  const [createAppointmentMutation] = USE_CREATE_APPOINTMENT();
+  const [updateAppointmentMutation] = USE_UPDATE_APPOINTMENT();
+  const [deleteAppointmentMutation] = USE_DELETE_APPOINTMENT();
+
   // ── Appointments ───────────────────────────────────────────────────────────
-  const addAppointment = useCallback((data) => {
-    const startTime = data.startTime || '09:00';
-    const endTime   = data.endTime   || calcEndTime(startTime, data.service);
-    const apptDate  = new Date(`${data.date}T${startTime}`);
+
+  const addAppointment = useCallback((data = {}) => {
+    const startTime  = data.startTime || '09:00';
+    const endTime    = data.endTime   || calcEndTime(startTime, data.service);
+    const apptDate   = new Date(`${data.date}T${startTime}`);
     const reminderAt = new Date(apptDate.getTime() - 24 * 60 * 60 * 1000).toISOString();
     const appt = {
-      id: `appt-${Date.now()}`,
+      id: crypto.randomUUID(),
       locationId: activeLocationId === 'all' ? 'loc-001' : activeLocationId,
       type: 'appointment',
       status: 'scheduled',
@@ -160,29 +196,67 @@ export function SchedulingProvider({ children }) {
       startTime,
       endTime,
     };
+
     setAppointments(prev => [appt, ...prev]);
+
+    if (orgId && !isDevAuth) {
+      createAppointmentMutation({
+        variables: {
+          orgId,
+          locationId:   appt.locationId,
+          technicianId: appt.technicianId ?? null,
+          estimateId:   appt.estimateId   ?? null,
+          customerId:   appt.customerId   ?? null,
+          vehicleId:    appt.vehicleId    ?? null,
+          service:      appt.service,
+          date:         appt.date,
+          startTime:    appt.startTime,
+          endTime:      appt.endTime      ?? null,
+          status:       appt.status,
+          reminderQueued: appt.reminderQueued,
+          reminderAt:   appt.reminderAt,
+          notes:        appt.notes        ?? null,
+        },
+      }).catch(err => console.error('[SchedulingContext] GraphQL create failed:', err));
+    }
+
     return appt;
-  }, [activeLocationId]);
+  }, [activeLocationId, orgId, isDevAuth, createAppointmentMutation]);
 
   const updateAppointment = useCallback((id, patch) => {
-    setAppointments(prev => prev.map(a => a.id === id ? { ...a, ...patch } : a));
-  }, []);
+    setAppointments(prev =>
+      prev.map(a => a.id === id ? { ...a, ...patch, updatedAt: new Date().toISOString() } : a)
+    );
+
+    if (orgId && !isDevAuth) {
+      updateAppointmentMutation({ variables: { id, ...patch } })
+        .catch(err => console.error('[SchedulingContext] GraphQL update failed:', err));
+    }
+  }, [orgId, isDevAuth, updateAppointmentMutation]);
 
   const deleteAppointment = useCallback((id) => {
     setAppointments(prev => prev.filter(a => a.id !== id));
-  }, []);
+
+    if (orgId && !isDevAuth) {
+      deleteAppointmentMutation({ variables: { id } })
+        .catch(err => console.error('[SchedulingContext] GraphQL delete failed:', err));
+    }
+  }, [orgId, isDevAuth, deleteAppointmentMutation]);
 
   const getAppointmentsByDate = useCallback((date) => {
     return appointments.filter(a => a.date === date);
   }, [appointments]);
 
   const dismissReminder = useCallback((id) => {
-    setAppointments(prev => prev.map(a => a.id === id ? { ...a, reminderSent: true } : a));
+    setAppointments(prev =>
+      prev.map(a => a.id === id ? { ...a, reminderSent: true } : a)
+    );
   }, []);
 
-  // ── Technicians ────────────────────────────────────────────────────────────
-  const addTechnician = useCallback((data) => {
-    const tech = { id: `tech-${Date.now()}`, active: true, color: '#6B7280', ...data };
+  // ── Technicians (local only) ───────────────────────────────────────────────
+
+  const addTechnician = useCallback((data = {}) => {
+    const tech = { id: crypto.randomUUID(), active: true, color: '#6B7280', ...data };
     setTechnicians(prev => [...prev, tech]);
     return tech;
   }, []);
@@ -195,10 +269,11 @@ export function SchedulingProvider({ children }) {
     setTechnicians(prev => prev.filter(t => t.id !== id));
   }, []);
 
-  // ── Blocked times ──────────────────────────────────────────────────────────
-  const addBlockedTime = useCallback((data) => {
+  // ── Blocked times (local only) ───────────────────────────────────────────
+
+  const addBlockedTime = useCallback((data = {}) => {
     const block = {
-      id: `blocked-${Date.now()}`,
+      id: crypto.randomUUID(),
       locationId: activeLocationId === 'all' ? 'loc-001' : activeLocationId,
       type: 'blocked',
       label: data.label || 'Blocked',
@@ -217,7 +292,8 @@ export function SchedulingProvider({ children }) {
     setBlockedTimes(prev => prev.filter(b => b.id !== id));
   }, []);
 
-  // ── Booking token ──────────────────────────────────────────────────────────
+  // ── Booking token (local only) ────────────────────────────────────────────
+
   const getBookingToken = useCallback(() => {
     let token = localStorage.getItem(TOKEN_KEY);
     if (!token) {
@@ -228,33 +304,43 @@ export function SchedulingProvider({ children }) {
     return token;
   }, []);
 
+  // ── Context value ─────────────────────────────────────────────────────────
+
+  const value = {
+    appointments:       filteredAppointments,
+    allAppointments:   appointments,
+    loading:           !isDevAuth && apolloLoading,
+    error:             apolloError,
+    refetch,
+    addAppointment,
+    updateAppointment,
+    deleteAppointment,
+    getAppointmentsByDate,
+    dismissReminder,
+    technicians,
+    blockedTimes:      filteredBlockedTimes,
+    allBlockedTimes:   blockedTimes,
+    addTechnician,
+    updateTechnician,
+    deleteTechnician,
+    addBlockedTime,
+    updateBlockedTime,
+    deleteBlockedTime,
+    getBookingToken,
+    calcEndTime,
+    SERVICE_DURATIONS,
+  };
+
   return (
-    <SchedulingContext.Provider value={{
-      appointments: filteredAppointments,
-      allAppointments: appointments,
-      technicians,
-      blockedTimes: filteredBlockedTimes,
-      allBlockedTimes: blockedTimes,
-      addAppointment,
-      updateAppointment,
-      deleteAppointment,
-      getAppointmentsByDate,
-      dismissReminder,
-      addTechnician,
-      updateTechnician,
-      deleteTechnician,
-      addBlockedTime,
-      updateBlockedTime,
-      deleteBlockedTime,
-      getBookingToken,
-      calcEndTime,
-      SERVICE_DURATIONS,
-    }}>
+    <SchedulingContext.Provider value={value}>
       {children}
     </SchedulingContext.Provider>
   );
 }
 
+// ─── Hook ───────────────────────────────────────────────────────────────────
+
+// eslint-disable-next-line react-refresh/only-export-components
 export function useScheduling() {
   const ctx = useContext(SchedulingContext);
   if (!ctx) throw new Error('useScheduling must be used within SchedulingProvider');
