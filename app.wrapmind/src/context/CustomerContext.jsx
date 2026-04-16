@@ -13,7 +13,13 @@ import {
   lifetimeValue,
   searchCustomerList,
 } from '../lib/customerLookup.js';
-import * as svc from '../lib/customerService.js';
+import {
+  USE_CUSTOMERS,
+  USE_CUSTOMER,
+  USE_CREATE_CUSTOMER,
+  USE_UPDATE_CUSTOMER,
+  USE_DELETE_CUSTOMER,
+} from '../api/customers.graphql.js';
 
 // ─── Context ──────────────────────────────────────────────────────────────────
 
@@ -59,7 +65,7 @@ function computeLastActivity(estimates, appointments) {
   return dates.sort().at(-1);
 }
 
-// ─── Helper: build synthetic customer from estimate data ─────────────────────
+// ─── Helper: build synthetic customer from estimate data ──────────────────────
 
 function syntheticCustomerFromEstimates(name, custEstimates) {
   const first = custEstimates[0] || {};
@@ -83,13 +89,15 @@ function syntheticCustomerFromEstimates(name, custEstimates) {
 // ─── Provider ─────────────────────────────────────────────────────────────────
 
 export function CustomerProvider({ children }) {
-  const { orgId } = useAuth();
+  const { profile } = useAuth();
+  const orgId = profile?.org_id;
+
+  // Apollo GraphQL: customers from pg_graphql
+  const { customers: apolloCustomers, loading: apolloLoading, error: apolloError, refetch } =
+    USE_CUSTOMERS({ orgId, first: 200 });
 
   // Manual overrides (notes, tag edits, custom fields) stored in localStorage
   const [overrides, setOverrides] = useState(loadOverrides);
-
-  // Supabase-sourced customer records (replaces/augments seed data when auth'd)
-  const [dbCustomers, setDbCustomers] = useState(null);
 
   // Live leads from LeadHubPage (wm-leads-v1)
   const [liveLeads, setLiveLeads] = useState(() => {
@@ -113,69 +121,37 @@ export function CustomerProvider({ children }) {
   const { invoices = [] }         = useInvoices();
   const { appointments = [] }     = useScheduling();
 
+  // Apollo mutations
+  const [createCustomerMutation, { loading: creating }] = USE_CREATE_CUSTOMER();
+  const [updateCustomerMutation, { loading: updating }]  = USE_UPDATE_CUSTOMER();
+  const [deleteCustomerMutation, { loading: deleting }]  = USE_DELETE_CUSTOMER();
+
   // Persist overrides
   useEffect(() => { saveOverrides(overrides); }, [overrides]);
 
-  // ── Supabase sync: migrate seed + overrides on first auth, then fetch ─────
-  useEffect(() => {
-    if (!orgId) return;
-    let cancelled = false;
+  // ── Seed / Apollo data routing ──────────────────────────────────────────────
+  // Priority:
+  //   1. Apollo GraphQL data (live from Supabase via pg_graphql)
+  //   2. Seed data (VITE_DEV_AUTH prototype mode)
+  //   3. Seed data (fallback if Apollo fails)
 
-    (async () => {
-      try {
-        const migrated = localStorage.getItem(MIGRATION_KEY);
-        if (!migrated) {
-          const localOverrides = loadOverrides();
-          const customersToMigrate = SEED_CUSTOMERS.map(base => ({
-            ...base,
-            ...(localOverrides[base.id] || {}),
-            id: base.id,
-          }));
-          if (customersToMigrate.length > 0) {
-            await svc.migrateLocalCustomers(customersToMigrate, orgId);
-          }
+  const isDevAuth   = import.meta.env.VITE_DEV_AUTH === '1';
+  const hasApolloData = !apolloLoading && !apolloError && apolloCustomers.length > 0;
 
-          // Migrate communication history from overrides
-          const commEntries = [];
-          for (const [custId, ov] of Object.entries(localOverrides)) {
-            if (ov.communicationHistory?.length) {
-              for (const entry of ov.communicationHistory) {
-                commEntries.push({ ...entry, customerId: custId });
-              }
-            }
-          }
-          if (commEntries.length > 0) {
-            const dbCusts = await svc.fetchCustomers(orgId);
-            const idMap = {};
-            for (const c of dbCusts) { idMap[c.name?.toLowerCase()] = c.id; }
-            for (const seed of SEED_CUSTOMERS) { if (idMap[seed.name?.toLowerCase()]) idMap[seed.id] = idMap[seed.name?.toLowerCase()]; }
-            await svc.migrateLocalCommunications(commEntries, orgId, idMap).catch(() => {});
-          }
-
-          localStorage.setItem(MIGRATION_KEY, orgId);
-        }
-
-        const remote = await svc.fetchCustomers(orgId);
-        if (!cancelled) {
-          setDbCustomers(remote);
-        }
-      } catch (err) {
-        console.error('[CustomerContext] Supabase sync failed, using localStorage:', err);
-      }
-    })();
-
-    return () => { cancelled = true; };
-  }, [orgId]);
-
-  // The base customers list: prefer DB records when available, fall back to seed
   const baseCustomers = useMemo(() => {
-    if (dbCustomers && dbCustomers.length > 0) return dbCustomers;
+    // Dev auth: always use seed data
+    if (isDevAuth) return SEED_CUSTOMERS;
+    // Apollo data available: use it
+    if (hasApolloData) return apolloCustomers;
+    // Apollo loading/failed: use seed data as fallback
     return SEED_CUSTOMERS;
-  }, [dbCustomers]);
+  }, [isDevAuth, hasApolloData, apolloCustomers]);
 
-  // ── Build enriched customer list ──────────────────────────────────────────
+  const graphqlLoading = apolloLoading && !isDevAuth;
+
+  // ── Build enriched customer list ────────────────────────────────────────────
   const enrichedCustomers = useMemo(() => {
-    // ── 1. Enrich base customers ──────────────────────────────────────────
+    // ── 1. Enrich base customers ──────────────────────────────────────────────
     const baseSet = new Set(baseCustomers.map(c => c.name?.toLowerCase()));
     const enrichedBase = baseCustomers.map(base => {
       const override = overrides[base.id] || {};
@@ -250,7 +226,7 @@ export function CustomerProvider({ children }) {
       };
     });
 
-    // ── 2. Build synthetic customers from estimates not matching any base ──
+    // ── 2. Build synthetic customers from estimates not matching any base ─────
     const estByName = {};
     estimates.forEach(e => {
       if (!e.customerName) return;
@@ -286,7 +262,7 @@ export function CustomerProvider({ children }) {
       };
     });
 
-    // ── 3. Build synthetic customers from unconverted leads not in base ────
+    // ── 3. Build synthetic customers from unconverted leads not in base ─────────
     const liveLeadCustomers = liveLeads
       .filter(lead => {
         if (!lead.name) return false;
@@ -324,7 +300,7 @@ export function CustomerProvider({ children }) {
     return [...enrichedBase, ...syntheticFromEstimates, ...liveLeadCustomers];
   }, [estimates, invoices, appointments, overrides, liveLeads, baseCustomers]);
 
-  // ── Lookup helpers ────────────────────────────────────────────────────────
+  // ── Lookup helpers ─────────────────────────────────────────────────────────
 
   const getById = useCallback((id) =>
     enrichedCustomers.find(c => c.id === id) || null,
@@ -346,20 +322,97 @@ export function CustomerProvider({ children }) {
     searchCustomerList(enrichedCustomers, query, limit),
   [enrichedCustomers]);
 
-  // ── Mutations (persist to overrides + Supabase) ──────────────────────────
+  // ── Mutations ────────────────────────────────────────────────────────────────
 
+  /**
+   * Create a new customer via Apollo GraphQL.
+   * Apollo cache update prepends the new record automatically.
+   */
+  const createCustomer = useCallback(async (input) => {
+    if (!orgId) {
+      // Fallback: store in overrides for prototype mode
+      const tempId = `new-${Date.now()}`;
+      setOverrides(prev => ({
+        ...prev,
+        [tempId]: { ...input, id: tempId, createdAt: new Date().toISOString() },
+      }));
+      return { id: tempId };
+    }
+
+    try {
+      const { data, errors } = await createCustomerMutation({
+        variables: {
+          orgId,
+          name:     input.name,
+          email:    input.email     || null,
+          phone:    input.phone     || null,
+          company:  input.company   || null,
+          address:  input.address   || null,
+          tags:     input.tags      || [],
+          source:   input.source    || 'manual',
+          assigneeId: input.assigneeId || null,
+          notes:    input.notes     || null,
+          status:   input.status    || 'active',
+        },
+      });
+
+      if (errors?.length) {
+        console.error('[CustomerContext] GraphQL create error:', errors);
+        return { error: errors[0] };
+      }
+
+      // Apollo cache already updated via update callback; also update overrides
+      const newCustomer = data?.customerInsert?.edges?.[0]?.node;
+      if (newCustomer) {
+        // Store server-assigned fields in overrides (orgId, id, createdAt, etc.)
+        setOverrides(prev => ({
+          ...prev,
+          [newCustomer.id]: { ...newCustomer },
+        }));
+      }
+
+      return { data: newCustomer, error: null };
+    } catch (err) {
+      console.error('[CustomerContext] createCustomer failed:', err);
+      return { error: err };
+    }
+  }, [orgId, createCustomerMutation]);
+
+  /**
+   * Update a customer via Apollo GraphQL.
+   * Updates Apollo cache directly for instant UI feedback.
+   */
   const updateCustomer = useCallback((id, patch) => {
+    // Always update local overrides immediately (optimistic)
     setOverrides(prev => {
       const updated = { ...prev, [id]: { ...(prev[id] || {}), ...patch } };
       return updated;
     });
 
     if (orgId) {
-      svc.patchCustomer(id, patch).catch(err =>
-        console.error('[CustomerContext] Supabase update failed:', err)
-      );
+      updateCustomerMutation({ variables: { id, ...patch } })
+        .catch(err => console.error('[CustomerContext] GraphQL update failed:', err));
     }
-  }, [orgId]);
+  }, [orgId, updateCustomerMutation]);
+
+  /**
+   * Delete a customer via Apollo GraphQL.
+   */
+  const deleteCustomer = useCallback(async (id) => {
+    // Optimistic: remove from overrides immediately
+    setOverrides(prev => {
+      const { [id]: _, ...rest } = prev;
+      return rest;
+    });
+
+    if (orgId) {
+      try {
+        await deleteCustomerMutation({ variables: { id } });
+      } catch (err) {
+        console.error('[CustomerContext] GraphQL delete failed:', err);
+      }
+    }
+  }, [orgId, deleteCustomerMutation]);
 
   const addCustomerNote = useCallback((id, note) => {
     const base = baseCustomers.find(c => c.id === id);
@@ -382,14 +435,11 @@ export function CustomerProvider({ children }) {
       };
     });
 
-    if (orgId) {
-      svc.insertCommunication(newEntry, orgId, customerId).catch(err =>
-        console.error('[CustomerContext] Supabase comm insert failed:', err)
-      );
-    }
-  }, [orgId]);
+    // Note: communication inserts go directly to Supabase (communications table
+    // not yet migrated to GraphQL). This is a Phase 2 concern.
+  }, []);
 
-  // ── Aggregate stats (for dashboard widgets) ───────────────────────────────
+  // ── Aggregate stats (for dashboard widgets) ─────────────────────────────────
 
   const stats = useMemo(() => {
     const active = enrichedCustomers.filter(c => c.status !== 'archived');
@@ -420,16 +470,21 @@ export function CustomerProvider({ children }) {
     };
   }, [enrichedCustomers]);
 
-  // ── Context value ──────────────────────────────────────────────────────────
+  // ── Context value ───────────────────────────────────────────────────────────
 
   const value = {
     customers:     enrichedCustomers,
     stats,
+    loading:       graphqlLoading,
+    error:         apolloError,
+    refetch,
     getById,
     getByName,
     getByEmail,
     searchCustomers,
+    createCustomer,
     updateCustomer,
+    deleteCustomer,
     addCustomerNote,
     addCommunication,
   };

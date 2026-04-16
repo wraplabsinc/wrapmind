@@ -187,7 +187,7 @@ export const DELETE_CUSTOMER = gql`
 
 // ─── Apollo React Hooks ───────────────────────────────────────────────────────
 
-import { useQuery, useMutation } from '@apollo/client';
+import { useQuery, useMutation } from '@apollo/client/react';
 
 /**
  * List customers for an org.
