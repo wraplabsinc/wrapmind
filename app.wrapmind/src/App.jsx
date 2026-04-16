@@ -40,6 +40,7 @@ import { EstimateProvider, useEstimates } from './context/EstimateContext';
 import { recordEstimateOutcome } from './lib/learningAgent';
 import { InvoiceProvider, useInvoices } from './context/InvoiceContext';
 import { CustomerProvider } from './context/CustomerContext';
+import { VehicleProvider } from './context/VehicleContext';
 import WrapMindChat from './components/chat/WrapMindChat';
 import HelpPage from './components/HelpPage';
 import SetupWizard from './components/setup/SetupWizard';
@@ -1445,7 +1446,9 @@ function DataProviders({ children }) {
           <SchedulingProvider>
             <MarketingProvider>
               <CustomerProvider>
-                {children}
+                <VehicleProvider>
+                  {children}
+                </VehicleProvider>
               </CustomerProvider>
             </MarketingProvider>
           </SchedulingProvider>
