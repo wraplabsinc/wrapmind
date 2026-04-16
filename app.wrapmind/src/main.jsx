@@ -9,7 +9,7 @@ if (SENTRY_DSN) {
   Sentry.init({
     dsn: SENTRY_DSN,
     environment: import.meta.env.MODE,
-    release: `wrapos-estimator@${import.meta.env.VITE_APP_VERSION ?? '0.0.0'}`,
+    release: `app.wrapmind@${import.meta.env.VITE_APP_VERSION ?? '0.0.0'}`,
     tracesSampleRate: 0.1,
     replaysSessionSampleRate: 0,
     replaysOnErrorSampleRate: 0,
