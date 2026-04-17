@@ -3,6 +3,7 @@ import Button from './ui/Button';
 import { analyzeVehicleImage } from '../lib/ai.js';
 import { uploadVehicleImage, validateFile } from '../lib/storage.js';
 import { useAuth } from '../context/AuthContext.jsx';
+import { uuid } from '../lib/uuid.js';
 
 export default function VehicleByImage({ onSelect, selectedCar }) {
   const [image, setImage] = useState(null);
@@ -129,7 +130,7 @@ export default function VehicleByImage({ onSelect, selectedCar }) {
     setUploadError(null);
 
     try {
-      const vehicleId = car.vehicleId || crypto.randomUUID();
+      const vehicleId = car.vehicleId || uuid();
       const source = car._capturedImage || image;
       const { url, thumbnailUrl } = await uploadVehicleImage(source, orgId, vehicleId);
 

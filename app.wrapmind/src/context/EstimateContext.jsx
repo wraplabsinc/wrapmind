@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback, useRef } f
 import { recordEstimateOutcome } from '../lib/learningAgent';
 import { useLocations } from './LocationContext';
 import { useAuth } from './AuthContext.jsx';
+import { uuid } from '../lib/uuid.js';
 import {
   USE_ESTIMATES,
   USE_ESTIMATE,
@@ -284,7 +285,7 @@ export function EstimateProvider({ children }) {
     })();
 
     const newEst = {
-      id: crypto.randomUUID(),
+      id: uuid(),
       estimateNumber: nextNumber,
       locationId: activeLocationId === 'all' ? 'loc-001' : activeLocationId,
       createdAt: new Date().toISOString(),

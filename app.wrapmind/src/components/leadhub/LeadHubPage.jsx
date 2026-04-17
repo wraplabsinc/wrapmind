@@ -22,6 +22,7 @@ import {
   formatCurrencyShort,
 } from './leadData';
 import Button from '../ui/Button';
+import { uuid } from '../../lib/uuid.js';
 
 // ─── Small icons ────────────────────────────────────────────────────────────
 const SearchIcon = ({ className = 'w-3.5 h-3.5' }) => (
@@ -212,7 +213,7 @@ export default function LeadHubPage({ onNavigate }) {
   };
 
   const handleImportLeads = (imported) => {
-    const withIds = imported.map(l => ({ ...l, id: l.id || crypto.randomUUID() }));
+    const withIds = imported.map(l => ({ ...l, id: l.id || uuid() }));
     withIds.forEach(l => addLead(l));
     setLeads(prev => [...withIds, ...prev]);
     addLog('DATA', 'LEADS_IMPORTED', {

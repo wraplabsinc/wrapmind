@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 import { useAuth } from './AuthContext.jsx';
 import { useLocations } from './LocationContext.jsx';
+import { uuid } from '../lib/uuid.js';
 import {
   USE_LEADS,
   USE_CREATE_LEAD,
@@ -86,7 +87,7 @@ export function LeadProvider({ children }) {
    */
   const addLead = useCallback((data = {}) => {
     const newLead = {
-      id: crypto.randomUUID(),
+      id: uuid(),
       status: 'new',
       priority: 'warm',
       source: 'manual',

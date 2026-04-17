@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 import { useAuth } from './AuthContext.jsx';
+import { uuid } from '../lib/uuid.js';
 import {
   USE_NOTIFICATIONS,
   USE_CREATE_NOTIFICATION,
@@ -106,7 +107,7 @@ export function NotificationsProvider({ children }) {
       link: null,
       read: false,
       ...data,
-      id: crypto.randomUUID(),
+      id: uuid(),
       createdAt: new Date().toISOString(),
     };
     setNotifications(prev => [newNotif, ...prev]);

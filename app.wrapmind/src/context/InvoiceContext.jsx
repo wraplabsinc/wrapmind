@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 import { useLocations } from './LocationContext';
 import { useAuth } from './AuthContext.jsx';
+import { uuid } from '../lib/uuid.js';
 import {
   USE_INVOICES,
   USE_INVOICE,
@@ -327,7 +328,7 @@ export function InvoiceProvider({ children }) {
 
   const addInvoice = useCallback((invoiceData = {}) => {
     const newInvoice = {
-      id: crypto.randomUUID(),
+      id: uuid(),
       locationId: activeLocationId === 'all' ? 'loc-001' : activeLocationId,
       invoiceNumber: invoiceData.invoiceNumber,
       status: 'draft',
@@ -413,7 +414,7 @@ export function InvoiceProvider({ children }) {
       prev.map(inv => {
         if (inv.id !== invoiceId) return inv;
         const payment = {
-          id: crypto.randomUUID(),
+          id: uuid(),
           ...paymentData,
           recordedAt: new Date().toISOString(),
         };
@@ -443,7 +444,7 @@ export function InvoiceProvider({ children }) {
       const inv = invoices.find(i => i.id === invoiceId);
       if (!inv) return;
       const payment = {
-        id: crypto.randomUUID(),
+        id: uuid(),
         ...paymentData,
         recordedAt: new Date().toISOString(),
       };
@@ -479,7 +480,7 @@ export function InvoiceProvider({ children }) {
     );
 
     const newInvoice = {
-      id: crypto.randomUUID(),
+      id: uuid(),
       locationId: estimate.locationId || (activeLocationId === 'all' ? 'loc-001' : activeLocationId),
       invoiceNumber: getNextInvoiceNumber(),
       estimateId: estimate.id,
@@ -492,14 +493,14 @@ export function InvoiceProvider({ children }) {
       vehicleLabel: estimate.vehicleLabel || '',
       lineItems: [
         {
-          id: crypto.randomUUID(),
+          id: uuid(),
           description: `${estimate.package} – ${estimate.material} ${estimate.materialColor || ''}`.trim(),
           qty: 1, unit: 'job',
           unitPrice: estimate.basePrice || 0,
           total: estimate.basePrice || 0,
         },
         {
-          id: crypto.randomUUID(),
+          id: uuid(),
           description: `Labor – Installation (${estimate.laborHours || 0} hrs)`,
           qty: estimate.laborHours || 0, unit: 'hr',
           unitPrice: estimate.laborHours
@@ -509,7 +510,7 @@ export function InvoiceProvider({ children }) {
         },
         ...(estimate.materialCost
           ? [{
-              id: crypto.randomUUID(),
+              id: uuid(),
               description: 'Materials & Supplies',
               qty: 1, unit: 'job',
               unitPrice: estimate.materialCost,

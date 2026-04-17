@@ -1,5 +1,6 @@
 import { createContext, useContext, useReducer, useEffect, useState, useCallback, useRef } from 'react';
 import { useAuth } from './AuthContext.jsx';
+import { uuid } from '../lib/uuid.js';
 import {
   USE_EMPLOYEES,
   USE_ACHIEVEMENT_EVENTS,
@@ -140,7 +141,7 @@ function reducer(state, action) {
 
     case 'AWARD_XP': {
       const newEvent = {
-        id: crypto.randomUUID(),
+        id: uuid(),
         employeeId: action.payload.employeeId,
         achievementId: action.payload.achievementId,
         xp: action.payload.xp,
@@ -268,7 +269,7 @@ export function GamificationProvider({ children }) {
 
   const addEmployee = useCallback((data = {}) => {
     const newEmp = {
-      id: crypto.randomUUID(),
+      id: uuid(),
       isActive: true,
       color: '#6366F1',
       ...data,

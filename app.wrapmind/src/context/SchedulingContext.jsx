@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { useLocations } from './LocationContext';
 import { useAuth } from './AuthContext.jsx';
+import { uuid } from '../lib/uuid.js';
 import {
   USE_APPOINTMENTS,
   USE_CREATE_APPOINTMENT,
@@ -184,7 +185,7 @@ export function SchedulingProvider({ children }) {
     const apptDate   = new Date(`${data.date}T${startTime}`);
     const reminderAt = new Date(apptDate.getTime() - 24 * 60 * 60 * 1000).toISOString();
     const appt = {
-      id: crypto.randomUUID(),
+      id: uuid(),
       locationId: activeLocationId === 'all' ? 'loc-001' : activeLocationId,
       type: 'appointment',
       status: 'scheduled',
@@ -256,7 +257,7 @@ export function SchedulingProvider({ children }) {
   // ── Technicians (local only) ───────────────────────────────────────────────
 
   const addTechnician = useCallback((data = {}) => {
-    const tech = { id: crypto.randomUUID(), active: true, color: '#6B7280', ...data };
+    const tech = { id: uuid(), active: true, color: '#6B7280', ...data };
     setTechnicians(prev => [...prev, tech]);
     return tech;
   }, []);
@@ -273,7 +274,7 @@ export function SchedulingProvider({ children }) {
 
   const addBlockedTime = useCallback((data = {}) => {
     const block = {
-      id: crypto.randomUUID(),
+      id: uuid(),
       locationId: activeLocationId === 'all' ? 'loc-001' : activeLocationId,
       type: 'blocked',
       label: data.label || 'Blocked',
@@ -297,7 +298,7 @@ export function SchedulingProvider({ children }) {
   const getBookingToken = useCallback(() => {
     let token = localStorage.getItem(TOKEN_KEY);
     if (!token) {
-      try { token = crypto.randomUUID(); }
+      try { token = uuid(); }
       catch { token = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2); }
       localStorage.setItem(TOKEN_KEY, token);
     }
