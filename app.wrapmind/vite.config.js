@@ -12,7 +12,24 @@ export default defineConfig({
     'import.meta.env.VITE_APP_VERSION': JSON.stringify(process.env.npm_package_version),
   },
   server: {
-    allowedHosts: ['wrapos.cloud']
+    allowedHosts: ['wrapos.cloud'],
+    proxy: {
+      '/auth/v1': {
+        target: 'http://127.0.0.1:54321',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/rest/v1': {
+        target: 'http://127.0.0.1:54321',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/storage/v1': {
+        target: 'http://127.0.0.1:54321',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
   },
   plugins: [
     react(),
