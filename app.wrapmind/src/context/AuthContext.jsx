@@ -9,7 +9,7 @@ const AuthContext = createContext(null);
 // LOCAL_DEV=1 → prototype mode: skip Supabase auth, use localStorage seed data
 // LOCAL_DEV=0 → local Supabase auth (via VITE_SUPABASE_URL)
 // unset → production Supabase auth
-const DEV_AUTH = import.meta.env.LOCAL_DEV === '1';
+const DEV_AUTH = import.meta.env.VITE_LOCAL_DEV === '1';
 
 const DEV_USER    = { id: 'dev-user', email: 'dev@wrapmind.local' };
 const DEV_PROFILE = { id: 'dev-profile', role: 'owner', user_id: 'dev-user' };
