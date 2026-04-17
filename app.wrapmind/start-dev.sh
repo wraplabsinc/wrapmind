@@ -1,29 +1,23 @@
 #!/bin/bash
 # wrapmind dev server launcher
-# Reads .env (gitignored) and passes vars to Vite.
 # Usage: ./start-dev.sh [vite args...]
 #
-# Auth modes (from LOCAL_DEV):
+# Auth modes (from VITE_LOCAL_DEV):
 #   1  = prototype mode (localStorage seed data, skip Supabase)
 #   0  = local Supabase Docker auth
 #   unset = production Supabase
 
 set -e
-
 APP_DIR="$(cd "$(dirname "$0")" && pwd)"
-ENV_FILE="$APP_DIR/.env"
-
-# Load .env if it exists
-if [[ -f "$ENV_FILE" ]]; then
-  set -a
-  source "$ENV_FILE"
-  set +a
-fi
-
 cd "$APP_DIR"
 
-echo "[wrapmind] VITE_SUPABASE_URL=${VITE_SUPABASE_URL:-'(default: production)'}"
-echo "[wrapmind] LOCAL_DEV=${LOCAL_DEV:-'(unset -> production)'}"
+# Local dev defaults — override by setting env vars before calling
+VITE_LOCAL_DEV="${VITE_LOCAL_DEV:-0}"
+VITE_SUPABASE_URL="${VITE_SUPABASE_URL:-http://127.0.0.1:54321}"
+VITE_SUPABASE_ANON_KEY="${VITE_SUPABASE_ANON_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwOi8vMTI3LjAuMC4xOjU0MzIxL2F1dGgvdjEiLCJyZWYiOiJ3cmFwbWluZCIsInJvbGUiOiJhbm9uIiwiZXhwIjoxNzc2NDU0MzY1fQ.QPtw6xT3fRzuTxfdn7CWsMeotxpIViddPJYAxSwHqYY}"
+
+echo "[wrapmind] VITE_LOCAL_DEV=$VITE_LOCAL_DEV"
+echo "[wrapmind] VITE_SUPABASE_URL=$VITE_SUPABASE_URL"
 echo "[wrapmind] Starting Vite..."
 
 exec node_modules/.bin/vite --host 0.0.0.0 "$@"
