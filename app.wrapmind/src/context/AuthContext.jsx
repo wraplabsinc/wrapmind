@@ -6,9 +6,10 @@ import { configureAnalytics } from '../lib/analytics';
 const AuthContext = createContext(null);
 
 // ── Dev-mode bypass ───────────────────────────────────────────────────────────
-// When VITE_DEV_AUTH=1 the app skips Supabase auth entirely and runs with
-// local seed data. Never set this in production.
-const DEV_AUTH = import.meta.env.VITE_DEV_AUTH === '1';
+// LOCAL_DEV=1 → prototype mode: skip Supabase auth, use localStorage seed data
+// LOCAL_DEV=0 → local Supabase auth (via VITE_SUPABASE_URL)
+// unset → production Supabase auth
+const DEV_AUTH = import.meta.env.LOCAL_DEV === '1';
 
 const DEV_USER    = { id: 'dev-user', email: 'dev@wrapmind.local' };
 const DEV_PROFILE = { id: 'dev-profile', role: 'owner', user_id: 'dev-user' };
