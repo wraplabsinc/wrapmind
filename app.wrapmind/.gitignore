@@ -1,7 +1,8 @@
 # Environment variables
-.env
-.env.*.local
-# Logs
+# .env is SAFE TO COMMIT — contains only production URL + publishable anon key
+!.env
+.env.*.local  # local overrides (VITE_SUPABASE_URL, VITE_DEV_AUTH, etc.)
+!.env.example
 logs
 *.log
 npm-debug.log*
