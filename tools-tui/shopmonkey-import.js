@@ -15,23 +15,21 @@ import blessed from 'blessed';
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import { createInterface } from 'readline';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ENV_FILE = join(__dirname, '.env');
 
-// ── Load existing .env if present ─────────────────────────────────────────────
+// ── Load/save .env ─────────────────────────────────────────────────────────────
 function loadEnv() {
   const defaults = {
-    SHOPMONKEY_TOKEN:         '',
-    SUPABASE_URL:             'http://wrapos.cloud:54321',
-    SUPABASE_SERVICE_ROLE_KEY:'',
-    ORG_ID:                   '',
-    LOCATION_ID:              '',
-    SM_API_BASE:              'https://api.shopmonkey.cloud/api/v3',
+    SHOPMONKEY_TOKEN:          '',
+    SUPABASE_URL:              'http://wrapos.cloud:54321',
+    SUPABASE_SERVICE_ROLE_KEY: '',
+    ORG_ID:                    '',
+    LOCATION_ID:               '',
+    SM_API_BASE:               'https://api.shopmonkey.cloud/api/v3',
   };
   if (!existsSync(ENV_FILE)) return defaults;
-
   const raw = readFileSync(ENV_FILE, 'utf8');
   for (const line of raw.split('\n')) {
     const m = line.match(/^([A-Z_]+)=(.*)$/);
@@ -47,144 +45,137 @@ function saveEnv(env) {
   writeFileSync(ENV_FILE, lines.join('\n') + '\n', 'utf8');
 }
 
-// ── Blessed screen setup ───────────────────────────────────────────────────────
+// ── Screen ────────────────────────────────────────────────────────────────────
 const screen = blessed.screen({ smartCSR: true, autoPadding: true });
 screen.title = 'ShopMonkey Import TUI';
 
-const styles = {
-  border: { fg: 'cyan' },
-  title:  { fg: 'cyan', bold: true },
-  label:  { fg: 'white' },
-  value:  { fg: 'green' },
-  error:  { fg: 'red' },
-  muted:  { fg: 'grey' },
-  success:{ fg: 'green' },
-  warning:{ fg: 'yellow' },
-  bright:{ fg: 'white', bold: true },
-  selected:{ fg: 'black', bg: 'cyan', bold: true },
-  formBorder:{ fg: 'cyan' },
-};
-
-// ── Shared log box (used across screens) ──────────────────────────────────────
-function makeLogBox(parent, top, height) {
-  return blessed.log({
-    parent,
-    top,
-    left: '0',
-    right: '0',
-    height,
-    border: { type: 'line', fg: 'cyan' },
-    label: ' Log ',
-    scrollable: true,
-    alwaysScroll: true,
-    scrollbar: { ch: '│', track: { bg: 'black' }, style: { fg: 'cyan' } },
-    style: { fg: 'white', scrollbar: { fg: 'cyan' } },
-    tags: true,
-  });
-}
-
-// ── SCREEN 1: Config Form ─────────────────────────────────────────────────────
-let config = loadEnv();
-
-const formScreen = blessed.layout({
+// ── Container: Config Form ─────────────────────────────────────────────────────
+const formContainer = blessed.box({
   parent: screen,
   width: '100%',
   height: '100%',
 });
-formScreen.append(blessed.text({
-  parent: formScreen,
-  top: '0',
+
+// Title
+formContainer.append(blessed.text({
+  top: 0,
   left: 'center',
   content: '{center}{bold}{cyan-fg}ShopMonkey → WrapOS Migration{/cyan-fg}{/bold}{/center}',
+  height: 1,
 }));
-formScreen.append(blessed.text({
-  parent: formScreen,
-  top: '2',
+
+formContainer.append(blessed.text({
+  top: 2,
   left: 'center',
-  content: '{center}{grey-fg}Fill in or edit each field. Tab to move. Enter to start import.{/grey-fg}{/center}',
+  content: '{center}{grey-fg}Fill in the fields. Tab to navigate. Enter on a button to activate.{/grey-fg}{/center}',
+  height: 1,
 }));
 
 // Field definitions
-const fields = [
-  { key: 'SHOPMONKEY_TOKEN',         label: 'ShopMonkey Token',           secret: true,  placeholder: 'eyJ...' },
-  { key: 'SUPABASE_URL',             label: 'Supabase URL',                secret: false, placeholder: 'http://wrapos.cloud:54321' },
-  { key: 'SUPABASE_SERVICE_ROLE_KEY',label: 'Supabase Service Role Key',   secret: true,  placeholder: 'eyJ...' },
-  { key: 'ORG_ID',                   label: 'Org ID',                      secret: false, placeholder: '571bcc90-...' },
-  { key: 'LOCATION_ID',              label: 'Location ID (optional)',        secret: false, placeholder: '85798b11-... or leave blank' },
+const fieldDefs = [
+  { key: 'SHOPMONKEY_TOKEN',          label: 'ShopMonkey Token',            secret: true,  placeholder: 'eyJ...' },
+  { key: 'SUPABASE_URL',              label: 'Supabase URL',                 secret: false, placeholder: 'http://wrapos.cloud:54321' },
+  { key: 'SUPABASE_SERVICE_ROLE_KEY', label: 'Supabase Service Role Key',    secret: true,  placeholder: 'eyJ...' },
+  { key: 'ORG_ID',                   label: 'Org ID',                       secret: false, placeholder: '571bcc90-...' },
+  { key: 'LOCATION_ID',              label: 'Location ID (optional)',       secret: false, placeholder: 'leave blank for all' },
   { key: 'SM_API_BASE',              label: 'ShopMonkey API Base',          secret: false, placeholder: 'https://api.shopmonkey.cloud/api/v3' },
 ];
 
-const formLines = [];
-fields.forEach((f, i) => {
+let config = loadEnv();
+const fieldWidgets = [];
+
+fieldDefs.forEach((f, i) => {
   const row = 5 + i * 2;
-  const label = blessed.text({
-    parent: formScreen,
+
+  formContainer.append(blessed.text({
     top: row,
-    left: 'left',
-    width: '35%',
-    content: ` {cyan-fg}${f.label}:{/cyan-fg}`,
-  });
+    left: 2,
+    width: 34,
+    content: ` {cyan-fg}${f.label}{/cyan-fg}:`,
+    height: 1,
+  }));
+
   const input = blessed.textbox({
-    parent: formScreen,
+    parent: formContainer,
     top: row,
-    left: '35%',
+    left: 37,
     width: '60%',
     height: 1,
     border: { type: 'line', fg: 'grey' },
-    style: { fg: 'green', border: { fg: 'grey' }, focus: { fg: 'white', border: { fg: 'cyan' } } },
+    style: {
+      border: { fg: 'grey' },
+      focus: { border: { fg: 'cyan' }, fg: 'white' },
+    },
     value: config[f.key] || '',
     placeholder: f.placeholder,
   });
-  input.on('focus', () => { input.border.fg = 'cyan'; screen.render(); });
-  input.on('blur',  () => { input.border.fg = 'grey'; screen.render(); });
-  formLines.push({ field: f, label, input });
+  if (f.secret) {
+    input.displaySecret = true;
+    input.secretPlaceholder = true;
+  }
+  fieldWidgets.push({ field: f, input });
 });
 
 const statusLine = blessed.text({
-  parent: formScreen,
-  top: fields.length * 2 + 6,
-  left: '0',
-  right: '0',
-  content: '{center}{grey-fg}.env will be saved on import.{/grey-fg}{/center}',
-  style: { fg: 'grey' },
+  parent: formContainer,
+  top: fieldDefs.length * 2 + 6,
+  left: 0,
+  right: 0,
+  align: 'center',
+  content: '',
+  height: 1,
 });
 
 const btnTest = blessed.button({
-  parent: formScreen,
-  top: fields.length * 2 + 8,
-  left: '20%',
-  width: '25%',
+  parent: formContainer,
+  top: fieldDefs.length * 2 + 8,
+  left: '18%',
+  width: 26,
   height: 1,
   content: ' Test Connection ',
   border: { type: 'line', fg: 'yellow' },
-  style: { fg: 'yellow', hover: { bg: 'yellow', fg: 'black' }, focus: { bg: 'yellow', fg: 'black' } },
+  style: { fg: 'yellow', hover: { bg: 'yellow', fg: 'black' } },
 });
 
 const btnRun = blessed.button({
-  parent: formScreen,
-  top: fields.length * 2 + 8,
-  left: '55%',
-  width: '25%',
+  parent: formContainer,
+  top: fieldDefs.length * 2 + 8,
+  left: '56%',
+  width: 26,
   height: 1,
   content: ' Start Import ',
   border: { type: 'line', fg: 'green' },
-  style: { fg: 'green', hover: { bg: 'green', fg: 'black' }, focus: { bg: 'green', fg: 'black' } },
-  disabled: false,
+  style: { fg: 'green', hover: { bg: 'green', fg: 'black' } },
 });
 
-// ── SCREEN 2: Import Progress ──────────────────────────────────────────────────
-const importScreen = blessed.screen({ hidden: true, parent: screen });
-importScreen.title = 'Importing...';
+const btnQuit = blessed.button({
+  parent: formContainer,
+  top: fieldDefs.length * 2 + 8,
+  left: '38%',
+  width: 18,
+  height: 1,
+  content: ' Quit ',
+  border: { type: 'line', fg: 'grey' },
+  style: { fg: 'grey', hover: { bg: 'grey', fg: 'black' } },
+});
 
-importScreen.append(blessed.text({
-  parent: importScreen,
-  top: '0',
+// ── Container: Import Progress (hidden initially) ─────────────────────────────
+const importContainer = blessed.box({
+  parent: screen,
+  width: '100%',
+  height: '100%',
+  hidden: true,
+});
+
+importContainer.append(blessed.text({
+  top: 0,
   left: 'center',
-  content: '{center}{bold}{cyan-fg}ShopMonkey Import{/cyan-fg}{/bold}{/center}',
+  content: '{center}{bold}{cyan-fg}ShopMonkey Import — Running{/cyan-fg}{/bold}{/center}',
+  height: 1,
 }));
 
 const progressBar = blessed.progressbar({
-  parent: importScreen,
+  parent: importContainer,
   top: 3,
   left: '5%',
   right: '5%',
@@ -196,122 +187,140 @@ const progressBar = blessed.progressbar({
 });
 
 const progressLabel = blessed.text({
-  parent: importScreen,
+  parent: importContainer,
   top: 2,
   left: '5%',
   content: '{cyan-fg}Progress:{/cyan-fg} 0%',
+  height: 1,
 });
 
 const phaseLabel = blessed.text({
-  parent: importScreen,
+  parent: importContainer,
   top: 5,
   left: '5%',
   content: '{white-fg}Phase: Initializing...{/white-fg}',
+  height: 1,
 });
 
-const logBox = makeLogBox(importScreen, 7, '50%');
+const importLog = blessed.log({
+  parent: importContainer,
+  top: 7,
+  left: 2,
+  right: 2,
+  bottom: 3,
+  border: { type: 'line', fg: 'cyan' },
+  label: ' Log ',
+  scrollable: true,
+  alwaysScroll: true,
+  scrollbar: { ch: '│', track: { bg: 'black' }, style: { fg: 'cyan' } },
+  style: { fg: 'white', scrollbar: { fg: 'cyan' } },
+  tags: true,
+});
 
-const btnBack = blessed.button({
-  parent: importScreen,
+const btnCancel = blessed.button({
+  parent: importContainer,
   bottom: 1,
   left: '40%',
-  width: '20%',
+  width: 20,
   height: 1,
   content: ' Cancel & Back ',
   border: { type: 'line', fg: 'red' },
   style: { fg: 'red', hover: { bg: 'red', fg: 'white' } },
 });
 
-// ── Screen navigation helpers ──────────────────────────────────────────────────
-function showImportScreen() {
-  formScreen.hide();
-  importScreen.show();
-  importScreen.key(['escape'], () => showFormScreen());
-  btnBack.key(['enter'], () => showFormScreen());
-  btnBack.focus();
+// ── Show/hide helpers ─────────────────────────────────────────────────────────
+function showForm() {
+  importContainer.hide();
+  formContainer.show();
+  screen.title = 'ShopMonkey Import TUI';
   screen.render();
 }
 
-function showFormScreen() {
-  importScreen.hide();
-  formScreen.show();
+function showImport() {
+  formContainer.hide();
+  importContainer.show();
+  importLog.clear();
+  progressBar.setProgress(0);
+  progressLabel.setContent('{cyan-fg}Progress:{/cyan-fg} 0%');
+  phaseLabel.setContent('{white-fg}Phase: Starting...{/white-fg}');
+  screen.title = 'Importing...';
   screen.render();
 }
 
-// ── Connection test ──────────────────────────────────────────────────────────────
-function setFormStatus(msg, color = 'grey') {
-  statusLine.setContent(`{center}{${color}-fg}${msg}{/center}`);
-  screen.render();
-}
-
-btnTest.on('press', async () => {
-  // Collect values from form
+// ── Collect config from form ───────────────────────────────────────────────────
+function collectConfig() {
   const vals = {};
-  formLines.forEach(({ field, input }) => { vals[field.key] = input.value; });
+  fieldWidgets.forEach(({ field, input }) => { vals[field.key] = input.value; });
   saveEnv(vals);
   config = { ...config, ...vals };
+  return config;
+}
 
-  setFormStatus('Testing ShopMonkey API...', 'yellow');
-  logBox?.log('Testing ShopMonkey API...');
+function setStatus(msg, color = 'grey') {
+  statusLine.set({ content: `{${color}-fg}{center}${msg}{/center}{/}`,
+    height: 1 });
+  screen.render();
+}
+
+// ── Connection test ────────────────────────────────────────────────────────────
+btnTest.on('press', async () => {
+  const cfg = collectConfig();
+  setStatus('Testing ShopMonkey API...', 'yellow');
+  importLog?.log('Testing ShopMonkey API...');
 
   try {
-    const url = new URL(`${config.SM_API_BASE}/channels`);
-    const res = await fetch(url, {
-      headers: { 'Authorization': `Bearer ${config.SHOPMONKEY_TOKEN}`, 'Accept': 'application/json' },
+    const url = new URL(`${cfg.SM_API_BASE}/channels`);
+    const res = await fetch(url.toString(), {
+      headers: { 'Authorization': `Bearer ${cfg.SHOPMONKEY_TOKEN}`, 'Accept': 'application/json' },
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json().catch(() => []);
-    logBox.log(`{green-fg}✓ ShopMonkey API: OK{/green-fg} (${data.length} channels)`);
-    setFormStatus('ShopMonkey API: Connected', 'green');
+    importLog?.log(`{green-fg}✓ ShopMonkey API: OK{/green-fg} (${data.length} channels)`);
+    setStatus('ShopMonkey API: Connected', 'green');
   } catch (e) {
-    logBox.log(`{red-fg}✗ ShopMonkey API failed: ${e.message}{/red-fg}`);
-    setFormStatus(`ShopMonkey error: ${e.message}`, 'red');
+    importLog?.log(`{red-fg}✗ ShopMonkey API failed: ${e.message}{/red-fg}`);
+    setStatus(`ShopMonkey error: ${e.message}`, 'red');
   }
 
-  setFormStatus('Testing Supabase...', 'yellow');
-  logBox.log('Testing Supabase...');
+  setStatus('Testing Supabase...', 'yellow');
+  importLog?.log('Testing Supabase...');
 
   try {
-    const url = `${config.SUPABASE_URL}/rest/v1/organizations?select=id`;
+    const url = `${cfg.SUPABASE_URL}/rest/v1/organizations?select=id`;
     const res = await fetch(url, {
       headers: {
-        'Authorization': `Bearer ${config.SUPABASE_SERVICE_ROLE_KEY}`,
-        'apikey': config.SUPABASE_SERVICE_ROLE_KEY,
+        'Authorization': `Bearer ${cfg.SUPABASE_SERVICE_ROLE_KEY}`,
+        'apikey': cfg.SUPABASE_SERVICE_ROLE_KEY,
       },
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json().catch(() => []);
-    logBox.log(`{green-fg}✓ Supabase: OK{/green-fg} (${data.length} orgs)`);
-    setFormStatus('Supabase: Connected', 'green');
+    importLog?.log(`{green-fg}✓ Supabase: OK{/green-fg} (${data.length} orgs)`);
+    setStatus('Supabase: Connected', 'green');
   } catch (e) {
-    logBox.log(`{red-fg}✗ Supabase failed: ${e.message}{/red-fg}`);
-    setFormStatus(`Supabase error: ${e.message}`, 'red');
+    importLog?.log(`{red-fg}✗ Supabase failed: ${e.message}{/red-fg}`);
+    setStatus(`Supabase error: ${e.message}`, 'red');
   }
 });
 
-// ── Import runner ──────────────────────────────────────────────────────────────
+// ── Import runner ─────────────────────────────────────────────────────────────
 async function runImport() {
-  // Collect and save env
-  const vals = {};
-  formLines.forEach(({ field, input }) => { vals[field.key] = input.value; });
-  saveEnv(vals);
-  config = { ...config, ...vals };
+  const cfg = collectConfig();
 
-  // Validate required fields
   const required = ['SHOPMONKEY_TOKEN', 'SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', 'ORG_ID'];
-  const missing = required.filter(k => !config[k]);
+  const missing = required.filter(k => !cfg[k]);
   if (missing.length) {
-    logBox.log(`{red-fg}✗ Missing required fields: ${missing.join(', ')}{/red-fg}}`);
+    importLog.log(`{red-fg}✗ Missing required fields: ${missing.join(', ')}{/red-fg}`);
     return;
   }
 
-  logBox.log(`{cyan-fg}Starting import for org ${config.ORG_ID}{/cyan-fg}`);
-  if (config.LOCATION_ID) logBox.log(`{cyan-fg}Location filter: ${config.LOCATION_ID}{/cyan-fg}`);
+  importLog.log(`{cyan-fg}Starting import for org ${cfg.ORG_ID}{/cyan-fg}`);
+  if (cfg.LOCATION_ID) importLog.log(`{cyan-fg}Location filter: ${cfg.LOCATION_ID}{/cyan-fg}`);
 
-  // Helper: paginated ShopMonkey fetch
+  // Helper: paginated SM fetch
   async function smFetch(path, params = {}) {
-    const url = new URL(`${config.SM_API_BASE}${path}`);
-    if (config.LOCATION_ID) url.searchParams.set('locationId', config.LOCATION_ID);
+    const url = new URL(`${cfg.SM_API_BASE}${path}`);
+    if (cfg.LOCATION_ID) url.searchParams.set('locationId', cfg.LOCATION_ID);
     Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
     const all = [];
     let page = 1;
@@ -320,7 +329,7 @@ async function runImport() {
       p.searchParams.set('page', String(page));
       p.searchParams.set('limit', '500');
       const res = await fetch(p.toString(), {
-        headers: { 'Authorization': `Bearer ${config.SHOPMONKEY_TOKEN}`, 'Accept': 'application/json' },
+        headers: { 'Authorization': `Bearer ${cfg.SHOPMONKEY_TOKEN}`, 'Accept': 'application/json' },
       });
       if (!res.ok) throw new Error(`${path} → HTTP ${res.status}`);
       const batch = await res.json();
@@ -335,21 +344,20 @@ async function runImport() {
   // Helper: upsert to Supabase
   const conflictMap = {
     sm_import_customers:    'org_id,sm_customer_id',
-    sm_import_vehicles:     'org_id,sm_vehicle_id',
-    sm_import_orders:       'org_id,sm_order_id',
-    sm_import_order_lines:  'org_id,sm_order_id,sm_line_id',
-    sm_import_labor_rates:  'org_id,sm_labor_rate_id',
+    sm_import_vehicles:    'org_id,sm_vehicle_id',
+    sm_import_orders:      'org_id,sm_order_id',
+    sm_import_order_lines: 'org_id,sm_order_id,sm_line_id',
+    sm_import_labor_rates: 'org_id,sm_labor_rate_id',
   };
 
   async function sbUpsert(table, rows) {
     if (!rows.length) return { imported: 0, failed: 0 };
-    const conflictCols = conflictMap[table];
-    const url = `${config.SUPABASE_URL}/rest/v1/${table}?on_conflict=${conflictCols}`;
+    const url = `${cfg.SUPABASE_URL}/rest/v1/${table}?on_conflict=${conflictMap[table]}`;
     const res = await fetch(url, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${config.SUPABASE_SERVICE_ROLE_KEY}`,
-        'apikey': config.SUPABASE_SERVICE_ROLE_KEY,
+        'Authorization': `Bearer ${cfg.SUPABASE_SERVICE_ROLE_KEY}`,
+        'apikey': cfg.SUPABASE_SERVICE_ROLE_KEY,
         'Content-Type': 'application/json',
         'Prefer': 'resolution=merge-duplicates',
       },
@@ -362,62 +370,44 @@ async function runImport() {
     return { imported: rows.length, failed: 0 };
   }
 
-  async function logPhase(phase, status, imported = 0, failed = 0) {
-    phaseLabel.setContent(`{white-fg}Phase: ${phase}{/white-fg}`);
+  function updateProgress(label, imported, failed) {
     const pct = Math.round(imported / Math.max(1, failed + imported) * 100);
     progressBar.setProgress(pct / 100);
     progressLabel.setContent(`{cyan-fg}Progress:{/cyan-fg} ${pct}%`);
-    logBox.log(`[${status}] ${phase}${imported ? ` — ${imported} imported${failed ? `, ${failed} failed` : ''}` : ''}`);
+    phaseLabel.setContent(`{white-fg}Phase: ${label}{/white-fg}`);
+    importLog.log(`[${label}] ${imported} imported${failed ? `, ${failed} failed` : ''}`);
     screen.render();
   }
 
-  // ── Import log start ───────────────────────────────────────────────────────
-  let logId = null;
-  try {
-    const r = await fetch(`${config.SUPABASE_URL}/rest/v1/sm_import_log`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${config.SUPABASE_SERVICE_ROLE_KEY}`,
-        'apikey': config.SUPABASE_SERVICE_ROLE_KEY,
-        'Content-Type': 'application/json',
-        'Prefer': 'return=representation',
-      },
-      body: JSON.stringify({ org_id: config.ORG_ID, import_type: 'full', status: 'running' }),
-    });
-    const data = await r.json();
-    logId = Array.isArray(data) ? data[0]?.id : null;
-  } catch (e) {
-    logBox.log(`{yellow-fg}⚠ Could not write import log: ${e.message}{/yellow-fg}`);
-  }
-
   let totalImported = 0, totalFailed = 0;
-  const errors = [];
 
+  // ── Customers ───────────────────────────────────────────────────────────────
   try {
-    // Customers
-    logBox.log(`{cyan-fg}── Customers ──{/cyan-fg}`);
+    importLog.log(`{cyan-fg}── Customers ──{/cyan-fg}`);
     const customers = await smFetch('/customers');
-    logBox.log(`Found ${customers.length} customers`);
-    const cRows = customers.map(c => ({
-      org_id: config.ORG_ID, sm_customer_id: c.id,
+    importLog.log(`Found ${customers.length} customers`);
+    const rows = customers.map(c => ({
+      org_id: cfg.ORG_ID, sm_customer_id: c.id,
       first_name: c.firstName ?? null, last_name: c.lastName ?? null,
       phone: c.phone ?? null, email: c.email ?? null,
-      address: c.address ? `${c.address.street ?? ''}, ${c.address.city ?? ''} ${c.address.state ?? ''} ${c.address.zip ?? ''}`.trim() : null,
+      address: c.address
+        ? `${c.address.street ?? ''}, ${c.address.city ?? ''} ${c.address.state ?? ''} ${c.address.zip ?? ''}`.trim()
+        : null,
       sm_data: c,
     }));
-    for (let i = 0; i < cRows.length; i += 100) {
-      const r = await sbUpsert('sm_import_customers', cRows.slice(i, i + 100));
+    for (let i = 0; i < rows.length; i += 100) {
+      const r = await sbUpsert('sm_import_customers', rows.slice(i, i + 100));
       totalImported += r.imported; totalFailed += r.failed;
-      await logPhase('Customers', 'ok', totalImported, totalFailed);
+      updateProgress('Customers', totalImported, totalFailed);
     }
-    logBox.log(`{green-fg}✓ Customers: ${customers.length} imported{/green-fg}`);
+    importLog.log(`{green-fg}✓ Customers: ${customers.length} imported{/green-fg}`);
 
-    // Vehicles
-    logBox.log(`{cyan-fg}── Vehicles ──{/cyan-fg}`);
+    // ── Vehicles ──────────────────────────────────────────────────────────────
+    importLog.log(`{cyan-fg}── Vehicles ──{/cyan-fg}`);
     const vehicles = await smFetch('/vehicles');
-    logBox.log(`Found ${vehicles.length} vehicles`);
+    importLog.log(`Found ${vehicles.length} vehicles`);
     const vRows = vehicles.map(v => ({
-      org_id: config.ORG_ID, sm_vehicle_id: v.id,
+      org_id: cfg.ORG_ID, sm_vehicle_id: v.id,
       sm_customer_id: v.customerId ?? null,
       year: v.year ?? null, make: v.make ?? null, model: v.model ?? null,
       vin: v.VIN ?? null, license_plate: v.licensePlate ?? null,
@@ -427,50 +417,48 @@ async function runImport() {
     for (let i = 0; i < vRows.length; i += 100) {
       const r = await sbUpsert('sm_import_vehicles', vRows.slice(i, i + 100));
       totalImported += r.imported; totalFailed += r.failed;
-      await logPhase('Vehicles', 'ok', totalImported, totalFailed);
+      updateProgress('Vehicles', totalImported, totalFailed);
     }
-    logBox.log(`{green-fg}✓ Vehicles: ${vehicles.length} imported{/green-fg}`);
+    importLog.log(`{green-fg}✓ Vehicles: ${vehicles.length} imported{/green-fg}`);
 
-    // Labor rates
-    logBox.log(`{cyan-fg}── Labor Rates ──{/cyan-fg}`);
+    // ── Labor Rates ────────────────────────────────────────────────────────────
+    importLog.log(`{cyan-fg}── Labor Rates ──{/cyan-fg}`);
     const rates = await smFetch('/laborRates');
-    logBox.log(`Found ${rates.length} labor rates`);
+    importLog.log(`Found ${rates.length} labor rates`);
     const lRows = rates.map(r => ({
-      org_id: config.ORG_ID, sm_labor_rate_id: r.id,
+      org_id: cfg.ORG_ID, sm_labor_rate_id: r.id,
       name: r.name, rate: r.rate ?? null, sm_data: r,
     }));
     const lr = await sbUpsert('sm_import_labor_rates', lRows);
     totalImported += lr.imported; totalFailed += lr.failed;
-    await logPhase('Labor Rates', 'ok', totalImported, totalFailed);
-    logBox.log(`{green-fg}✓ Labor Rates: ${rates.length} imported{/green-fg}`);
+    updateProgress('Labor Rates', totalImported, totalFailed);
+    importLog.log(`{green-fg}✓ Labor Rates: ${rates.length} imported{/green-fg}`);
 
-    // Orders
-    logBox.log(`{cyan-fg}── Orders ──{/cyan-fg}`);
+    // ── Orders ────────────────────────────────────────────────────────────────
+    importLog.log(`{cyan-fg}── Orders ──{/cyan-fg}`);
     const orders = await smFetch('/orders');
-    logBox.log(`Found ${orders.length} orders`);
+    importLog.log(`Found ${orders.length} orders`);
 
     for (let i = 0; i < orders.length; i++) {
       const o = orders[i];
-      const oRow = [{
-        org_id: config.ORG_ID, sm_order_id: o.id,
+      await sbUpsert('sm_import_orders', [{
+        org_id: cfg.ORG_ID, sm_order_id: o.id,
         sm_customer_id: o.customerId ?? null, sm_vehicle_id: o.vehicleId ?? null,
         status: o.status ?? null,
         total: o.totalDollars ?? null, tax_total: o.taxDollars ?? null,
         labor_total: o.laborDollars ?? null, parts_total: o.partsDollars ?? null,
         notes: o.notes ?? null, sm_data: o,
-      }];
-      await sbUpsert('sm_import_orders', oRow);
+      }]);
 
-      // Order lines
       try {
-        const linesRes = await fetch(`${config.SM_API_BASE}/orders/${o.id}/lines`, {
-          headers: { 'Authorization': `Bearer ${config.SHOPMONKEY_TOKEN}`, 'Accept': 'application/json' },
+        const linesRes = await fetch(`${cfg.SM_API_BASE}/orders/${o.id}/lines`, {
+          headers: { 'Authorization': `Bearer ${cfg.SHOPMONKEY_TOKEN}`, 'Accept': 'application/json' },
         });
         if (linesRes.ok) {
           const lines = await linesRes.json();
           if (lines?.length) {
             const lineRows = lines.map(l => ({
-              org_id: config.ORG_ID, sm_order_id: o.id, sm_line_id: l.id,
+              org_id: cfg.ORG_ID, sm_order_id: o.id, sm_line_id: l.id,
               description: l.description ?? null, line_type: l.lineType ?? null,
               quantity: l.quantity ?? null, unit_price: l.unitPriceDollars ?? null,
               total: l.totalDollars ?? null, tax_rate: l.taxRate ?? null, sm_data: l,
@@ -483,61 +471,66 @@ async function runImport() {
       totalImported += 1;
 
       if ((i + 1) % 10 === 0) {
-        await logPhase(`Orders (${i + 1}/${orders.length})`, 'ok', totalImported, totalFailed);
+        updateProgress(`Orders (${i + 1}/${orders.length})`, totalImported, totalFailed);
       }
     }
-    logBox.log(`{green-fg}✓ Orders: ${orders.length} imported{/green-fg}`);
-    await logPhase('Complete', 'ok', totalImported, totalFailed);
+    importLog.log(`{green-fg}✓ Orders: ${orders.length} imported{/green-fg}`);
+
+    // ── Done ─────────────────────────────────────────────────────────────────
+    progressBar.setProgress(1);
+    progressLabel.setContent('{cyan-fg}Progress:{/cyan-fg} 100%');
+    phaseLabel.setContent('{green-fg}Complete!{/green-fg}');
+    importLog.log(`{green-fg}{bold}✓ Import complete! ✓{/bold}{/green-fg}`);
+    importLog.log(`Total: ${totalImported} imported, ${totalFailed} failed`);
+    importLog.log('{yellow-fg}Press Enter or click Back to return.{/yellow-fg}');
+    screen.render();
 
     // Update org sync timestamp
-    await fetch(`${config.SUPABASE_URL}/rest/v1/organizations?id=eq.${config.ORG_ID}`, {
+    await fetch(`${cfg.SUPABASE_URL}/rest/v1/organizations?id=eq.${cfg.ORG_ID}`, {
       method: 'PATCH',
       headers: {
-        'Authorization': `Bearer ${config.SUPABASE_SERVICE_ROLE_KEY}`,
-        'apikey': config.SUPABASE_SERVICE_ROLE_KEY,
+        'Authorization': `Bearer ${cfg.SUPABASE_SERVICE_ROLE_KEY}`,
+        'apikey': cfg.SUPABASE_SERVICE_ROLE_KEY,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ sm_last_synced_at: new Date().toISOString() }),
-    });
+    }).catch(() => {});
 
-    logBox.log(`{green-fg}{bold}✓ Import complete! ✓{/bold}{/green-fg}`);
-    logBox.log(`Total: ${totalImported} imported, ${totalFailed} failed`);
-
-    // Update log
-    if (logId) {
-      await fetch(`${config.SUPABASE_URL}/rest/v1/sm_import_log?id=eq.${logId}`, {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${config.SUPABASE_SERVICE_ROLE_KEY}`,
-          'apikey': config.SUPABASE_SERVICE_ROLE_KEY,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          records_imported: totalImported, records_failed: totalFailed,
-          status: totalFailed > 0 ? 'partial' : 'success',
-          completed_at: new Date().toISOString(),
-        }),
-      });
-    }
   } catch (e) {
-    logBox.log(`{red-fg}{bold}✗ Import failed: ${e.message}{/bold}{/red-fg}`);
-    errors.push(e.message);
+    importLog.log(`{red-fg}{bold}✗ Import failed: ${e.message}{/bold}{/red-fg}`);
+    phaseLabel.setContent(`{red-fg}Failed: ${e.message}{/red-fg}`);
   }
+
+  screen.render();
 }
 
-btnRun.on('press', async () => {
-  showImportScreen();
-  progressBar.setProgress(0);
-  progressLabel.setContent('{cyan-fg}Progress:{/cyan-fg} 0%');
-  phaseLabel.setContent('{white-fg}Phase: Starting...{/white-fg}');
-  screen.render();
-
-  await runImport();
-  logBox.log('{yellow-fg}Done. Press Escape or click Back to return.{/yellow-fg}');
-  screen.render();
+// ── Button handlers ────────────────────────────────────────────────────────────
+btnRun.on('press', () => {
+  showImport();
+  runImport();
 });
 
-// ── Focus first input ──────────────────────────────────────────────────────────
-formLines[0].input.focus();
-screen.key(['C-c'], () => process.exit(0));
-screen.render();
+btnCancel.on('press', () => {
+  showForm();
+});
+
+btnQuit.on('press', () => {
+  process.exit(0);
+});
+
+// ── Keyboard nav ──────────────────────────────────────────────────────────────
+fieldWidgets[0].input.focus();
+screen.key('tab', () => {
+  const focused = screen.focused;
+  const allWidgets = fieldWidgets.map(f => f.input).concat([btnTest, btnRun, btnQuit]);
+  const idx = allWidgets.indexOf(focused);
+  if (idx === -1 || idx === allWidgets.length - 1) {
+    fieldWidgets[0].input.focus();
+  } else {
+    allWidgets[idx + 1].focus();
+  }
+});
+screen.key('C-c', () => process.exit(0));
+
+// Initial render
+showForm();
