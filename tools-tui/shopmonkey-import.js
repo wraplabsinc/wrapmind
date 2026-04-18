@@ -86,7 +86,11 @@ function makeLogBox(parent, top, height) {
 // ── SCREEN 1: Config Form ─────────────────────────────────────────────────────
 let config = loadEnv();
 
-const formScreen = blessed.layout({ parent: screen });
+const formScreen = blessed.layout({
+  parent: screen,
+  width: '100%',
+  height: '100%',
+});
 formScreen.append(blessed.text({
   parent: formScreen,
   top: '0',
