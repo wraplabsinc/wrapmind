@@ -20,11 +20,15 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 // Check both WSL path and Windows-mounted path
 const WINDOWS_BASE = '/mnt/c/Users/duke/OneDrive/Documents/GitHub';
 function findEnvFile() {
-  const candidates = [
-    join(__dirname, '.env'),
-    join(__dirname.replace(WINDOWS_BASE, '/mnt/c/Users/duke/OneDrive/Documents/GitHub'), '.env'),
-  ];
-  return candidates.find(p => existsSync(p)) || candidates[0];
+  const wslPath     = __dirname.startsWith('/home/') ? __dirname : null;
+  const windowsBase = '/mnt/c/Users/duke/OneDrive/Documents/GitHub';
+  const windowsPath = __dirname.startsWith('/mnt/')
+    ? __dirname
+    : (wslPath ? wslPath.replace('/home/duke', windowsBase) : null);
+
+  const candidates = [__dirname, windowsPath, wslPath].filter(Boolean);
+  const envFile = candidates.find(p => existsSync(join(p, '.env')));
+  return envFile ? join(envFile, '.env') : join(__dirname, '.env');
 }
 const ENV_FILE = findEnvFile();
 
