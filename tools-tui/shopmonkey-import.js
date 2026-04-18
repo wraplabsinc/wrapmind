@@ -17,7 +17,16 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const ENV_FILE = join(__dirname, '.env');
+// Check both WSL path and Windows-mounted path
+const WINDOWS_BASE = '/mnt/c/Users/duke/OneDrive/Documents/GitHub';
+function findEnvFile() {
+  const candidates = [
+    join(__dirname, '.env'),
+    join(__dirname.replace(WINDOWS_BASE, '/mnt/c/Users/duke/OneDrive/Documents/GitHub'), '.env'),
+  ];
+  return candidates.find(p => existsSync(p)) || candidates[0];
+}
+const ENV_FILE = findEnvFile();
 
 // ── Load/save .env ─────────────────────────────────────────────────────────────
 function loadEnv() {
@@ -532,5 +541,11 @@ screen.key('tab', () => {
 });
 screen.key('C-c', () => process.exit(0));
 
-// Initial render
+// Initial render — show loaded config summary
+const loadedCount = Object.values(config).filter(v => v !== '').length;
+if (loadedCount > 0) {
+  setStatus(`Loaded ${loadedCount} values from .env`, 'green');
+} else {
+  setStatus('No .env found — fill in fields, then Test or Import', 'yellow');
+}
 showForm();
