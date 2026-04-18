@@ -87,12 +87,28 @@ export function AuthProvider({ children }) {
     return { data, error };
   }, []);
 
+  // Ensures a profiles row exists for the user. Creates one with default org if missing.
+  async function ensureProfile(userId, email) {
+    const { error } = await supabase.from('profiles').insert({
+      id: userId,
+      user_id: userId,
+      org_id: '00000000-0000-0000-0000-000000000001',
+      email,
+      role: 'estimator',
+      is_active: true,
+    }).select().single().catch(() => null);
+    // Silently ignore — profile may already exist from trigger
+  }
+
   const signIn = useCallback(async (email, password) => {
     if (DEV_AUTH) return { data: null, error: null };
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
+    if (!error && data.user) {
+      await ensureProfile(data.user.id, data.user.email);
+    }
     return { data, error };
   }, []);
 
