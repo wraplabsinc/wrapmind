@@ -6,7 +6,7 @@ Run this script **from your local machine** to migrate data from the ShopMonkey 
 
 ## Prerequisites
 
-- Node.js >= 20 (or set via nvm)
+- Node.js >= 20
 - `SHOPMONKEY_TOKEN` from your ShopMonkey account (Settings → API Access)
 - `SUPABASE_SERVICE_ROLE_KEY` from your local Supabase (run `supabase status` locally to get it)
 
@@ -16,10 +16,11 @@ Run this script **from your local machine** to migrate data from the ShopMonkey 
 
 ```bash
 cd ~/wrapmind
+git pull
 
-SHOPMONKEY_TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9... \
+SHOPMONKEY_TOKEN=<your-shopmonkey-token> \
 SUPABASE_URL=http://wrapos.cloud:54321 \
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9... \
+SUPABASE_SERVICE_ROLE_KEY=<your-local-service-role-key> \
 ORG_ID=571bcc90-165a-479e-a126-ef3ce56e17d5 \
 LOCATION_ID=85798b11-c872-409f-82f3-8ddb1a5db5a6 \
 node utils/sm-migrate.js
@@ -31,8 +32,8 @@ node utils/sm-migrate.js
 
 | Variable | Required | Description |
 |---|---|---|
-| `SHOPMONKEY_TOKEN` | Yes | ShopMonkey bearer JWT from your ShopMonkey account |
-| `SUPABASE_URL` | Yes | WrapOS Supabase URL — local: `http://wrapos.cloud:54321`, production: `https://nbewyeoiizlsfmbqoist.supabase.co` |
+| `SHOPMONKEY_TOKEN` | Yes | ShopMonkey bearer JWT from Settings → API Access |
+| `SUPABASE_URL` | Yes | Local: `http://wrapos.cloud:54321` / Production: `https://nbewyeoiizlsfmbqoist.supabase.co` |
 | `SUPABASE_SERVICE_ROLE_KEY` | Yes | Supabase service role key (not the anon key) |
 | `ORG_ID` | Yes | Target `organizations.id` in WrapOS |
 | `LOCATION_ID` | No | Filter to a specific ShopMonkey location. Omit to import all locations |
@@ -45,10 +46,14 @@ node utils/sm-migrate.js
 ## Dry Run (Fetch Only)
 
 ```bash
-DRY_RUN=true VERBOSE=true node utils/sm-migrate.js
+DRY_RUN=true VERBOSE=true \
+SHOPMONKEY_TOKEN=<your-shopmonkey-token> \
+SUPABASE_URL=http://wrapos.cloud:54321 \
+SUPABASE_SERVICE_ROLE_KEY=<your-local-service-role-key> \
+ORG_ID=571bcc90-165a-479e-a126-ef3ce56e17d5 \
+LOCATION_ID=85798b11-c872-409f-82f3-8ddb1a5db5a6 \
+node utils/sm-migrate.js
 ```
-
-This pulls data from ShopMonkey and logs what it would upsert, without touching the database.
 
 ---
 
@@ -56,33 +61,31 @@ This pulls data from ShopMonkey and logs what it would upsert, without touching 
 
 ### ORG_ID and LOCATION_ID
 
-Run this against your local Supabase to find existing orgs and locations:
+Run against your local Supabase:
 
 ```bash
-# Get ORG_ID
 curl -s "http://wrapos.cloud:54321/rest/v1/organizations?select=id,name" \
-  -H "apikey: <SUPABASE_SERVICE_ROLE_KEY>" \
-  -H "Authorization: Bearer <SUPABASE_SERVICE_ROLE_KEY>"
+  -H "apikey: <your-service-role-key>" \
+  -H "Authorization: Bearer <your-service-role-key>"
+```
 
-# Get LOCATION_ID
+```bash
 curl -s "http://wrapos.cloud:54321/rest/v1/locations?select=id,name,org_id" \
-  -H "apikey: <SUPABASE_SERVICE_ROLE_KEY>" \
-  -H "Authorization: Bearer <SUPABASE_SERVICE_ROLE_KEY>"
+  -H "apikey: <your-service-role-key>" \
+  -H "Authorization: Bearer <your-service-role-key>"
 ```
 
 ### SUPABASE_SERVICE_ROLE_KEY
 
-Run `supabase status` in your local WrapOS project:
-
 ```bash
 cd ~/wrapmind
 supabase status
-# Look for: service_role key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+# Copy the value shown for: service_role key
 ```
 
 ### SHOPMONKEY_TOKEN
 
-In ShopMonkey: **Settings → API Access**. Copy the bearer JWT token (starts with `eyJ...`).
+In ShopMonkey: **Settings → API Access**. Copy the full bearer JWT token.
 
 ---
 
@@ -105,7 +108,11 @@ On success, `organizations.sm_last_synced_at` is updated and a row is written to
 ## Import All Locations (No Filter)
 
 ```bash
-SHOPMONKEY_TOKEN=... SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... ORG_ID=... node utils/sm-migrate.js
+SHOPMONKEY_TOKEN=<your-shopmonkey-token> \
+SUPABASE_URL=http://wrapos.cloud:54321 \
+SUPABASE_SERVICE_ROLE_KEY=<your-service-role-key> \
+ORG_ID=571bcc90-165a-479e-a126-ef3ce56e17d5 \
+node utils/sm-migrate.js
 # Note: LOCATION_ID is omitted
 ```
 
