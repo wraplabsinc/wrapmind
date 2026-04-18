@@ -297,7 +297,7 @@ async function runImport() {
   const required = ['SHOPMONKEY_TOKEN', 'SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', 'ORG_ID'];
   const missing = required.filter(k => !config[k]);
   if (missing.length) {
-    logBox.log(`{red-fg}✗ Missing required fields: ${missing.join(', '}{/red-fg}}`);
+    logBox.log(`{red-fg}✗ Missing required fields: ${missing.join(', ')}{/red-fg}}`);
     return;
   }
 
