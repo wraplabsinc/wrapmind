@@ -27,8 +27,9 @@ function loadEnv() {
 }
 
 const cfg = loadEnv();
+const LID  = cfg.LOCATION_ID || '62437facd0a9970014db286d';
 console.log(`Config loaded. Org: ${cfg.ORG_ID}`);
-console.log(`  BASE: ${cfg.SM_API_BASE || BASE}`);
+console.log(`  BASE: ${cfg.SM_API_BASE || 'https://api.shopmonkey.cloud/v3'}`);
 console.log(`  LID:  ${LID}`);
 console.log(`  Token: ${cfg.SHOPMONKEY_TOKEN.slice(0,15)}...`);
 
@@ -72,7 +73,6 @@ function setStatus(msg)  { statusLabel.setContent(`{cyan-fg}Status:{/cyan-fg} ${
 const BASE    = cfg.SM_API_BASE || 'https://api.shopmonkey.cloud/v3';
 const SB_URL  = cfg.SUPABASE_URL || 'http://wrapos.cloud:54321';
 const SB_KEY  = cfg.SUPABASE_SERVICE_ROLE_KEY;
-const LID     = cfg.LOCATION_ID || '62437facd0a9970014db286d';
 
 const conflictMap = {
   sm_import_customers:    'org_id,sm_customer_id',
