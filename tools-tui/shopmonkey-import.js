@@ -73,11 +73,10 @@ function setStatus(msg)  { statusLabel.setContent(`{cyan-fg}Status:{/cyan-fg} ${
 // ── Helpers ─────────────────────────────────────────────────────────────────────
 const BASE    = 'https://api.shopmonkey.cloud/v3'; // hardcoded — do not override from .env
 
-// Write to both dev (wrapos.cloud) and production simultaneously
+// Production Supabase only
 const SB_SERVERS = [
-  { url: cfg.SUPABASE_URL_DEV  || 'http://wrapos.cloud:54321',            key: cfg.SUPABASE_SERVICE_ROLE_KEY_DEV  || cfg.SUPABASE_SERVICE_ROLE_KEY },
   { url: cfg.SUPABASE_URL_PROD || 'https://nbewyeoiizlsfmbqoist.supabase.co', key: cfg.SUPABASE_SERVICE_ROLE_KEY_PROD || cfg.SUPABASE_SERVICE_ROLE_KEY },
-].filter((v, i, a) => a.findIndex(x => x.url === v.url) === i); // dedupe by url
+].filter((v, i, a) => a.findIndex(x => x.url === v.url) === i);
 
 const conflictMap = {
   sm_import_customers:    'org_id,sm_customer_id',
