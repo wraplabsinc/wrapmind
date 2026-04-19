@@ -71,8 +71,13 @@ function setStatus(msg)  { statusLabel.setContent(`{cyan-fg}Status:{/cyan-fg} ${
 
 // ── Helpers ─────────────────────────────────────────────────────────────────────
 const BASE    = 'https://api.shopmonkey.cloud/v3'; // hardcoded — do not override from .env
-const SB_URL  = cfg.SUPABASE_URL || 'https://nbewyeoiizlsfmbqoist.supabase.co';
 const SB_KEY  = cfg.SUPABASE_SERVICE_ROLE_KEY;
+
+// Write to both dev (wrapos.cloud) and production simultaneously
+const SB_URLS = [
+  cfg.SUPABASE_URL_DEV    || 'http://wrapos.cloud:54321',
+  cfg.SUPABASE_URL_PROD   || 'https://nbewyeoiizlsfmbqoist.supabase.co',
+].filter((v, i, a) => a.indexOf(v) === i); // dedupe
 
 const conflictMap = {
   sm_import_customers:    'org_id,sm_customer_id',
@@ -109,13 +114,25 @@ async function smFetch(path) {
 
 async function sbUpsert(table, rows) {
   if (!rows.length) return 0;
-  const url = `${SB_URL}/rest/v1/${table}?on_conflict=${conflictMap[table]}`;
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${SB_KEY}`, 'apikey': SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates' },
-    body: JSON.stringify(rows),
-  });
-  if (!res.ok) throw new Error(`${table} → HTTP ${res.status}: ${(await res.text()).slice(0,80)}`);
+  const conflict = conflictMap[table];
+  // Write to all configured Supabase servers in parallel
+  const results = await Promise.allSettled(
+    SB_URLS.map(baseUrl => {
+      const url = `${baseUrl}/rest/v1/${table}?on_conflict=${conflict}`;
+      return fetch(url, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${SB_KEY}`, 'apikey': SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates' },
+        body: JSON.stringify(rows),
+      }).then(res => ({ url: baseUrl, status: res.status, ok: res.ok }));
+    })
+  );
+  const failures = results.filter(r => r.status === 'rejected' || !r.value.ok);
+  if (failures.length) {
+    const msg = failures.map(r => r.status === 'rejected' ? r.reason?.message : `${r.value.url} → HTTP ${r.value.status}`).join('; ');
+    log(`  {yellow-fg}⚠ sbUpsert ${table}: ${failures.length}/${results.length} failed: ${msg}{/yellow-fg}`);
+  } else {
+    log(`  {green-fg}✓ ${table} → ${results.length} server(s){/green-fg}`);
+  }
   return rows.length;
 }
 
