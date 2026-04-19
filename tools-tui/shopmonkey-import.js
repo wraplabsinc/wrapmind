@@ -71,13 +71,12 @@ function setStatus(msg)  { statusLabel.setContent(`{cyan-fg}Status:{/cyan-fg} ${
 
 // ── Helpers ─────────────────────────────────────────────────────────────────────
 const BASE    = 'https://api.shopmonkey.cloud/v3'; // hardcoded — do not override from .env
-const SB_KEY  = cfg.SUPABASE_SERVICE_ROLE_KEY;
 
 // Write to both dev (wrapos.cloud) and production simultaneously
-const SB_URLS = [
-  cfg.SUPABASE_URL_DEV    || 'http://wrapos.cloud:54321',
-  cfg.SUPABASE_URL_PROD   || 'https://nbewyeoiizlsfmbqoist.supabase.co',
-].filter((v, i, a) => a.indexOf(v) === i); // dedupe
+const SB_SERVERS = [
+  { url: cfg.SUPABASE_URL_DEV  || 'http://wrapos.cloud:54321',            key: cfg.SUPABASE_SERVICE_ROLE_KEY_DEV  || cfg.SUPABASE_SERVICE_ROLE_KEY },
+  { url: cfg.SUPABASE_URL_PROD || 'https://nbewyeoiizlsfmbqoist.supabase.co', key: cfg.SUPABASE_SERVICE_ROLE_KEY_PROD || cfg.SUPABASE_SERVICE_ROLE_KEY },
+].filter((v, i, a) => a.findIndex(x => x.url === v.url) === i); // dedupe by url
 
 const conflictMap = {
   sm_import_customers:    'org_id,sm_customer_id',
@@ -117,13 +116,13 @@ async function sbUpsert(table, rows) {
   const conflict = conflictMap[table];
   // Write to all configured Supabase servers in parallel
   const results = await Promise.allSettled(
-    SB_URLS.map(baseUrl => {
-      const url = `${baseUrl}/rest/v1/${table}?on_conflict=${conflict}`;
+    SB_SERVERS.map(server => {
+      const url = `${server.url}/rest/v1/${table}?on_conflict=${conflict}`;
       return fetch(url, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${SB_KEY}`, 'apikey': SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates' },
+        headers: { 'Authorization': `Bearer ${server.key}`, 'apikey': server.key, 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates' },
         body: JSON.stringify(rows),
-      }).then(res => ({ url: baseUrl, status: res.status, ok: res.ok }));
+      }).then(res => ({ url: server.url, status: res.status, ok: res.ok }));
     })
   );
   const failures = results.filter(r => r.status === 'rejected' || !r.value.ok);
