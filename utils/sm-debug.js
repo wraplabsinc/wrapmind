@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
- * sm-debug.js — ShopMonkey API probe
+ * sm-debug.js — Test correct ShopMonkey v3 paths from docs
+ * Reads .env in same directory.
  * Writes results to sm-debug-output.txt
  */
 
@@ -25,131 +26,95 @@ function loadEnv() {
 
 const cfg   = loadEnv();
 const TOKEN = cfg.SHOPMONKEY_TOKEN;
-const out   = [];
+const LID  = cfg.LOCATION_ID || cfg.SHOPMONKEY_LOCATION_ID || '62437facd0a9970014db286d';
+const BASE = 'https://api.shopmonkey.cloud/v3';
+const out  = [];
 
-function log(...args) { out.push(args.join(' ')); console.log(...args); }
+function log(...a) { console.log(...a); out.push(a.join(' ')); }
 
-function fetch(path, opts = {}) {
+function fetch(path) {
   return new Promise((resolve) => {
-    // Try each known base
-    const bases = [
-      'https://api.shopmonkey.cloud/v3',
-      'https://api.shopmonkey.io/v3',
-    ];
-    tryBase(bases, 0, path, opts, resolve);
-  });
-}
-
-function tryBase(bases, idx, path, opts, resolve) {
-  if (idx >= bases.length) { resolve({ status: 0, raw: 'all bases failed' }); return; }
-  const base = bases[idx];
-  const url = new URL(`${base}${path}`);
-  const req = https.request(url, {
-    method: 'GET',
-    headers: { 'Authorization': `Bearer ${TOKEN}`, 'Accept': 'application/json', ...(opts.headers || {}) },
-    timeout: 10000,
-    rejectUnauthorized: false, // handle self-signed cert
-  }, res => {
-    let body = '';
-    res.on('data', d => body += d);
-    res.on('end', () => {
-      if (res.statusCode === 401 || res.statusCode === 403) {
-        // Try next base
-        tryBase(bases, idx + 1, path, opts, resolve);
-      } else {
+    const url = new URL(`${BASE}${path}`);
+    const req = https.request(url, {
+      headers: {
+        'Authorization': `Bearer ${TOKEN}`,
+        'Accept': 'application/json',
+      },
+      timeout: 10000,
+      rejectUnauthorized: false,
+    }, res => {
+      let body = '';
+      res.on('data', d => body += d);
+      res.on('end', () => {
         let data;
         try { data = JSON.parse(body); } catch { data = null; }
-        resolve({ status: res.statusCode, data, raw: body.slice(0,200), base });
-      }
+        resolve({ status: res.statusCode, data, raw: body.slice(0, 300) });
+      });
     });
+    req.on('error', e => resolve({ status: 0, data: null, raw: e.message }));
+    req.on('timeout', () => { req.destroy(); resolve({ status: 0, data: null, raw: 'timeout' }); });
+    req.end();
   });
-  req.on('error', () => tryBase(bases, idx + 1, path, opts, resolve));
-  req.on('timeout', () => { req.destroy(); tryBase(bases, idx + 1, path, opts, resolve); });
-  req.end();
 }
 
-function statusOk(s) { return s >= 200 && s < 300; }
-
 ;(async () => {
-  log(`Token: ${TOKEN.slice(0,25)}...`);
-  log('');
-
-  // Decode JWT to show payload (not signature check)
-  try {
-    const payloadB64 = TOKEN.split('.')[1];
-    const pad = 4 - payloadB64.length % 4;
-    const payload = JSON.parse(Buffer.from(payloadB64 + '='.repeat(pad), 'base64url').toString());
-    log('JWT payload:');
-    log('  iss (issuer):', payload.iss);
-    log('  cid (client/company id):', payload.cid);
-    log('  lid (location id):', payload.lid);
-    log('  sid (shop id):', payload.sid);
-    log('  exp (expires):', new Date(payload.exp * 1000).toISOString());
-    log('  iat (issued at):', new Date(payload.iat * 1000).toISOString());
-    log('');
-  } catch(e) { log('Could not decode JWT:', e.message, ''); }
-
-  log('=== Probing bases (auto-selected on 401) ===');
+  log(`Base: ${BASE}`);
+  log(`Token: ${TOKEN.slice(0,20)}...`);
+  log(`LID: ${LID}`);
   log('');
 
   const tests = [
-    '/channels',
-    '/customers',
-    '/vehicles',
-    '/orders',
-    '/laborRates',
-    '/shops',
-    '/me',
-    '/profile',
-    '/api-docs',
-    '/swagger.json',
-    '/openapi.json',
-    // Shop-scoped with sid
-    `/shops/${SID}/customers`,
-    `/shops/${SID}/vehicles`,
-    `/shops/${SID}/orders`,
-    // Shop-scoped with lid
-    `/locations/${LID}/customers`,
-    `/locations/${LID}/vehicles`,
-    `/locations/${LID}/orders`,
-    // cid in path
-    `/companies/${CID}/customers`,
-    `/companies/${CID}/vehicles`,
-    `/companies/${CID}/orders`,
-    // data prefix
-    '/data/customers',
-    '/data/vehicles',
-    '/data/orders',
-    // public/info
-    '/public/channels',
-    '/public/customers',
+    // Main list endpoints (singular nouns, no locationId)
+    ['GET', '/customer',                'List customers'],
+    ['GET', '/customer?locationId='+LID, 'List customers (filtered)'],
+    ['GET', '/vehicle',                'List vehicles'],
+    ['GET', '/vehicle?locationId='+LID, 'List vehicles (filtered)'],
+    ['GET', '/order',                  'List orders'],
+    ['GET', '/order?locationId='+LID,   'List orders (filtered)'],
+    ['GET', '/labor_rate',             'List labor rates'],
+    ['GET', '/labor_rate?locationId='+LID, 'List labor rates (filtered)'],
+    ['GET', '/location',              'List locations'],
+    ['GET', '/location?locationId='+LID, 'List locations (filtered)'],
+
+    // Search endpoints
+    ['POST', '/customer/search',       'Search customers'],
+    ['POST', '/vehicle/search',        'Search vehicles'],
+    ['POST', '/order/search',          'Search orders'],
+
+    // With limit
+    ['GET', '/customer?limit=1',       'Customers limit=1'],
+    ['GET', '/vehicle?limit=1',        'Vehicles limit=1'],
+    ['GET', '/order?limit=1',          'Orders limit=1'],
   ];
 
-  for (const path of tests) {
-    const { status, data, raw, base } = await fetch(path);
-    const tag = statusOk(status) ? '✓' : status === 401 ? '✗401' : status === 404 ? '✗404' : '?';
-    let info = `HTTP ${status}`;
-    if (statusOk(status) && data) {
-      if (Array.isArray(data)) info = `OK — ${data.length} items`;
-      else info = `OK — keys: ${Object.keys(data).slice(0,5).join(', ')}`;
-    } else if (raw && raw.length < 100) {
-      info = raw.replace(/\n/g, ' ');
+  for (const [method, path, label] of tests) {
+    const r = await fetch(path);
+    const ok = r.status >= 200 && r.status < 300;
+    let info = '';
+    if (ok && r.data) {
+      const count = Array.isArray(r.data.data) ? r.data.data.length
+        : Array.isArray(r.data) ? r.data.length
+        : '?';
+      const hasMore = r.data.meta?.hasMore !== undefined ? r.data.meta.hasMore : '?';
+      info = `✓ ${count} items${typeof hasMore === 'boolean' ? `, hasMore=${hasMore}` : ''}`;
+      if (r.data.data?.[0]) {
+        info += ` | keys: ${Object.keys(r.data.data[0]).slice(0,5).join(', ')}`;
+      }
+    } else if (r.status === 404) {
+      info = `✗ 404 not found`;
+    } else if (r.status === 401) {
+      info = `✗ 401 unauthorized`;
+    } else if (r.status === 0) {
+      info = `✗ ${r.raw}`;
+    } else {
+      info = `HTTP ${r.status}: ${r.raw.slice(0,80)}`;
     }
-    log(`${tag} [${base}] ${path.padEnd(25)} ${info}`);
+    const tag = ok ? '✓' : r.status === 404 ? '✗' : '?';
+    log(`${tag} [${method}] ${path.padEnd(40)} ${label.padEnd(30)} ${info}`);
   }
 
   log('');
-  log('=== Trying shop-specific base URL from JWT iss ===');
-  const { status: s0, raw: r0 } = await new Promise(r => https.request(
-    'https://api.shopmonkey.cloud/.well-known/openapi.json',
-    { headers: { 'Authorization': `Bearer ${TOKEN}`, 'Accept': 'application/json' }, timeout: 8000, rejectUnauthorized: false },
-    res => { let b=''; res.on('data', d=>b+=d); res.on('end', () => r({ status: res.statusCode, raw: b })); }
-  ).on('error', e => r({ status: 0, raw: e.message })).end());
-  log(`/openapi.json: HTTP ${s0} — ${r0.slice(0,100)}`);
-
-  log('');
   log('=== DONE ===');
-  log('Copy output above.');
   writeFileSync(OUT_FILE, out.join('\n'));
   log('Wrote:', OUT_FILE);
 })();
