@@ -33,8 +33,6 @@ function fetch(path, opts = {}) {
   return new Promise((resolve) => {
     // Try each known base
     const bases = [
-      'https://api.shopmonkey.cloud/api/v3',
-      'https://api.shopmonkey.io/api/v3',
       'https://api.shopmonkey.cloud/v3',
       'https://api.shopmonkey.io/v3',
     ];
