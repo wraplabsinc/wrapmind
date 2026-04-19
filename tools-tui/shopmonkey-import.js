@@ -28,6 +28,9 @@ function loadEnv() {
 
 const cfg = loadEnv();
 console.log(`Config loaded. Org: ${cfg.ORG_ID}`);
+console.log(`  BASE: ${cfg.SM_API_BASE || BASE}`);
+console.log(`  LID:  ${LID}`);
+console.log(`  Token: ${cfg.SHOPMONKEY_TOKEN.slice(0,15)}...`);
 
 // ── TUI ────────────────────────────────────────────────────────────────────────
 const screen = blessed.screen({ smartCSR: true });
@@ -87,7 +90,9 @@ async function smFetch(path) {
     const p = new URL(url);
     p.searchParams.set('page', String(page));
     p.searchParams.set('limit', '100');
-    const res = await fetch(p.toString(), {
+    const fetchUrl = p.toString();
+    log(`  → GET ${fetchUrl.slice(0, 100)}`);
+    const res = await fetch(fetchUrl, {
       headers: { 'Authorization': `Bearer ${cfg.SHOPMONKEY_TOKEN}`, 'Accept': 'application/json' },
     });
     if (!res.ok) throw new Error(`${path} → HTTP ${res.status}`);
