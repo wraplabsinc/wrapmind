@@ -126,7 +126,7 @@ const conflictMap = {
 };
 
 async function smFetch(path, params = {}) {
-  const url = new URL(`${cfg.SM_API_BASE || 'https://api.shopmonkey.cloud/api/v3'}${path}`);
+  const url = new URL(`${cfg.SM_API_BASE || 'https://api.shopmonkey.cloud/v3'}${path}`);
   if (cfg.LOCATION_ID) url.searchParams.set('locationId', cfg.LOCATION_ID);
   Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
   const all = [];
@@ -241,7 +241,7 @@ async function sbUpsert(table, rows) {
       }]);
 
       try {
-        const linesRes = await fetch(`${cfg.SM_API_BASE || 'https://api.shopmonkey.cloud/api/v3'}/orders/${o.id}/lines`, {
+        const linesRes = await fetch(`${cfg.SM_API_BASE || 'https://api.shopmonkey.cloud/v3'}/orders/${o.id}/lines`, {
           headers: { 'Authorization': `Bearer ${cfg.SHOPMONKEY_TOKEN}`, 'Accept': 'application/json' },
         });
         if (linesRes.ok) {

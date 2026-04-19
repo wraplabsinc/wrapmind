@@ -18,14 +18,14 @@
  *
  * Environment variables (optional):
  *   LOCATION_ID               — filter to a specific ShopMonkey location (omit to import all)
- *   SM_API_BASE               — defaults to https://api.shopmonkey.cloud/api/v3
+ *   SM_API_BASE               — defaults to https://api.shopmonkey.cloud/v3
  *   DRY_RUN                  — if "true", fetch only, don't write to Supabase
  *   VERBOSE                   — if "true", log every record upserted
  */
 
 'use strict';
 
-const SM_API_BASE   = process.env.SM_API_BASE  || 'https://api.shopmonkey.cloud/api/v3';
+const SM_API_BASE   = process.env.SM_API_BASE  || 'https://api.shopmonkey.cloud/v3';
 const SUPABASE_URL  = process.env.SUPABASE_URL;
 const SB_SRV_KEY    = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const SM_TOKEN      = process.env.SHOPMONKEY_TOKEN;
