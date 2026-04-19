@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * sm-debug.js — Test correct ShopMonkey v3 paths from docs
+ * sm-debug.js — Test ShopMonkey pagination
  * Reads .env in same directory.
  * Writes results to sm-debug-output.txt
  */
@@ -26,29 +26,23 @@ function loadEnv() {
 
 const cfg   = loadEnv();
 const TOKEN = cfg.SHOPMONKEY_TOKEN;
-const LID  = cfg.LOCATION_ID || cfg.SHOPMONKEY_LOCATION_ID || '62437facd0a9970014db286d';
-const BASE = 'https://api.shopmonkey.cloud/v3';
+const BASE  = cfg.SM_API_BASE || 'https://api.shopmonkey.cloud/v3';
+const LID  = cfg.LOCATION_ID || '62437facd0a9970014db286d';
 const out  = [];
 
 function log(...a) { console.log(...a); out.push(a.join(' ')); }
 
-function fetch(path) {
+function fetch(url) {
   return new Promise((resolve) => {
-    const url = new URL(`${BASE}${path}`);
-    const req = https.request(url, {
-      headers: {
-        'Authorization': `Bearer ${TOKEN}`,
-        'Accept': 'application/json',
-      },
-      timeout: 10000,
-      rejectUnauthorized: false,
+    const req = https.request(new URL(url), {
+      headers: { 'Authorization': `Bearer ${TOKEN}`, 'Accept': 'application/json' },
+      timeout: 10000, rejectUnauthorized: false,
     }, res => {
-      let body = '';
-      res.on('data', d => body += d);
+      let b = ''; res.on('data', d => b += d);
       res.on('end', () => {
         let data;
-        try { data = JSON.parse(body); } catch { data = null; }
-        resolve({ status: res.statusCode, data, raw: body.slice(0, 300) });
+        try { data = JSON.parse(b); } catch { data = null; }
+        resolve({ status: res.statusCode, data, raw: b.slice(0,200) });
       });
     });
     req.on('error', e => resolve({ status: 0, data: null, raw: e.message }));
@@ -58,59 +52,47 @@ function fetch(path) {
 }
 
 ;(async () => {
-  log(`Base: ${BASE}`);
+  log(`BASE: ${BASE}`);
   log(`Token: ${TOKEN.slice(0,20)}...`);
-  log(`LID: ${LID}`);
   log('');
 
-  const tests = [
-    // Main list endpoints (singular nouns, no locationId)
-    ['GET', '/customer',                'List customers'],
-    ['GET', '/customer?locationId='+LID, 'List customers (filtered)'],
-    ['GET', '/vehicle',                'List vehicles'],
-    ['GET', '/vehicle?locationId='+LID, 'List vehicles (filtered)'],
-    ['GET', '/order',                  'List orders'],
-    ['GET', '/order?locationId='+LID,   'List orders (filtered)'],
-    ['GET', '/labor_rate',             'List labor rates'],
-    ['GET', '/labor_rate?locationId='+LID, 'List labor rates (filtered)'],
-    ['GET', '/location',              'List locations'],
-    ['GET', '/location?locationId='+LID, 'List locations (filtered)'],
+  // Fetch page 1 — check what ids we get
+  const p1 = await fetch(`${BASE}/customer?limit=100&page=1`);
+  const ids1 = p1.data?.data?.slice(0,5).map(c => c.id) || [];
+  const hasMore1 = p1.data?.meta?.hasMore;
+  log(`Page 1: ${p1.data?.data?.length} items, hasMore=${hasMore1}, first 5 ids: ${ids1.join(', ')}`);
 
-    // Search endpoints
-    ['POST', '/customer/search',       'Search customers'],
-    ['POST', '/vehicle/search',        'Search vehicles'],
-    ['POST', '/order/search',          'Search orders'],
+  // Fetch page 2
+  const p2 = await fetch(`${BASE}/customer?limit=100&page=2`);
+  const ids2 = p2.data?.data?.slice(0,5).map(c => c.id) || [];
+  const hasMore2 = p2.data?.meta?.hasMore;
+  log(`Page 2: ${p2.data?.data?.length} items, hasMore=${hasMore2}, first 5 ids: ${ids2.join(', ')}`);
 
-    // With limit
-    ['GET', '/customer?limit=1',       'Customers limit=1'],
-    ['GET', '/vehicle?limit=1',        'Vehicles limit=1'],
-    ['GET', '/order?limit=1',          'Orders limit=1'],
-  ];
+  // Fetch page 3
+  const p3 = await fetch(`${BASE}/customer?limit=100&page=3`);
+  const ids3 = p3.data?.data?.slice(0,5).map(c => c.id) || [];
+  const hasMore3 = p3.data?.meta?.hasMore;
+  log(`Page 3: ${p3.data?.data?.length} items, hasMore=${hasMore3}, first 5 ids: ${ids3.join(', ')}`);
 
-  for (const [method, path, label] of tests) {
-    const r = await fetch(path);
-    const ok = r.status >= 200 && r.status < 300;
-    let info = '';
-    if (ok && r.data) {
-      const count = Array.isArray(r.data.data) ? r.data.data.length
-        : Array.isArray(r.data) ? r.data.length
-        : '?';
-      const hasMore = r.data.meta?.hasMore !== undefined ? r.data.meta.hasMore : '?';
-      info = `✓ ${count} items${typeof hasMore === 'boolean' ? `, hasMore=${hasMore}` : ''}`;
-      if (r.data.data?.[0]) {
-        info += ` | keys: ${Object.keys(r.data.data[0]).slice(0,5).join(', ')}`;
-      }
-    } else if (r.status === 404) {
-      info = `✗ 404 not found`;
-    } else if (r.status === 401) {
-      info = `✗ 401 unauthorized`;
-    } else if (r.status === 0) {
-      info = `✗ ${r.raw}`;
-    } else {
-      info = `HTTP ${r.status}: ${r.raw.slice(0,80)}`;
-    }
-    const tag = ok ? '✓' : r.status === 404 ? '✗' : '?';
-    log(`${tag} [${method}] ${path.padEnd(40)} ${label.padEnd(30)} ${info}`);
+  log('');
+
+  // Are they the same?
+  const same12 = ids1[0] === ids2[0];
+  const same23 = ids2[0] === ids3[0];
+  log(`${same12 ? '✗ Page 1 and 2 have SAME ids (broken!)' : '✓ Page 1 and 2 are different'}`);
+  log(`${same23 ? '✗ Page 2 and 3 have SAME ids (broken!)' : '✓ Page 2 and 3 are different'}`);
+
+  if (same12 || same23) {
+    log('');
+    log('PAGINATION IS BROKEN — page parameter ignored by API');
+    log('Trying with LocationId + offset/limit...');
+    const o1 = await fetch(`${BASE}/customer?limit=100&locationId=${LID}&offset=0`);
+    const o2 = await fetch(`${BASE}/customer?limit=100&locationId=${LID}&offset=100`);
+    const ids_off1 = o1.data?.data?.slice(0,3).map(c => c.id) || [];
+    const ids_off2 = o2.data?.data?.slice(0,3).map(c => c.id) || [];
+    log(`offset=0:  ${ids_off1.join(', ')}`);
+    log(`offset=100: ${ids_off2.join(', ')}`);
+    log(`${ids_off1[0] === ids_off2[0] ? '✗ offset pagination also broken' : '✓ offset pagination works'}`);
   }
 
   log('');
