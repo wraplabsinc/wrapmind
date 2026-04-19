@@ -1,4 +1,5 @@
--- WrapOs Database Schema - ShopMonkey Data Intelligence (Phase 1: Import Tables)
+-- Run this against the production Supabase database to create sm_import_* tables
+-- Go to: https://supabase.com/dashboard → Project → SQL Editor → paste and run
 
 CREATE TABLE IF NOT EXISTS sm_import_customers (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -99,36 +100,9 @@ ALTER TABLE sm_import_orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE sm_import_order_lines ENABLE ROW LEVEL SECURITY;
 ALTER TABLE sm_import_labor_rates ENABLE ROW LEVEL SECURITY;
 
+-- Service role key bypasses RLS, so these policies allow auth.uid() to work for regular users
 CREATE POLICY "Allow all access for organization members" ON sm_import_customers FOR ALL USING (org_id = (SELECT org_id FROM users WHERE id = auth.uid()));
 CREATE POLICY "Allow all access for organization members" ON sm_import_vehicles FOR ALL USING (org_id = (SELECT org_id FROM users WHERE id = auth.uid()));
 CREATE POLICY "Allow all access for organization members" ON sm_import_orders FOR ALL USING (org_id = (SELECT org_id FROM users WHERE id = auth.uid()));
 CREATE POLICY "Allow all access for organization members" ON sm_import_order_lines FOR ALL USING (org_id = (SELECT org_id FROM users WHERE id = auth.uid()));
 CREATE POLICY "Allow all access for organization members" ON sm_import_labor_rates FOR ALL USING (org_id = (SELECT org_id FROM users WHERE id = auth.uid()));
-
-CREATE OR REPLACE FUNCTION update_sm_import_timestamp()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.updated_at = NOW();
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER tr_sm_import_customers_updated
-    BEFORE UPDATE ON sm_import_customers
-    FOR EACH ROW EXECUTE FUNCTION update_sm_import_timestamp();
-
-CREATE TRIGGER tr_sm_import_vehicles_updated
-    BEFORE UPDATE ON sm_import_vehicles
-    FOR EACH ROW EXECUTE FUNCTION update_sm_import_timestamp();
-
-CREATE TRIGGER tr_sm_import_orders_updated
-    BEFORE UPDATE ON sm_import_orders
-    FOR EACH ROW EXECUTE FUNCTION update_sm_import_timestamp();
-
-CREATE TRIGGER tr_sm_import_order_lines_updated
-    BEFORE UPDATE ON sm_import_order_lines
-    FOR EACH ROW EXECUTE FUNCTION update_sm_import_timestamp();
-
-CREATE TRIGGER tr_sm_import_labor_rates_updated
-    BEFORE UPDATE ON sm_import_labor_rates
-    FOR EACH ROW EXECUTE FUNCTION update_sm_import_timestamp();
