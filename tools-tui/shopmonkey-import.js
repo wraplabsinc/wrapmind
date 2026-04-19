@@ -71,7 +71,7 @@ function setStatus(msg)  { statusLabel.setContent(`{cyan-fg}Status:{/cyan-fg} ${
 
 // ── Helpers ─────────────────────────────────────────────────────────────────────
 const BASE    = 'https://api.shopmonkey.cloud/v3'; // hardcoded — do not override from .env
-const SB_URL  = cfg.SUPABASE_URL || 'http://wrapos.cloud:54321';
+const SB_URL  = cfg.SUPABASE_URL || 'https://nbewyeoiizlsfmbqoist.supabase.co';
 const SB_KEY  = cfg.SUPABASE_SERVICE_ROLE_KEY;
 
 const conflictMap = {
