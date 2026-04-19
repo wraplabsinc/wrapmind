@@ -20,7 +20,7 @@ function loadEnv() {
     const m = line.match(/^([A-Z_]+)=(.*)$/);
     if (m) env[m[1]] = m[2].trim().replace(/^["']|["']$/g, '');
   }
-  const required = ['SHOPMONKEY_TOKEN', 'SUPABASE_SERVICE_ROLE_KEY', 'ORG_ID'];
+  const required = ['SHOPMONKEY_TOKEN', 'SUPABASE_SERVICE_ROLE_KEY', 'WRAPMIND_ORG_ID'];
   const missing = required.filter(k => !env[k]);
   if (missing.length) { console.error(`Missing: ${missing.join(', ')}`); process.exit(1); }
   return env;
@@ -28,7 +28,9 @@ function loadEnv() {
 
 const cfg = loadEnv();
 const LID  = cfg.LOCATION_ID || '62437facd0a9970014db286d';
-console.log(`Config loaded. Org: ${cfg.ORG_ID}`);
+const WRAPMIND_ORG = cfg.WRAPMIND_ORG_ID;
+const SM_ORG      = cfg.SM_ORG_ID || WRAPMIND_ORG;
+console.log(`Config loaded. WRAPMIND_ORG: ${WRAPMIND_ORG}, SM_ORG: ${SM_ORG}`);
 console.log(`  BASE: ${cfg.SM_API_BASE || 'https://api.shopmonkey.cloud/v3'}`);
 console.log(`  LID:  ${LID}`);
 console.log(`  Token: ${cfg.SHOPMONKEY_TOKEN.slice(0,15)}...`);
@@ -147,7 +149,7 @@ async function sbUpsert(table, rows) {
     const customers = await smFetch('/customer');
     log(`Found ${customers.length} customers`);
     const rows = customers.map(c => ({
-      org_id: cfg.ORG_ID, sm_customer_id: c.id,
+      org_id: SM_ORG, sm_customer_id: c.id,
       first_name:       c.coalescedFirstNameOrCompanyName || c.firstName || null,
       last_name:        c.lastName || null,
       phone:            c.phone || null,
@@ -168,7 +170,7 @@ async function sbUpsert(table, rows) {
     const vehicles = await smFetch('/vehicle');
     log(`Found ${vehicles.length} vehicles`);
     const vRows = vehicles.map(v => ({
-      org_id: cfg.ORG_ID, sm_vehicle_id: v.id,
+      org_id: SM_ORG, sm_vehicle_id: v.id,
       sm_customer_id: v.customerId || v.baseId || null,
       year: v.year || null, make: v.make || null, model: v.model || null,
       vin: v.vin || v.VIN || null,
@@ -190,7 +192,7 @@ async function sbUpsert(table, rows) {
     const rates = await smFetch('/labor_rate');
     log(`Found ${rates.length} labor rates`);
     const lRows = rates.map(r => ({
-      org_id: cfg.ORG_ID, sm_labor_rate_id: r.id,
+      org_id: SM_ORG, sm_labor_rate_id: r.id,
       name: r.name || null, rate: r.rate || r.hourlyLaborRate || null,
       sm_data: r,
     }));
@@ -209,7 +211,7 @@ async function sbUpsert(table, rows) {
     for (let i = 0; i < orders.length; i++) {
       const o = orders[i];
       await sbUpsert('sm_import_orders', [{
-        org_id: cfg.ORG_ID, sm_order_id: o.id,
+        org_id: SM_ORG, sm_order_id: o.id,
         sm_customer_id: o.customerId || null, sm_vehicle_id: o.vehicleId || null,
         status: o.status || null,
         total: o.totalDollars || o.total || null,
@@ -235,7 +237,7 @@ async function sbUpsert(table, rows) {
             if (svc.parts?.length) {
               for (const p of svc.parts) {
                 lineRows.push({
-                  org_id: cfg.ORG_ID, sm_order_id: o.id, sm_line_id: p.id || `${svc.id}-part-${p.partId}`,
+                  org_id: SM_ORG, sm_order_id: o.id, sm_line_id: p.id || `${svc.id}-part-${p.partId}`,
                   description: p.description || p.partDescription || null,
                   line_type: 'part', quantity: p.quantity || null,
                   unit_price: p.unitPriceDollars || null, total: p.totalDollars || null,
@@ -247,7 +249,7 @@ async function sbUpsert(table, rows) {
             if (svc.labor?.length) {
               for (const l of svc.labor) {
                 lineRows.push({
-                  org_id: cfg.ORG_ID, sm_order_id: o.id, sm_line_id: l.id || `${svc.id}-labor-${l.laborId}`,
+                  org_id: SM_ORG, sm_order_id: o.id, sm_line_id: l.id || `${svc.id}-labor-${l.laborId}`,
                   description: l.description || l.laborDescription || null,
                   line_type: 'labor', quantity: l.hours || null,
                   unit_price: l.unitPriceDollars || null, total: l.totalDollars || null,
@@ -259,7 +261,7 @@ async function sbUpsert(table, rows) {
             if (svc.fees?.length) {
               for (const f of svc.fees) {
                 lineRows.push({
-                  org_id: cfg.ORG_ID, sm_order_id: o.id, sm_line_id: f.id || `${svc.id}-fee-${f.feeId}`,
+                  org_id: SM_ORG, sm_order_id: o.id, sm_line_id: f.id || `${svc.id}-fee-${f.feeId}`,
                   description: f.description || f.feeDescription || null,
                   line_type: 'fee', quantity: 1,
                   unit_price: f.amount || f.unitPriceDollars || null, total: f.totalDollars || null,
@@ -271,7 +273,7 @@ async function sbUpsert(table, rows) {
             if (svc.tires?.length) {
               for (const t of svc.tires) {
                 lineRows.push({
-                  org_id: cfg.ORG_ID, sm_order_id: o.id, sm_line_id: t.id || `${svc.id}-tire-${t.tireId}`,
+                  org_id: SM_ORG, sm_order_id: o.id, sm_line_id: t.id || `${svc.id}-tire-${t.tireId}`,
                   description: t.description || t.tireDescription || null,
                   line_type: 'tire', quantity: t.quantity || null,
                   unit_price: t.unitPriceDollars || null, total: t.totalDollars || null,
@@ -298,11 +300,15 @@ async function sbUpsert(table, rows) {
     setStatus('Complete!');
     log(`{green-fg}{bold}✓ Import complete!{/bold}{/green-fg}`);
 
-    await fetch(`${SB_URL}/rest/v1/organizations?id=eq.${cfg.ORG_ID}`, {
-      method: 'PATCH',
-      headers: { 'Authorization': `Bearer ${SB_KEY}`, 'apikey': SB_KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ sm_last_synced_at: new Date().toISOString() }),
-    }).catch(() => {});
+    await Promise.allSettled(
+      SB_SERVERS.map(server =>
+        fetch(`${server.url}/rest/v1/organizations?id=eq.${WRAPMIND_ORG}`, {
+          method: 'PATCH',
+          headers: { 'Authorization': `Bearer ${server.key}`, 'apikey': server.key, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sm_last_synced_at: new Date().toISOString() }),
+        })
+      )
+    );
 
   } catch (err) {
     log(`{red-fg}{bold}✗ Error: ${err.message}{/bold}{/red-fg}`);
