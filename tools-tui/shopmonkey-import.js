@@ -85,23 +85,24 @@ const conflictMap = {
 async function smFetch(path) {
   const url = new URL(`${BASE}${path}`);
   const all = [];
-  let page = 1;
+  let skip = 0;
+  const LIMIT = 100;
   while (true) {
     const p = new URL(url);
-    p.searchParams.set('page', String(page));
-    p.searchParams.set('limit', '100');
+    p.searchParams.set('limit', String(LIMIT));
+    p.searchParams.set('skip', String(skip));
     const fetchUrl = p.toString();
-    log(`  → GET ${fetchUrl.slice(0, 100)}`);
+    log(`  → GET ${fetchUrl}`);
     const res = await fetch(fetchUrl, {
       headers: { 'Authorization': `Bearer ${cfg.SHOPMONKEY_TOKEN}`, 'Accept': 'application/json' },
     });
     if (!res.ok) throw new Error(`${path} → HTTP ${res.status}`);
     const body = await res.json();
-    const rows = Array.isArray(body.data) ? body.data : Array.isArray(body) ? body : [];
+    const rows = body.data || [];
     if (!rows.length) break;
     all.push(...rows);
     if (!body.meta?.hasMore) break;
-    page++;
+    skip += LIMIT;
   }
   return all;
 }
