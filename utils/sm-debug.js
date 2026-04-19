@@ -104,6 +104,25 @@ function statusOk(s) { return s >= 200 && s < 300; }
     '/api-docs',
     '/swagger.json',
     '/openapi.json',
+    // Shop-scoped with sid
+    `/shops/${SID}/customers`,
+    `/shops/${SID}/vehicles`,
+    `/shops/${SID}/orders`,
+    // Shop-scoped with lid
+    `/locations/${LID}/customers`,
+    `/locations/${LID}/vehicles`,
+    `/locations/${LID}/orders`,
+    // cid in path
+    `/companies/${CID}/customers`,
+    `/companies/${CID}/vehicles`,
+    `/companies/${CID}/orders`,
+    // data prefix
+    '/data/customers',
+    '/data/vehicles',
+    '/data/orders',
+    // public/info
+    '/public/channels',
+    '/public/customers',
   ];
 
   for (const path of tests) {
