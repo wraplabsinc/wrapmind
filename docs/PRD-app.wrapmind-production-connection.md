@@ -2,7 +2,7 @@
 
 **Version:** 1.0
 **Date:** 2026-04-19
-**Status:** Draft
+**Status:** Archived — Implementation complete. See GitHub issues #33–#39.
 **Author:** Sophie (AI) + Duke DeLaet
 
 ---
