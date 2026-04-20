@@ -135,6 +135,29 @@ async function sbUpsert(table, rows) {
   return rows.length;
 }
 
+// Mark records as soft-deleted (deleted_at = NOW()) where ID not in currentIds
+async function markDeleted(table, idColumn, currentIds) {
+  if (!currentIds.size) return;
+  try {
+    const res = await fetch(
+      `${SB_SERVERS[0].url}/rest/v1/${table}?org_id=eq.${WRAPMIND_ORG}&${idColumn}=not.in.(${Array.from(currentIds).map(id => encodeURIComponent(id)).join(',')})&deleted_at=is.null&select=${idColumn}`,
+      { headers: { 'Authorization': `Bearer ${SB_SERVERS[0].key}`, 'apikey': SB_SERVERS[0].key } }
+    );
+    if (!res.ok) return;
+    const stale = await res.json();
+    if (!stale.length) return;
+    await fetch(
+      `${SB_SERVERS[0].url}/rest/v1/${table}?org_id=eq.${WRAPMIND_ORG}`,
+      {
+        method: 'PATCH',
+        headers: { 'Authorization': `Bearer ${SB_SERVERS[0].key}`, 'apikey': SB_SERVERS[0].key, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+        body: JSON.stringify({ deleted_at: new Date().toISOString() }),
+      }
+    );
+    log(`  {yellow-fg}⚠ Soft-deleted ${stale.length} removed ${table} record(s){/yellow-fg}`);
+  } catch {}
+}
+
 // ── Run ───────────────────────────────────────────────────────────────────────
 ;(async () => {
   const phases = ['Customers', 'Vehicles', 'Labor Rates', 'Orders', 'Done'];
@@ -159,6 +182,7 @@ async function sbUpsert(table, rows) {
       await sbUpsert('sm_import_customers', rows.slice(i, i + 100));
       setProgress((i + 100) / rows.length * 0.2);
     }
+    await markDeleted('sm_import_customers', 'sm_customer_id', new Set(customers.map(c => c.id)));
     log(`{green-fg}✓ Customers: ${customers.length} imported{/green-fg}`);
     phaseIdx++;
 
@@ -181,6 +205,7 @@ async function sbUpsert(table, rows) {
       await sbUpsert('sm_import_vehicles', vRows.slice(i, i + 100));
       setProgress(0.2 + (i + 100) / vRows.length * 0.2);
     }
+    await markDeleted('sm_import_vehicles', 'sm_vehicle_id', new Set(vehicles.map(v => v.id)));
     log(`{green-fg}✓ Vehicles: ${vehicles.length} imported{/green-fg}`);
     phaseIdx++;
 
@@ -315,7 +340,8 @@ async function sbUpsert(table, rows) {
         setProgress(0.6 + orderCount / orders.length * 0.35);
       }
     }
-    log(`{green-fg}✓ Orders: ${orders.length} imported{/green-fg}`);
+    await markDeleted('sm_import_orders', 'sm_order_id', new Set(allOrders.map(o => o.id)));
+    log(`{green-fg}✓ Orders: ${orders.length} imported (${allOrders.length} total in ShopMonkey){/green-fg}`);
     phaseIdx++;
 
     // ── Done ───────────────────────────────────────────────────────────────
