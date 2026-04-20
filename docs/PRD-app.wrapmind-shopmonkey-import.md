@@ -22,7 +22,7 @@ ShopMonkey API  →  sm_import_* staging tables  →  Native wrapmind tables
 
 | ShopMonkey Entity | Import Stage Table     | Native wrapmind Table |
 |-------------------|------------------------|----------------------|
-| Customer          | sm_import_customers    | customers            |
+| Customer          | sm_import_customers    | customers (was: clients) |
 | Vehicle           | sm_import_vehicles     | vehicles             |
 | Order             | sm_import_orders       | estimates / invoices |
 | Order Service Line| sm_import_order_lines  | estimate/invoice line_items |
@@ -160,7 +160,7 @@ Phase 2 runs SQL that reads from sm_import_* staging tables and upserts into nat
 ### 4.1 Customers
 
 **Source:** `sm_import_customers`
-**Target:** `customers`
+**Target:** `customers` (renamed from `clients` in production — had `shopmonkey_customer_id` already)
 
 ```sql
 INSERT INTO customers (id, org_id, name, email, phone, address, source, created_at, updated_at)
@@ -178,36 +178,38 @@ FROM sm_import_customers
 ON CONFLICT DO NOTHING;  -- dedupe by sm_customer_id via staging dedup
 ```
 
-**Note:** Native `customers` table does NOT have an external ID column. The sm_customer_id is lost after transformation. A future migration should add `sm_customer_id TEXT` to the customers table to enable bidirectional sync.
+**Note:** `customers` (was `clients`) already has `shopmonkey_customer_id TEXT UNIQUE` and index — no migration needed for that column. Phase 2 join from vehicles now uses `sm_vehicle_id → vehicles.sm_vehicle_id → sm_import_vehicles.sm_vehicle_id` (created in Issue #44).
 
 ### 4.2 Vehicles
 
 **Source:** `sm_import_vehicles`
-**Target:** `vehicles`
+**Target:** `vehicles` (created in Issue #44)
 
-Vehicles must be linked to a customer. The vehicle's `sm_customer_id` must be resolved to a wrapmind `customer_id` via the transformed customers.
+Vehicles link to a customer via `client_id` (→ `customers`). The join path is:
+```sql
+sm_import_vehicles.sm_vehicle_id → vehicles.sm_vehicle_id
+sm_import_vehicles.sm_customer_id → customers.shopmonkey_customer_id
+```
 
 ```sql
-INSERT INTO vehicles (id, org_id, customer_id, year, make, model, vin, color, vehicle_type, created_at, updated_at)
+INSERT INTO vehicles (id, org_id, client_id, sm_vehicle_id, year, make, model, vin, color, vehicle_type, created_at, updated_at)
 SELECT
   gen_random_uuid(),
   v.org_id,
-  c.id,
+  c.id,                                    -- resolved via shopmonkey_customer_id
+  v.sm_vehicle_id,
   v.year, v.make, v.model, v.vin, v.color, v.vehicle_type,
   NOW(), NOW()
 FROM sm_import_vehicles v
 JOIN customers c
-  ON c.org_id = v.org_id
-  AND c.name = COALESCE(NULLIF(v.first_name, '') || ' ' || NULLIF(v.last_name, ''), ...)
--- Requires customers to have sm_customer_id tracking
-ON CONFLICT (org_id, vin) DO UPDATE SET
+  ON c.shopmonkey_customer_id = v.sm_customer_id
+  AND c.org_id = v.org_id
+ON CONFLICT (org_id, sm_vehicle_id) DO UPDATE SET
   year = EXCLUDED.year,
   make = EXCLUDED.make,
   model = EXCLUDED.model,
   updated_at = NOW();
 ```
-
-**Note:** The join condition is fragile without an explicit sm_customer_id on the customers table. This is an open issue.
 
 ### 4.3 Orders → Estimates / Invoices
 
@@ -240,8 +242,8 @@ SELECT
   o.total, o.notes, 'draft',
   NOW(), NOW()
 FROM sm_import_orders o
-JOIN customers c ON ...  -- sm_customer_id resolution
-LEFT JOIN vehicles v ON v.sm_vehicle_id = o.sm_vehicle_id
+JOIN customers c ON c.shopmonkey_customer_id = o.sm_customer_id AND c.org_id = o.org_id
+LEFT JOIN vehicles v ON v.sm_vehicle_id = o.sm_vehicle_id AND v.org_id = o.org_id
 WHERE o.status NOT IN ('won', 'paid', 'invoiced')
 ON CONFLICT (estimate_number) DO UPDATE SET
   total = EXCLUDED.total,
@@ -255,11 +257,11 @@ ON CONFLICT (estimate_number) DO UPDATE SET
 
 All upserts use the ShopMonkey external ID as the conflict key:
 
-- Customers: `sm_customer_id` → `customers` (requires adding `sm_customer_id` column)
-- Vehicles: `(org_id, vin)` unique index (existing)
+- Customers: `shopmonkey_customer_id` on `customers` (was: `clients`) — already exists
+- Vehicles: `(org_id, sm_vehicle_id)` — unique index created in Issue #44
 - Orders: `estimate_number = 'SM-' || sm_order_id` → estimates; invoices use `invoice_number`
 
-**Important:** Without storing `sm_customer_id` on the native `customers` table, subsequent syncs cannot match imported customers back to their ShopMonkey origin. This is a known gap.
+**Important:** `customers.shopmonkey_customer_id` was already present in production — no migration needed.
 
 ---
 
@@ -316,7 +318,7 @@ A scheduled Edge Function could:
 
 3. **Historical orders:** Should the pipeline backfill all historical ShopMonkey orders, or only fetch orders modified since `organizations.sm_last_synced_at`? The current TUI fetches ALL orders every time, which is inefficient.
 
-4. **sm_customer_id on customers table:** The native `customers` table lacks a ShopMonkey external ID column. This breaks reliable customer matching in Phase 2. A migration to add `sm_customer_id TEXT UNIQUE` to `customers` is needed.
+4. **sm_customer_id on customers table:** Already resolved — `customers` (was `clients`) already had `shopmonkey_customer_id TEXT UNIQUE` with index. Vehicles table now has `sm_vehicle_id` with unique index on `(org_id, sm_vehicle_id)`.
 
 5. **Location resolution:** ShopMonkey orders have no `location_id`. wrapmind's `estimates` and `invoices` require a `location_id`. How should this be resolved?
    - Use a single default location for the org?

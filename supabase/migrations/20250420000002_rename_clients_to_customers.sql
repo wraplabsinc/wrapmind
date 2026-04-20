@@ -1,0 +1,15 @@
+-- ============================================================
+-- Issue #44 follow-up: Rename clients → customers
+-- ============================================================
+-- Production had `clients` (not `customers`). Renamed to
+-- `customers` to match PRD naming and Phase 2 SQL.
+--
+-- PostgreSQL automatically updates all FK references.
+-- Constraint names stay as-is (fk_estimates_client_id, etc.)
+-- but still reference the correct table.
+--
+-- Already applied via Management API. This file is for repo
+-- documentation only.
+-- ============================================================
+
+-- ALTER TABLE clients RENAME TO customers;
