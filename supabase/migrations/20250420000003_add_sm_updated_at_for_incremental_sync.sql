@@ -1,0 +1,14 @@
+-- ============================================================
+-- Issue #45: Add sm_updated_at for incremental order sync
+-- ShopMonkey Import Pipeline
+-- ============================================================
+-- Adds sm_updated_at column to sm_import_orders so the TUI can
+-- filter to only modified orders (incremental sync) by comparing
+-- ShopMonkey order's updatedAt against organizations.sm_last_synced_at.
+--
+-- Already applied via Management API. This file is for repo
+-- documentation only.
+-- ============================================================
+
+-- ALTER TABLE sm_import_orders ADD COLUMN sm_updated_at timestamptz;
+-- CREATE INDEX sm_import_orders_sm_updated_at ON sm_import_orders(sm_updated_at);
