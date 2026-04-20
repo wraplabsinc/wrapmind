@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 import { useAuth } from './AuthContext.jsx';
 import { uuid } from '../lib/uuid.js';
+import { supabase } from '../lib/supabase.js';
 import {
   USE_NOTIFICATIONS,
   USE_CREATE_NOTIFICATION,
@@ -92,6 +93,71 @@ export function NotificationsProvider({ children }) {
   useEffect(() => {
     if (!isDevAuth) saveToStorage(notifications);
   }, [notifications, isDevAuth]);
+
+  // ── Realtime subscriptions (patch layer — Apollo remains primary source) ────
+  useEffect(() => {
+    if (!profileId || isDevAuth) return;
+
+    const channel = supabase.channel('notifications-realtime');
+
+    channel
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'notifications',
+        filter: `profile_id=eq.${profileId}`,
+      }, (payload) => {
+        const newNotif = {
+          id: payload.new.id,
+          type: payload.new.type,
+          title: payload.new.title,
+          body: payload.new.body,
+          link: payload.new.link,
+          recordId: payload.new.record_id,
+          read: payload.new.read ?? false,
+          createdAt: payload.new.created_at,
+        };
+        setNotifications(prev => {
+          if (prev.some(n => n.id === newNotif.id)) return prev;
+          return [newNotif, ...prev];
+        });
+      })
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'notifications',
+        filter: `profile_id=eq.${profileId}`,
+      }, (payload) => {
+        setNotifications(prev =>
+          prev.map(n => n.id === payload.new.id
+            ? {
+                ...n,
+                type: payload.new.type,
+                title: payload.new.title,
+                body: payload.new.body,
+                link: payload.new.link,
+                recordId: payload.new.record_id,
+                read: payload.new.read,
+                createdAt: payload.new.created_at,
+              }
+            : n
+          )
+        );
+      })
+      .on('postgres_changes', {
+        event: 'DELETE',
+        schema: 'public',
+        table: 'notifications',
+        filter: `profile_id=eq.${profileId}`,
+      }, (payload) => {
+        setNotifications(prev => prev.filter(n => n.id !== payload.old.id));
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [profileId, isDevAuth]);
 
   // ── Sorted view ────────────────────────────────────────────────────────────
   const sorted = [...notifications].sort(

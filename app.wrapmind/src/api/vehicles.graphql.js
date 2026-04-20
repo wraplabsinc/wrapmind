@@ -27,6 +27,8 @@ export const VEHICLE_FIELDS = gql`
     lastServiceAt
     createdAt
     updatedAt
+    locationId
+    leadId
   }
 `;
 
@@ -57,6 +59,8 @@ export const LIST_VEHICLES = gql`
           wrapStatus
           wrapColor
           createdAt
+          locationId
+          leadId
         }
       }
       pageInfo {
@@ -125,6 +129,7 @@ export const CREATE_VEHICLE = gql`
     $wrapColor: String
     $tags: [String!]
     $notes: String
+    $locationId: UUID
   ) {
     vehicleInsert(
       collection: "vehicles"
@@ -147,6 +152,7 @@ export const CREATE_VEHICLE = gql`
         wrapColor: $wrapColor
         tags: $tags
         notes: $notes
+        locationId: $locationId
       }]
     ) {
       edges {
@@ -181,6 +187,8 @@ export const UPDATE_VEHICLE = gql`
     $wrapColor: String
     $tags: [String!]
     $notes: String
+    $locationId: UUID
+    $leadId: UUID
   ) {
     vehicleUpdate(id: $id, set: {
       year: $year
@@ -199,6 +207,8 @@ export const UPDATE_VEHICLE = gql`
       wrapColor: $wrapColor
       tags: $tags
       notes: $notes
+      locationId: $locationId
+      leadId: $leadId
     }) {
       ...VehicleFields
     }

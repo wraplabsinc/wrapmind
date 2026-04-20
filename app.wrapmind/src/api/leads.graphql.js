@@ -21,6 +21,13 @@ export const LEAD_FIELDS = gql`
     notes
     createdAt
     updatedAt
+    vehicleYear
+    vehicleMake
+    vehicleModel
+    vehicleVin
+    vehicleType
+    vehicleColor
+    followUpDate
   }
 `;
 
@@ -55,6 +62,13 @@ export const LIST_LEADS = gql`
           notes
           createdAt
           updatedAt
+          vehicleYear
+          vehicleMake
+          vehicleModel
+          vehicleVin
+          vehicleType
+          vehicleColor
+          followUpDate
         }
       }
       pageInfo {
