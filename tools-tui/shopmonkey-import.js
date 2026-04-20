@@ -201,9 +201,33 @@ async function sbUpsert(table, rows) {
 
     // ── Orders ─────────────────────────────────────────────────────────────
     log('{cyan-fg}── Orders ──{/cyan-fg}');
+
+    // Read sm_last_synced_at for incremental fetch
+    let lastSynced = null;
+    try {
+      const orgRes = await fetch(
+        `${SB_SERVERS[0].url}/rest/v1/organizations?id=eq.${WRAPMIND_ORG}&select=sm_last_synced_at`,
+        { headers: { 'Authorization': `Bearer ${SB_SERVERS[0].key}`, 'apikey': SB_SERVERS[0].key } }
+      );
+      const orgData = await orgRes.json();
+      if (orgData?.[0]?.sm_last_synced_at) {
+        lastSynced = new Date(orgData[0].sm_last_synced_at);
+        log(`  Last synced: ${lastSynced.toISOString()}`);
+      }
+    } catch (e) {
+      log(`  {yellow-fg}⚠ Could not read sm_last_synced_at, will fetch all orders{/yellow-fg}`);
+    }
+
     setStatus('Fetching orders...');
-    const orders = await smFetch('/order');
-    log(`Found ${orders.length} orders`);
+    const allOrders = await smFetch('/order');
+    // Filter to modified orders only (incremental sync)
+    const orders = lastSynced
+      ? allOrders.filter(o => {
+          const updatedAt = o.updatedAt ? new Date(o.updatedAt) : null;
+          return updatedAt && updatedAt > lastSynced;
+        })
+      : allOrders;
+    log(`Found ${allOrders.length} total orders, ${orders.length} modified since last sync`);
 
     let orderCount = 0;
     for (let i = 0; i < orders.length; i++) {
@@ -216,6 +240,7 @@ async function sbUpsert(table, rows) {
         tax_total: o.taxDollars || null, labor_total: o.laborDollars || null,
         parts_total: o.partsDollars || null,
         notes: o.techRecommendation || o.notes || null,
+        sm_updated_at: o.updatedAt ? new Date(o.updatedAt) : null,
         sm_data: o,
       }]);
 
