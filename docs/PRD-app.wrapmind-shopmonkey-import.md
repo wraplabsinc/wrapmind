@@ -216,17 +216,14 @@ ON CONFLICT (org_id, sm_vehicle_id) DO UPDATE SET
 **Source:** `sm_import_orders`, `sm_import_order_lines`
 **Target:** `estimates` or `invoices`
 
-ShopMonkey order `status` determines routing:
+ShopMonkey order `status` determines routing. Only two values exist in practice:
 
-| ShopMonkey Status         | wrapmind Table | wrapmind Status |
-|---------------------------|----------------|-----------------|
-| estimate / quote / draft  | estimates      | draft           |
-| won / paid / invoiced     | invoices       | paid            |
-| lost / declined           | (skip or log)  | —               |
-| open / in-progress        | estimates      | sent            |
-| (unknown)                 | estimates      | draft           |
+| ShopMonkey Status | wrapmind Table | wrapmind Status | Notes |
+|---|---|---|---|
+| `Estimate` | `estimates` | `draft` | 386 orders |
+| `Invoice` | `invoices` | `paid` | 580 orders |
 
-**Open question:** What ShopMonkey status values exist in practice? The TUI maps `o.status` directly as a string. A status mapping table or case statement is needed.
+No other status values appear in production data. All `Invoice` orders route to invoices; all `Estimate` orders route to estimates.
 
 ```sql
 -- Route to estimates
@@ -244,8 +241,24 @@ SELECT
 FROM sm_import_orders o
 JOIN customers c ON c.shopmonkey_customer_id = o.sm_customer_id AND c.org_id = o.org_id
 LEFT JOIN vehicles v ON v.sm_vehicle_id = o.sm_vehicle_id AND v.org_id = o.org_id
-WHERE o.status NOT IN ('won', 'paid', 'invoiced')
-ON CONFLICT (estimate_number) DO UPDATE SET
+WHERE o.status = 'Estimate'
+
+-- Route to invoices
+INSERT INTO invoices (id, org_id, location_id, invoice_number, customer_id, vehicle_id,
+                      total, notes, status, created_at, updated_at)
+SELECT
+  gen_random_uuid(),
+  o.org_id,
+  (SELECT id FROM locations WHERE org_id = o.org_id LIMIT 1),
+  'SM-' || o.sm_order_id,
+  c.id, v.id,
+  o.total, o.notes, 'paid',
+  NOW(), NOW()
+FROM sm_import_orders o
+JOIN customers c ON c.shopmonkey_customer_id = o.sm_customer_id AND c.org_id = o.org_id
+LEFT JOIN vehicles v ON v.sm_vehicle_id = o.sm_vehicle_id AND v.org_id = o.org_id
+WHERE o.status = 'Invoice'
+ON CONFLICT (invoice_number) DO UPDATE SET
   total = EXCLUDED.total,
   notes = EXCLUDED.notes,
   updated_at = NOW();
@@ -324,7 +337,7 @@ A scheduled Edge Function could:
    - Use a single default location for the org?
    - Add a ShopMonkey location-to-wrapmind location mapping table?
 
-6. **ShopMonkey status mapping:** What are the actual `status` string values returned by ShopMonkey's `/order` endpoint? A sample response is needed to build the status → (estimate|invoice) routing case statement.
+6. **ShopMonkey status mapping:** Resolved — only two values exist in production data: `Estimate` (386 orders) and `Invoice` (580 orders). See Section 4.3 for confirmed routing.
 
 7. **Phase 2 SQL execution:** Who runs the transformation SQL? Options:
    - Inline in the Edge Function after fetching
