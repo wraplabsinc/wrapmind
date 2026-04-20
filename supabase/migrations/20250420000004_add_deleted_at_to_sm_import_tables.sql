@@ -1,0 +1,17 @@
+-- ============================================================
+-- Issue #47: Add deleted_at soft-delete to sm_import_* tables
+-- ShopMonkey Import Pipeline
+-- ============================================================
+-- Adds deleted_at column to all sm_import_* staging tables.
+-- When a record no longer appears in ShopMonkey's response, the
+-- TUI marks it as deleted (soft-delete) rather than hard-deleting.
+--
+-- Already applied via Management API. This file is for repo
+-- documentation only.
+-- ============================================================
+
+-- ALTER TABLE sm_import_customers    ADD COLUMN deleted_at timestamptz;
+-- ALTER TABLE sm_import_vehicles    ADD COLUMN deleted_at timestamptz;
+-- ALTER TABLE sm_import_orders      ADD COLUMN deleted_at timestamptz;
+-- ALTER TABLE sm_import_order_lines ADD COLUMN deleted_at timestamptz;
+-- ALTER TABLE sm_import_labor_rates ADD COLUMN deleted_at timestamptz;
