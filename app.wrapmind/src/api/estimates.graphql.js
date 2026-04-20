@@ -13,6 +13,7 @@ export const ESTIMATE_FIELDS = gql`
     customerId
     vehicleId
     package
+    modifierSelections
     material
     materialColor
     laborHours
@@ -59,6 +60,7 @@ export const LIST_ESTIMATES = gql`
           customerId
           vehicleId
           package
+          modifierSelections
           material
           materialColor
           laborHours
@@ -108,6 +110,7 @@ const ESTIMATE_INPUT = `
   $estimateNumber: String!
   $status: String
   $package: String
+  $modifierSelections: JSON
   $material: String
   $materialColor: String
   $laborHours: Float
@@ -127,6 +130,7 @@ const ESTIMATE_VARIABLES = `
   estimateNumber: $estimateNumber
   status: $status
   package: $package
+  modifierSelections: $modifierSelections
   material: $material
   materialColor: $materialColor
   laborHours: $laborHours
@@ -168,6 +172,7 @@ export const UPDATE_ESTIMATE = gql`
     $id: UUID!
     $status: String
     $package: String
+    $modifierSelections: JSON
     $material: String
     $materialColor: String
     $laborHours: Float
@@ -187,6 +192,7 @@ export const UPDATE_ESTIMATE = gql`
     estimateUpdate(id: $id, set: {
       status: $status
       package: $package
+      modifierSelections: $modifierSelections
       material: $material
       materialColor: $materialColor
       laborHours: $laborHours
