@@ -97,7 +97,7 @@ export const GET_LEAD = gql`
 export const CREATE_LEAD = gql`
   mutation CreateLead(
     $orgId: UUID!
-    $locationId: UUID
+    $locationId: UUID!
     $name: String!
     $phone: String
     $email: String
@@ -107,6 +107,13 @@ export const CREATE_LEAD = gql`
     $priority: String
     $status: String
     $notes: String
+    $vehicleYear: Int
+    $vehicleMake: String
+    $vehicleModel: String
+    $vehicleVin: String
+    $vehicleType: String
+    $vehicleColor: String
+    $followUpDate: Date
   ) {
     leadInsert(
       input: {
@@ -121,6 +128,13 @@ export const CREATE_LEAD = gql`
         priority: $priority
         status: $status
         notes: $notes
+        vehicleYear: $vehicleYear
+        vehicleMake: $vehicleMake
+        vehicleModel: $vehicleModel
+        vehicleVin: $vehicleVin
+        vehicleType: $vehicleType
+        vehicleColor: $vehicleColor
+        followUpDate: $followUpDate
       }
     ) {
       ...LeadFields
@@ -143,6 +157,13 @@ export const UPDATE_LEAD = gql`
     $assigneeId: UUID
     $customerId: UUID
     $notes: String
+    $vehicleYear: Int
+    $vehicleMake: String
+    $vehicleModel: String
+    $vehicleVin: String
+    $vehicleType: String
+    $vehicleColor: String
+    $followUpDate: Date
   ) {
     leadUpdate(
       id: $id
@@ -158,6 +179,13 @@ export const UPDATE_LEAD = gql`
         assigneeId: $assigneeId
         customerId: $customerId
         notes: $notes
+        vehicleYear: $vehicleYear
+        vehicleMake: $vehicleMake
+        vehicleModel: $vehicleModel
+        vehicleVin: $vehicleVin
+        vehicleType: $vehicleType
+        vehicleColor: $vehicleColor
+        followUpDate: $followUpDate
       }
     ) {
       ...LeadFields
