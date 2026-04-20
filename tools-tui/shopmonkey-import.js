@@ -164,13 +164,12 @@ async function markDeleted(table, idColumn, currentIds) {
   let phaseIdx = 0;
 
   try {
-    // ── Customers ──────────────────────────────────────────────────────────
-    log('{cyan-fg}── Customers ──{/cyan-fg}');
+    // Fetch customers first so we can map customerId → UUID for vehicle linking
     setStatus('Fetching customers...');
     const customers = await smFetch('/customer');
     log(`Found ${customers.length} customers`);
     const rows = customers.map(c => ({
-      org_id: WRAPMIND_ORG, sm_customer_id: c.id,
+      org_id: WRAPMIND_ORG, sm_customer_id: c.id,  // c.id is the ShopMonkey UUID for this customer
       first_name:       c.coalescedFirstNameOrCompanyName || c.firstName || null,
       last_name:        c.lastName || null,
       phone:            c.phone || null,
@@ -191,9 +190,29 @@ async function markDeleted(table, idColumn, currentIds) {
     setStatus('Fetching vehicles...');
     const vehicles = await smFetch('/vehicle');
     log(`Found ${vehicles.length} vehicles`);
+
+    // Fetch customer UUIDs for vehicles that have a customerId
+    // ShopMonkey returns numeric customerId on vehicles but UUID on /customer/:id
+    const vehiclesWithCustomers = vehicles.filter(v => v.customerId);
+    if (vehiclesWithCustomers.length) {
+      log(`Fetching ${vehiclesWithCustomers.length} customer UUIDs...`);
+      const batchSize = 20;
+      for (let i = 0; i < vehiclesWithCustomers.length; i += batchSize) {
+        const batch = vehiclesWithCustomers.slice(i, i + batchSize);
+        await Promise.allSettled(batch.map(async v => {
+          try {
+            const [cust] = await smFetch(`/customer/${v.customerId}`);
+            if (cust) v._customerUuid = cust.id;
+          } catch {}
+        }));
+        setProgress(i / vehiclesWithCustomers.length * 0.1);
+      }
+    }
+
     const vRows = vehicles.map(v => ({
       org_id: WRAPMIND_ORG, sm_vehicle_id: v.id,
-      sm_customer_id: v.customerId || v.baseId || null,
+      // Use customer's UUID so it joins to sm_import_customers.sm_customer_id
+      sm_customer_id: v._customerUuid || null,
       year: v.year || null, make: v.make || null, model: v.model || null,
       vin: v.vin || v.VIN || null,
       license_plate: v.licensePlate || null,
