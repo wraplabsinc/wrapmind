@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useCallback, useEffect, useRef } f
 import { useAuth } from './AuthContext.jsx';
 import { useLocations } from './LocationContext.jsx';
 import { uuid } from '../lib/uuid.js';
+import { supabase } from '../lib/supabase.js';
 import {
   USE_LEADS,
   USE_CREATE_LEAD,
@@ -78,6 +79,85 @@ export function LeadProvider({ children }) {
   useEffect(() => {
     if (!isDevAuth && leads.length > 0) saveToStorage(leads);
   }, [leads, isDevAuth]);
+
+  // ── Realtime subscriptions (patch layer — Apollo remains primary source) ────
+  useEffect(() => {
+    if (!orgId || isDevAuth) return;
+
+    const channel = supabase.channel('leads-realtime');
+
+    channel
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'leads',
+        filter: `org_id=eq.${orgId}`,
+      }, (payload) => {
+        const newLead = {
+          id: payload.new.id,
+          name: payload.new.name,
+          phone: payload.new.phone,
+          email: payload.new.email,
+          source: payload.new.source,
+          serviceInterest: payload.new.service_interest,
+          budget: payload.new.budget,
+          priority: payload.new.priority,
+          status: payload.new.status,
+          assigneeId: payload.new.assignee_id,
+          customerId: payload.new.customer_id,
+          notes: payload.new.notes,
+          locationId: payload.new.location_id,
+          createdAt: payload.new.created_at,
+          updatedAt: payload.new.updated_at,
+        };
+        setLeads(prev => {
+          if (prev.some(l => l.id === newLead.id)) return prev;
+          return [newLead, ...prev];
+        });
+      })
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'leads',
+        filter: `org_id=eq.${orgId}`,
+      }, (payload) => {
+        setLeads(prev =>
+          prev.map(l => l.id === payload.new.id
+            ? {
+                ...l,
+                name: payload.new.name,
+                phone: payload.new.phone,
+                email: payload.new.email,
+                source: payload.new.source,
+                serviceInterest: payload.new.service_interest,
+                budget: payload.new.budget,
+                priority: payload.new.priority,
+                status: payload.new.status,
+                assigneeId: payload.new.assignee_id,
+                customerId: payload.new.customer_id,
+                notes: payload.new.notes,
+                locationId: payload.new.location_id,
+                createdAt: payload.new.created_at,
+                updatedAt: payload.new.updated_at,
+              }
+            : l
+          )
+        );
+      })
+      .on('postgres_changes', {
+        event: 'DELETE',
+        schema: 'public',
+        table: 'leads',
+        filter: `org_id=eq.${orgId}`,
+      }, (payload) => {
+        setLeads(prev => prev.filter(l => l.id !== payload.old.id));
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [orgId, isDevAuth]);
 
   // ── Actions ───────────────────────────────────────────────────────────────
 
