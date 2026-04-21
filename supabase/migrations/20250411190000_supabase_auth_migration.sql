@@ -226,6 +226,10 @@ AND (auth_user_id IS NULL OR auth_user_id != NEW.id)
 AND status = 'pending';
 END IF;
 RETURN NEW;
+EXCEPTION WHEN OTHERS THEN
+  -- Log error but do NOT re-raise — auth must never fail due to trigger errors
+  RAISE NOTICE 'link_pending_user skipped: %', SQLERRM;
+  RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
