@@ -45,8 +45,23 @@ const progressBar = blessed.progressbar({
   pCh: '█', mCh: '░',
 });
 
-const progressLabel = blessed.text({ parent: screen, top: 0, left: 2, content: '{cyan-fg}Progress:{/cyan-fg} 0%', height: 1 });
-const statusLabel  = blessed.text({ parent: screen, bottom: 2, left: 2, content: '{cyan-fg}Status:{/cyan-fg} Starting...', height: 1 });
+// Determine target server label
+const SUPABASE_URL = cfg.SUPABASE_URL_PROD || cfg.SUPABASE_URL || 'https://nbewyeoiizlsfmbqoist.supabase.co';
+const SERVER_LABEL = SUPABASE_URL.includes('127.0.0.1') || SUPABASE_URL.includes('localhost') || SUPABASE_URL.includes('wrapos.cloud')
+  ? '{yellow-fg}[LOCAL DEV]{/yellow-fg} ' + SUPABASE_URL
+  : '{green-fg}[PROD]{/green-fg} ' + SUPABASE_URL;
+
+const serverIndicator = blessed.text({
+  parent: screen, top: 0, right: 2, width: 50,
+  content: SERVER_LABEL, height: 1, align: 'right', tags: true,
+});
+
+const progressLabel = blessed.text({ parent: screen, top: 0, left: 2, content: '{cyan-fg}Progress:{/cyan-fg} 0%', height: 1, tags: true });
+const statusLabel  = blessed.text({ parent: screen, bottom: 3, left: 2, content: '{cyan-fg}Status:{/cyan-fg} Starting...', height: 1, tags: true });
+
+const recordCounter = blessed.text({
+  parent: screen, bottom: 2, left: 2, content: '{cyan-fg}Records:{/cyan-fg} 0', height: 1, tags: true,
+});
 
 const logBox = blessed.log({
   parent: screen, top: 2, left: 2, right: 2, bottom: 4,
@@ -69,6 +84,8 @@ screen.render();
 function log(msg)  { logBox.log(msg);  screen.render(); }
 function setProgress(p)  { progressBar.setProgress(p);  screen.render(); }
 function setStatus(msg)  { statusLabel.setContent(`{cyan-fg}Status:{/cyan-fg} ${msg}`);  screen.render(); }
+let totalRecordsImported = 0;
+function addRecords(n) { totalRecordsImported += n; recordCounter.setContent(`{cyan-fg}Records:{/cyan-fg} ${totalRecordsImported.toLocaleString()}`); screen.render(); }
 
 // ── Helpers ─────────────────────────────────────────────────────────────────────
 const BASE    = 'https://api.shopmonkey.cloud/v3'; // hardcoded — do not override from .env
@@ -178,7 +195,9 @@ async function markDeleted(table, idColumn, currentIds) {
       sm_data: c,
     }));
     for (let i = 0; i < rows.length; i += 100) {
-      await sbUpsert('sm_import_customers', rows.slice(i, i + 100));
+      const chunk = rows.slice(i, i + 100);
+      await sbUpsert('sm_import_customers', chunk);
+      addRecords(chunk.length);
       setProgress((i + 100) / rows.length * 0.2);
     }
     await markDeleted('sm_import_customers', 'sm_customer_id', new Set(customers.map(c => c.id)));
@@ -221,7 +240,9 @@ async function markDeleted(table, idColumn, currentIds) {
       sm_data: v,
     }));
     for (let i = 0; i < vRows.length; i += 100) {
-      await sbUpsert('sm_import_vehicles', vRows.slice(i, i + 100));
+      const chunk = vRows.slice(i, i + 100);
+      await sbUpsert('sm_import_vehicles', chunk);
+      addRecords(chunk.length);
       setProgress(0.2 + (i + 100) / vRows.length * 0.2);
     }
     await markDeleted('sm_import_vehicles', 'sm_vehicle_id', new Set(vehicles.map(v => v.id)));
@@ -239,6 +260,7 @@ async function markDeleted(table, idColumn, currentIds) {
       sm_data: r,
     }));
     await sbUpsert('sm_import_labor_rates', lRows);
+    addRecords(lRows.length);
     setProgress(0.6);
     log(`{green-fg}✓ Labor Rates: ${rates.length} imported{/green-fg}`);
     phaseIdx++;
@@ -287,6 +309,7 @@ async function markDeleted(table, idColumn, currentIds) {
         sm_updated_at: o.updatedAt ? new Date(o.updatedAt) : null,
         sm_data: o,
       }]);
+      addRecords(1);
 
       // Fetch service lines for this order
       try {
@@ -348,7 +371,10 @@ async function markDeleted(table, idColumn, currentIds) {
                 });
               }
             }
-            if (lineRows.length) await sbUpsert('sm_import_order_lines', lineRows);
+            if (lineRows.length) {
+              await sbUpsert('sm_import_order_lines', lineRows);
+              addRecords(lineRows.length);
+            }
           }
         }
       } catch {}
