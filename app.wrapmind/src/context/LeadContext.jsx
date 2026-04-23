@@ -45,7 +45,7 @@ export function LeadProvider({ children }) {
   const { orgId } = useAuth();
   const { activeLocationId: locationId } = useLocations() ?? {};
 
-  const isDevAuth = import.meta.env.VITE_DEV_AUTH === '1';
+  const isDevAuth = import.meta.env.VITE_LOCAL_DEV === '1';
 
   // Apollo data
   const { leads: apolloLeads, loading: apolloLoading, error: apolloError, refetch } =

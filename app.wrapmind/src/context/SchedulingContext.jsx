@@ -117,7 +117,7 @@ export function SchedulingProvider({ children }) {
   const { orgId } = useAuth();
   const { activeLocationId } = useLocations();
 
-  const isDevAuth = import.meta.env.VITE_DEV_AUTH === '1';
+  const isDevAuth = import.meta.env.VITE_LOCAL_DEV === '1';
 
   // Apollo: all appointments for the org
   const { appointments: apolloAppointments, loading: apolloLoading, error: apolloError, refetch } =

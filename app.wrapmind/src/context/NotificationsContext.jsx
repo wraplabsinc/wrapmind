@@ -59,7 +59,7 @@ const NotificationsContext = createContext(null);
 export function NotificationsProvider({ children }) {
   const { orgId, profileId } = useAuth();
 
-  const isDevAuth = import.meta.env.VITE_DEV_AUTH === '1';
+  const isDevAuth = import.meta.env.VITE_LOCAL_DEV === '1';
 
   // Apollo: notifications for this profile
   const { notifications: apolloNotifs, loading: apolloLoading, error: apolloError } =

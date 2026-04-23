@@ -520,7 +520,7 @@ function TopBar({ onNavigate, onLogout }) {
     <div className="h-[50px] flex items-center px-4 bg-white dark:bg-[#1B2A3E] border-b border-gray-200 dark:border-[#243348] sticky top-0 z-20 flex-shrink-0">
       <CompanyLogo onNavigate={onNavigate} />
       {multiLocationEnabled && <LocationSwitcher />}
-      {import.meta.env.VITE_DEV_AUTH === '1' && (
+      {import.meta.env.VITE_LOCAL_DEV === '1' && (
         <span className="ml-3 text-[9px] font-bold tracking-widest uppercase px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-500 dark:text-amber-400 border border-amber-400/30 flex-shrink-0">
           DEV
         </span>

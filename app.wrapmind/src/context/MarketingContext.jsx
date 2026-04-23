@@ -130,7 +130,7 @@ const DEFAULT_FOLLOWUP_CONFIG = {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function load(key, fallback) {
-  if (import.meta.env.VITE_DEV_AUTH === '1') return fallback;
+  if (import.meta.env.VITE_LOCAL_DEV === '1') return fallback;
   try {
     const raw = localStorage.getItem(key);
     return raw ? JSON.parse(raw) : fallback;

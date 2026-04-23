@@ -25,7 +25,7 @@ export function useVehicleContext() {
 const LS_KEY = 'wm-vehicle-overrides-v1';
 
 function loadOverrides() {
-  if (import.meta.env.VITE_DEV_AUTH === '1') return {};
+  if (import.meta.env.VITE_LOCAL_DEV === '1') return {};
   try {
     const raw = localStorage.getItem(LS_KEY);
     return raw ? JSON.parse(raw) : {};
@@ -58,7 +58,7 @@ export function VehicleProvider({ children }) {
   useEffect(() => { saveOverrides(overrides); }, [overrides]);
 
   // ── Seed / Apollo data routing ──────────────────────────────────────────────
-  const isDevAuth   = import.meta.env.VITE_DEV_AUTH === '1';
+  const isDevAuth   = import.meta.env.VITE_LOCAL_DEV === '1';
   const hasApolloData = !apolloLoading && !apolloError && apolloVehicles.length > 0;
 
   const baseVehicles = useMemo(() => {
