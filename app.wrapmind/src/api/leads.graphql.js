@@ -230,7 +230,7 @@ export function USE_CREATE_LEAD() {
       cache.modify({
         fields: {
           // eslint-disable-next-line no-unused-vars
-          leadsCollection(existing = { edges: [] }, { TO_MUCH }) {
+          leadsCollection(existing = { edges: [] }, { readField }) {
             return {
               ...existing,
               edges: [
@@ -252,7 +252,7 @@ export function USE_UPDATE_LEAD() {
       cache.modify({
         fields: {
           // eslint-disable-next-line no-unused-vars
-          leadsCollection(existing = { edges: [] }, { TO_MUCH }) {
+          leadsCollection(existing = { edges: [] }, { readField }) {
             return {
               ...existing,
               edges: existing.edges.map(e =>
@@ -275,7 +275,7 @@ export function USE_DELETE_LEAD() {
       cache.modify({
         fields: {
           // eslint-disable-next-line no-unused-vars
-          leadsCollection(existing = { edges: [] }, { TO_MUCH }) {
+          leadsCollection(existing = { edges: [] }, { readField }) {
             return {
               ...existing,
               edges: existing.edges.filter(e => e.node?.id !== leadDelete.id),

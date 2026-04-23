@@ -244,7 +244,7 @@ export function USE_CREATE_CUSTOMER() {
       cache.modify({
         fields: {
           // eslint-disable-next-line no-unused-vars
-          customersCollection(existing = { edges: [] }, { TO_MUCH }) {
+          customersCollection(existing = { edges: [] }, { readField }) {
             return {
               ...existing,
               edges: [
@@ -278,7 +278,7 @@ export function USE_DELETE_CUSTOMER() {
       cache.modify({
         fields: {
           // eslint-disable-next-line no-unused-vars
-          customersCollection(existing = { edges: [] }, { TO_MUCH }) {
+          customersCollection(existing = { edges: [] }, { readField }) {
             return {
               ...existing,
               edges: existing.edges.filter(

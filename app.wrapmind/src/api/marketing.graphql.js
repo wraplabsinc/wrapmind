@@ -522,7 +522,7 @@ export function USE_CREATE_REVIEW() {
       cache.modify({
         fields: {
           // eslint-disable-next-line no-unused-vars
-          reviewsCollection(existing = { edges: [] }, { TO_MUCH }) {
+          reviewsCollection(existing = { edges: [] }, { readField }) {
             return {
               ...existing,
               edges: [
@@ -549,7 +549,7 @@ export function USE_CREATE_CAMPAIGN() {
       cache.modify({
         fields: {
           // eslint-disable-next-line no-unused-vars
-          campaignsCollection(existing = { edges: [] }, { TO_MUCH }) {
+          campaignsCollection(existing = { edges: [] }, { readField }) {
             return {
               ...existing,
               edges: [
@@ -575,7 +575,7 @@ export function USE_DELETE_CAMPAIGN() {
       cache.modify({
         fields: {
           // eslint-disable-next-line no-unused-vars
-          campaignsCollection(existing = { edges: [] }, { TO_MUCH }) {
+          campaignsCollection(existing = { edges: [] }, { readField }) {
             return {
               ...existing,
               edges: existing.edges.filter(e => e.node?.id !== campaignDelete.id),
@@ -595,7 +595,7 @@ export function USE_CREATE_FOLLOW_UP() {
       cache.modify({
         fields: {
           // eslint-disable-next-line no-unused-vars
-          followUpsCollection(existing = { edges: [] }, { TO_MUCH }) {
+          followUpsCollection(existing = { edges: [] }, { readField }) {
             return {
               ...existing,
               edges: [
@@ -621,7 +621,7 @@ export function USE_DELETE_FOLLOW_UP() {
       cache.modify({
         fields: {
           // eslint-disable-next-line no-unused-vars
-          followUpsCollection(existing = { edges: [] }, { TO_MUCH }) {
+          followUpsCollection(existing = { edges: [] }, { readField }) {
             return {
               ...existing,
               edges: existing.edges.filter(e => e.node?.id !== followUpDelete.id),
@@ -641,7 +641,7 @@ export function USE_CREATE_REFERRAL() {
       cache.modify({
         fields: {
           // eslint-disable-next-line no-unused-vars
-          referralsCollection(existing = { edges: [] }, { TO_MUCH }) {
+          referralsCollection(existing = { edges: [] }, { readField }) {
             return {
               ...existing,
               edges: [
@@ -668,7 +668,7 @@ export function USE_CREATE_GALLERY_IMAGE() {
       cache.modify({
         fields: {
           // eslint-disable-next-line no-unused-vars
-          galleryImagesCollection(existing = { edges: [] }, { TO_MUCH }) {
+          galleryImagesCollection(existing = { edges: [] }, { readField }) {
             return {
               ...existing,
               edges: [
@@ -694,7 +694,7 @@ export function USE_DELETE_GALLERY_IMAGE() {
       cache.modify({
         fields: {
           // eslint-disable-next-line no-unused-vars
-          galleryImagesCollection(existing = { edges: [] }, { TO_MUCH }) {
+          galleryImagesCollection(existing = { edges: [] }, { readField }) {
             return {
               ...existing,
               edges: existing.edges.filter(e => e.node?.id !== galleryImageDelete.id),

@@ -276,7 +276,7 @@ export function USE_CREATE_ESTIMATE() {
       cache.modify({
         fields: {
           // eslint-disable-next-line no-unused-vars
-          estimatesCollection(existing = { edges: [] }, { TO_MUCH }) {
+          estimatesCollection(existing = { edges: [] }, { readField }) {
             return {
               ...existing,
               edges: [
@@ -310,7 +310,7 @@ export function USE_DELETE_ESTIMATE() {
       cache.modify({
         fields: {
           // eslint-disable-next-line no-unused-vars
-          estimatesCollection(existing = { edges: [] }, { TO_MUCH }) {
+          estimatesCollection(existing = { edges: [] }, { readField }) {
             return {
               ...existing,
               edges: existing.edges.filter(

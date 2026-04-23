@@ -457,7 +457,7 @@ export function USE_CREATE_WRAP_PACKAGE() {
       cache.modify({
         fields: {
           // eslint-disable-next-line no-unused-vars
-          wrapPackagesCollection(existing = { edges: [] }, { TO_MUCH }) {
+          wrapPackagesCollection(existing = { edges: [] }, { readField }) {
             return {
               ...existing,
               edges: [
@@ -484,7 +484,7 @@ export function USE_CREATE_MODIFIER() {
       cache.modify({
         fields: {
           // eslint-disable-next-line no-unused-vars
-          modifiersCollection(existing = { edges: [] }, { TO_MUCH }) {
+          modifiersCollection(existing = { edges: [] }, { readField }) {
             return {
               ...existing,
               edges: [
@@ -514,7 +514,7 @@ export function USE_UPSERT_PERMISSION() {
       cache.modify({
         fields: {
           // eslint-disable-next-line no-unused-vars
-          permissionsCollection(existing = { edges: [] }, { TO_MUCH }) {
+          permissionsCollection(existing = { edges: [] }, { readField }) {
             return {
               ...existing,
               edges: [
@@ -536,7 +536,7 @@ export function USE_DELETE_PERMISSION() {
       cache.modify({
         fields: {
           // eslint-disable-next-line no-unused-vars
-          permissionsCollection(existing = { edges: [] }, { TO_MUCH }) {
+          permissionsCollection(existing = { edges: [] }, { readField }) {
             return {
               ...existing,
               edges: existing.edges.filter(e => e.node?.id !== permissionDelete.id),

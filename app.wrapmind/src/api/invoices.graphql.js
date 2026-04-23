@@ -268,7 +268,7 @@ export function USE_CREATE_INVOICE() {
       cache.modify({
         fields: {
           // eslint-disable-next-line no-unused-vars
-          invoicesCollection(existing = { edges: [] }, { TO_MUCH }) {
+          invoicesCollection(existing = { edges: [] }, { readField }) {
             return {
               ...existing,
               edges: [
@@ -302,7 +302,7 @@ export function USE_DELETE_INVOICE() {
       cache.modify({
         fields: {
           // eslint-disable-next-line no-unused-vars
-          invoicesCollection(existing = { edges: [] }, { TO_MUCH }) {
+          invoicesCollection(existing = { edges: [] }, { readField }) {
             return {
               ...existing,
               edges: existing.edges.filter(

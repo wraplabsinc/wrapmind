@@ -206,7 +206,7 @@ export function USE_CREATE_ESTIMATE_TEMPLATE() {
       cache.modify({
         fields: {
           // eslint-disable-next-line no-unused-vars
-          estimateTemplatesCollection(existing = { edges: [] }, { TO_MUCH }) {
+          estimateTemplatesCollection(existing = { edges: [] }, { readField }) {
             return {
               ...existing,
               edges: [
@@ -240,7 +240,7 @@ export function USE_DELETE_ESTIMATE_TEMPLATE() {
       cache.modify({
         fields: {
           // eslint-disable-next-line no-unused-vars
-          estimateTemplatesCollection(existing = { edges: [] }, { TO_MUCH }) {
+          estimateTemplatesCollection(existing = { edges: [] }, { readField }) {
             return {
               ...existing,
               edges: existing.edges.filter(

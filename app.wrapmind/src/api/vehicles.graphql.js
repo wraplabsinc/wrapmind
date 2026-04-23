@@ -285,7 +285,7 @@ export function USE_CREATE_VEHICLE() {
       cache.modify({
         fields: {
           // eslint-disable-next-line no-unused-vars
-          vehiclesCollection(existing = { edges: [] }, { TO_MUCH }) {
+          vehiclesCollection(existing = { edges: [] }, { readField }) {
             return {
               ...existing,
               edges: [
@@ -319,7 +319,7 @@ export function USE_DELETE_VEHICLE() {
       cache.modify({
         fields: {
           // eslint-disable-next-line no-unused-vars
-          vehiclesCollection(existing = { edges: [] }, { TO_MUCH }) {
+          vehiclesCollection(existing = { edges: [] }, { readField }) {
             return {
               ...existing,
               edges: existing.edges.filter(

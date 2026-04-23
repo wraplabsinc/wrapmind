@@ -223,7 +223,7 @@ export function USE_CREATE_APPOINTMENT() {
       cache.modify({
         fields: {
           // eslint-disable-next-line no-unused-vars
-          appointmentsCollection(existing = { edges: [] }, { TO_MUCH }) {
+          appointmentsCollection(existing = { edges: [] }, { readField }) {
             return {
               ...existing,
               edges: [
@@ -257,7 +257,7 @@ export function USE_DELETE_APPOINTMENT() {
       cache.modify({
         fields: {
           // eslint-disable-next-line no-unused-vars
-          appointmentsCollection(existing = { edges: [] }, { TO_MUCH }) {
+          appointmentsCollection(existing = { edges: [] }, { readField }) {
             return {
               ...existing,
               edges: existing.edges.filter(
