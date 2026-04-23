@@ -198,7 +198,7 @@ const GamificationContext = createContext(null);
 export function GamificationProvider({ children }) {
   const { orgId } = useAuth();
 
-  const isDevAuth = import.meta.env.VITE_DEV_AUTH === '1';
+  const isDevAuth = import.meta.env.VITE_LOCAL_DEV === '1';
 
   // Apollo data
   const { employees: apolloEmployees, loading: empLoading, error: empError } =

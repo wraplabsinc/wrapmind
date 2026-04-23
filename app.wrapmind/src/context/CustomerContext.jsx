@@ -38,7 +38,7 @@ const LS_KEY = 'wm-customer-overrides-v1';
 const MIGRATION_KEY = 'wm-customers-migrated';
 
 function loadOverrides() {
-  if (import.meta.env.VITE_DEV_AUTH === '1') return {};
+  if (import.meta.env.VITE_LOCAL_DEV === '1') return {};
   try {
     const raw = localStorage.getItem(LS_KEY);
     return raw ? JSON.parse(raw) : {};
@@ -102,7 +102,7 @@ export function CustomerProvider({ children }) {
 
   // Live leads from LeadHubPage (wm-leads-v1)
   const [liveLeads, setLiveLeads] = useState(() => {
-    if (import.meta.env.VITE_DEV_AUTH === '1') return [];
+    if (import.meta.env.VITE_LOCAL_DEV === '1') return [];
     try { return JSON.parse(localStorage.getItem('wm-leads-v1') || '[]'); } catch { return []; }
   });
 
@@ -133,10 +133,10 @@ export function CustomerProvider({ children }) {
   // ── Seed / Apollo data routing ──────────────────────────────────────────────
   // Priority:
   //   1. Apollo GraphQL data (live from Supabase via pg_graphql)
-  //   2. Seed data (VITE_DEV_AUTH prototype mode)
+  //   2. Seed data (VITE_LOCAL_DEV prototype mode)
   //   3. Seed data (fallback if Apollo fails)
 
-  const isDevAuth   = import.meta.env.VITE_DEV_AUTH === '1';
+  const isDevAuth   = import.meta.env.VITE_LOCAL_DEV === '1';
   const hasApolloData = !apolloLoading && !apolloError && apolloCustomers.length > 0;
 
   const baseCustomers = useMemo(() => {

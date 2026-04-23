@@ -213,7 +213,7 @@ export function EstimateProvider({ children }) {
   // Track estimate outcomes for learning agent
   const recordedRef = useRef(new Set());
 
-  const isDevAuth = import.meta.env.VITE_DEV_AUTH === '1';
+  const isDevAuth = import.meta.env.VITE_LOCAL_DEV === '1';
   const hasApolloData = !apolloLoading && !apolloError && apolloEstimates.length > 0;
 
   // Apollo owns the list once data arrives; dev mode always uses seed

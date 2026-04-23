@@ -273,7 +273,7 @@ export function InvoiceProvider({ children }) {
   const { orgId, org } = useAuth();
   const { activeLocationId } = useLocations();
 
-  const isDevAuth = import.meta.env.VITE_DEV_AUTH === '1';
+  const isDevAuth = import.meta.env.VITE_LOCAL_DEV === '1';
 
   // Apollo: all invoices for the org
   const { invoices: apolloInvoices, loading: apolloLoading, error: apolloError, refetch } =

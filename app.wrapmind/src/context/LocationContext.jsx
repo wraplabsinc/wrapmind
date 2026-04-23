@@ -28,7 +28,7 @@ const SEED_LOCATIONS = [
 ];
 
 function loadLocations() {
-  if (import.meta.env.VITE_DEV_AUTH === '1') return SEED_LOCATIONS;
+  if (import.meta.env.VITE_LOCAL_DEV === '1') return SEED_LOCATIONS;
   try {
     const raw = localStorage.getItem('wm-locations');
     if (raw) {
