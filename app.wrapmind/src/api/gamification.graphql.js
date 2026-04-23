@@ -234,7 +234,7 @@ export function USE_CREATE_EMPLOYEE() {
       cache.modify({
         fields: {
           // eslint-disable-next-line no-unused-vars
-          employeesCollection(existing = { edges: [] }, { TO_MUCH }) {
+          employeesCollection(existing = { edges: [] }, { readField }) {
             return {
               ...existing,
               edges: [
@@ -260,7 +260,7 @@ export function USE_DELETE_EMPLOYEE() {
       cache.modify({
         fields: {
           // eslint-disable-next-line no-unused-vars
-          employeesCollection(existing = { edges: [] }, { TO_MUCH }) {
+          employeesCollection(existing = { edges: [] }, { readField }) {
             return {
               ...existing,
               edges: existing.edges.filter(
@@ -282,7 +282,7 @@ export function USE_AWARD_ACHIEVEMENT() {
       cache.modify({
         fields: {
           // eslint-disable-next-line no-unused-vars
-          achievementEventsCollection(existing = { edges: [] }, { TO_MUCH }) {
+          achievementEventsCollection(existing = { edges: [] }, { readField }) {
             return {
               ...existing,
               edges: [

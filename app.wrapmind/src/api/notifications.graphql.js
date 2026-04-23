@@ -148,7 +148,7 @@ export function USE_CREATE_NOTIFICATION() {
       cache.modify({
         fields: {
           // eslint-disable-next-line no-unused-vars
-          notificationsCollection(existing = { edges: [] }, { TO_MUCH }) {
+          notificationsCollection(existing = { edges: [] }, { readField }) {
             return {
               ...existing,
               edges: [
@@ -170,7 +170,7 @@ export function USE_MARK_NOTIFICATION_READ() {
       cache.modify({
         fields: {
           // eslint-disable-next-line no-unused-vars
-          notificationsCollection(existing = { edges: [] }, { TO_MUCH }) {
+          notificationsCollection(existing = { edges: [] }, { readField }) {
             return {
               ...existing,
               edges: existing.edges.map(e =>
@@ -193,7 +193,7 @@ export function USE_DELETE_NOTIFICATION() {
       cache.modify({
         fields: {
           // eslint-disable-next-line no-unused-vars
-          notificationsCollection(existing = { edges: [] }, { TO_MUCH }) {
+          notificationsCollection(existing = { edges: [] }, { readField }) {
             return {
               ...existing,
               edges: existing.edges.filter(
