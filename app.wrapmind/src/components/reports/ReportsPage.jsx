@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { useReports } from '../context/ReportsContext';
-import { useLocations } from '../context/LocationContext';
+import { useReports } from '../../context/ReportsContext';
+import { useLocations } from '../../context/LocationContext';
 import RevenueTab from './reports/RevenueTab';
 import EstimatesTab from './reports/EstimatesTab';
 import CustomersTab from './reports/CustomersTab';
