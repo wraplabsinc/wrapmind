@@ -7,7 +7,8 @@ import { enforceRateLimit } from './aiRateLimiter';
 import supabase, { supabaseUrl } from './supabase';
 
 
-const CHAT_MODEL  = 'claude-haiku-4-5';
+const CHAT_MODEL   = 'claude-haiku-4-5';
+const SMART_MODEL  = 'anthropic/claude-sonnet-4-5'; // use this for non-streaming text generation
 
 
 
