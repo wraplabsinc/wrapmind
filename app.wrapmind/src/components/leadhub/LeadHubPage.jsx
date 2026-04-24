@@ -18,7 +18,6 @@ import {
   LEAD_SOURCES,
   PRIORITIES,
   TEAM_MEMBERS,
-  SEED_LEADS,
   formatCurrencyShort,
 } from './leadData';
 import Button from '../ui/Button';

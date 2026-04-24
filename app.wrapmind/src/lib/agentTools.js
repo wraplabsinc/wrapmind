@@ -15,7 +15,7 @@
  */
 
 import { generateFollowUp } from './ai.js';
-import { CUSTOMERS } from '../components/lists/listsData.js';
+
 import { insertLead } from './leadsDb.js';
 import { estimatesForCustomer, invoicesForCustomer, searchCustomerList } from './customerLookup.js';
 
@@ -327,8 +327,8 @@ export async function executeToolCall(name, input, contexts) {
     }
 
     case 'search_customers': {
-      // Prefer enriched CustomerContext data; fall back to static seed
-      const pool = customers.length ? customers : CUSTOMERS;
+      // Prefer enriched CustomerContext data; fall back to empty if not yet loaded
+      const pool = customers.length ? customers : [];
       const results = searchCustomerList(pool, input.query, input.limit || 5);
       return {
         result: results.map(c => ({
