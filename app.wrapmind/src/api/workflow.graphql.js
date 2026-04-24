@@ -1,5 +1,5 @@
 import { gql } from '@apollo/client';
-import { useQuery, useMutation } from '@apollo/client';
+import { useQuery, useMutation } from '@apollo/client/react';
 
 // NOTE: Job bookings are currently handled inside SchedulingContext.
 // This file exists for future explicit workflow/kanban use cases

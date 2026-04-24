@@ -1,5 +1,5 @@
 import { gql } from '@apollo/client';
-import { useQuery, useMutation } from '@apollo/client';
+import { useQuery, useMutation } from '@apollo/client/react';
 
 // ════════════════════════════════════════════════════════════════════════════
 // AI CONVERSATIONS

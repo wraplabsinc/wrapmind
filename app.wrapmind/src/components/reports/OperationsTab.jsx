@@ -1,12 +1,12 @@
-import { useReports } from '../context/ReportsContext';
+import { useReports } from '../../context/ReportsContext';
 import { HeatmapChart } from './ReportsCharts';
 
 export default function OperationsTab() {
-  const { operations, appointments, employees, loading } = useReports();
+  const { operationsAgg, appointments, employees, loading } = useReports();
 
   const exportOperationsCSV = () => {
     const headers = ['Technician', 'Total Jobs', 'Scheduled Hrs', 'Utilization %'];
-    const rows = operations.technicianLoad.map(t => {
+    const rows = operationsAgg.technicianLoad.map(t => {
       const emp = employees.find(e => e.employeeId === t.technicianId);
       const utilPct = (t.totalJobs * 1.5) / 40 * 100;
       return `${emp?.name || t.technicianId},${t.totalJobs},${(t.totalJobs * 1.5).toFixed(1)},${utilPct.toFixed(1)}`;
@@ -31,7 +31,7 @@ export default function OperationsTab() {
   const hours = Array.from({ length: 12 }, (_, i) => i + 8); // 8am - 7pm
 
   // Mock heatmap data (real implementation would parse appointment slots)
-  // For now, use operations.technicianLoad to create approximate pattern
+  // For now, use operationsAgg.technicianLoad to create approximate pattern
   const heatmapData = hours.map(hour => {
     const dayRow = {};
     days.forEach(day => {
@@ -59,15 +59,15 @@ export default function OperationsTab() {
         </div>
         <div className="bg-white dark:bg-[#1B2A3E] border border-gray-200 dark:border-[#243348] rounded-xl p-4 flex flex-col gap-1">
           <p className="text-[10px] font-semibold uppercase tracking-wider text-[#64748B] dark:text-[#7D93AE]">Appts/Day (Avg)</p>
-          <p className="text-xl font-bold font-mono text-[#0F1923] dark:text-[#F8FAFE]">{operations.appointmentsPerDay.toFixed(1)}</p>
+          <p className="text-xl font-bold font-mono text-[#0F1923] dark:text-[#F8FAFE]">{operationsAgg.appointmentsPerDay.toFixed(1)}</p>
         </div>
         <div className="bg-white dark:bg-[#1B2A3E] border border-gray-200 dark:border-[#243348] rounded-xl p-4 flex flex-col gap-1">
           <p className="text-[10px] font-semibold uppercase tracking-wider text-[#64748B] dark:text-[#7D93AE]">Shop Util %</p>
-          <p className="text-xl font-bold font-mono text-[#0F1923] dark:text-[#F8FAFE]">{operations.shopUtilization.toFixed(1)}%</p>
+          <p className="text-xl font-bold font-mono text-[#0F1923] dark:text-[#F8FAFE]">{operationsAgg.shopUtilization.toFixed(1)}%</p>
         </div>
         <div className="bg-white dark:bg-[#1B2A3E] border border-gray-200 dark:border-[#243348] rounded-xl p-4 flex flex-col gap-1">
           <p className="text-[10px] font-semibold uppercase tracking-wider text-[#64748B] dark:text-[#7D93AE]">Active Techs</p>
-          <p className="text-xl font-bold font-mono text-[#0F1923] dark:text-[#F8FAFE]">{operations.technicianLoad.length}</p>
+          <p className="text-xl font-bold font-mono text-[#0F1923] dark:text-[#F8FAFE]">{operationsAgg.technicianLoad.length}</p>
         </div>
       </div>
 
@@ -89,7 +89,7 @@ export default function OperationsTab() {
             </tr>
           </thead>
           <tbody>
-            {operations.technicianLoad.map((t) => {
+            {operationsAgg.technicianLoad.map((t) => {
               // Identify employee name
               const emp = employees.find(e => e.employeeId === t.technicianId);
               const utilPct = (t.totalJobs * 1.5) / 40 * 100; // rough: 1.5hrs/job, 40hr week

@@ -1,17 +1,17 @@
-import { useReports } from '../context/ReportsContext';
+import { useReports } from '../../context/ReportsContext';
 import { DonutChart } from './ReportsCharts';
 
 export default function MarketingTab() {
-  const { marketing, leads, campaigns, reviewRequests, loading } = useReports();
+  const { marketingAgg, leads: leadsData, campaigns, reviewRequests, loading } = useReports();
 
   const exportMarketingCSV = () => {
     const headers = ['Campaigns', 'Avg Open %', 'Avg Click %', 'Cost/Lead', 'Review Conv %'];
     const row = [
       campaigns.length,
-      marketing.avgOpenRate.toFixed(1),
-      marketing.avgClickRate.toFixed(1),
-      marketing.costPerLead,
-      marketing.reviewConversion.toFixed(1),
+      marketingAgg.avgOpenRate.toFixed(1),
+      marketingAgg.avgClickRate.toFixed(1),
+      marketingAgg.costPerLead,
+      marketingAgg.reviewConversion.toFixed(1),
     ];
     const csv = [headers.join(','), row.join(',')].join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -30,22 +30,22 @@ export default function MarketingTab() {
 
   // Campaign funnel stages: impressions → clicks → leads → opportunities → reviews → closed
   const funnelStages = [
-    { label: 'Impressions',   count: marketing.campaignsSent || 0 },
-    { label: 'Clicks',        count: marketing.avgClickRate > 0 ? Math.round((marketing.avgClickRate / 100) * (marketing.campaignsSent || 0)) : 0 },
+    { label: 'Impressions',   count: marketingAgg.campaignsSent || 0 },
+    { label: 'Clicks',        count: marketingAgg.avgClickRate > 0 ? Math.round((marketingAgg.avgClickRate / 100) * (marketingAgg.campaignsSent || 0)) : 0 },
     { label: 'Leads',         count: leads.length },
-    { label: 'Opportunities', count: marketing.leadConvFunnel?.[2]?.count || 0 },
+    { label: 'Opportunities', count: marketingAgg.leadConvFunnel?.[2]?.count || 0 },
     { label: 'Reviews',       count: reviewRequests.length },
     { label: 'Closed Jobs',   count: 0 }, // derived from invoices
   ];
 
   // Calculate funnel conversion rates
   const impressions = funnelStages[0].count;
-  const leads = funnelStages[2].count;
+  const leadsCount = funnelStages[2].count;
   const opportunities = funnelStages[3].count;
   const reviews = funnelStages[4].count;
 
   const ctr = impressions > 0 ? ((funnelStages[1].count / impressions) * 100).toFixed(1) : '0.0';
-  const leadConv = leads > 0 ? ((opportunities / leads) * 100).toFixed(1) : '0.0';
+  const leadConv = leadsCount > 0 ? ((opportunities / leads) * 100).toFixed(1) : '0.0';
   const reviewRate = opportunities > 0 ? ((reviews / opportunities) * 100).toFixed(1) : '0.0';
 
   // Helper
@@ -65,15 +65,15 @@ export default function MarketingTab() {
         </div>
         <div className="bg-white dark:bg-[#1B2A3E] border border-gray-200 dark:border-[#243348] rounded-xl p-4 flex flex-col gap-1">
           <p className="text-[10px] font-semibold uppercase tracking-wider text-[#64748B] dark:text-[#7D93AE]">Avg Open Rate</p>
-          <p className="text-xl font-bold font-mono text-[#0F1923] dark:text-[#F8FAFE]">{marketing.avgOpenRate.toFixed(1)}%</p>
+          <p className="text-xl font-bold font-mono text-[#0F1923] dark:text-[#F8FAFE]">{marketingAgg.avgOpenRate.toFixed(1)}%</p>
         </div>
         <div className="bg-white dark:bg-[#1B2A3E] border border-gray-200 dark:border-[#243348] rounded-xl p-4 flex flex-col gap-1">
           <p className="text-[10px] font-semibold uppercase tracking-wider text-[#64748B] dark:text-[#7D93AE]">Avg Click Rate</p>
-          <p className="text-xl font-bold font-mono text-[#0F1923] dark:text-[#F8FAFE]">{marketing.avgClickRate.toFixed(1)}%</p>
+          <p className="text-xl font-bold font-mono text-[#0F1923] dark:text-[#F8FAFE]">{marketingAgg.avgClickRate.toFixed(1)}%</p>
         </div>
         <div className="bg-white dark:bg-[#1B2A3E] border border-gray-200 dark:border-[#243348] rounded-xl p-4 flex flex-col gap-1">
           <p className="text-[10px] font-semibold uppercase tracking-wider text-[#64748B] dark:text-[#7D93AE]">Cost per Lead</p>
-          <p className="text-xl font-bold font-mono text-[#0F1923] dark:text-[#F8FAFE]">{fmt$(marketing.costPerLead)}</p>
+          <p className="text-xl font-bold font-mono text-[#0F1923] dark:text-[#F8FAFE]">{fmt$(marketingAgg.costPerLead)}</p>
         </div>
       </div>
 

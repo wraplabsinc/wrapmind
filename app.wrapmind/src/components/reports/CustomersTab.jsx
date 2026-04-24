@@ -1,11 +1,11 @@
-import { useReports } from '../context/ReportsContext';
+import { useReports } from '../../context/ReportsContext';
 import { BarChart } from './ReportsCharts';
 
 export default function CustomersTab() {
-  const { customers, invoices, loading } = useReports();
+  const { customersAgg, invoices, loading } = useReports();
 
   const exportCustomersCSV = () => {
-    const customersWithJobs = customers.top10.map(c => ({
+    const customersWithJobs = customersAgg.top10.map(c => ({
       ...c,
       jobs: invoices.filter(inv => inv.customerId === c.customerId).length,
     }));
@@ -30,15 +30,15 @@ export default function CustomersTab() {
   }
 
   // Derive job counts from invoices per customer
-  const customersWithJobs = customers.top10.map(c => {
+  const customersWithJobs = customersAgg.top10.map(c => {
     const jobCount = invoices.filter(inv => inv.customerId === c.customerId).length;
     return { ...c, jobs: jobCount };
   });
 
   // Totals for summary cards
-  const totalLTV = customers.top10.reduce((sum, c) => sum + c.totalSpent, 0);
+  const totalLTV = customersAgg.top10.reduce((sum, c) => sum + c.totalSpent, 0);
   const totalJobs  = customersWithJobs.reduce((sum, c) => sum + c.jobs, 0);
-  const avgLTV     = customers.top10.length > 0 ? totalLTV / customers.top10.length : 0;
+  const avgLTV     = customersAgg.top10.length > 0 ? totalLTV / customersAgg.top10.length : 0;
 
   // Format helpers
   const fmt$ = (n) => {
@@ -53,7 +53,7 @@ export default function CustomersTab() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <div className="bg-white dark:bg-[#1B2A3E] border border-gray-200 dark:border-[#243348] rounded-xl p-4 flex flex-col gap-1">
           <p className="text-[10px] font-semibold uppercase tracking-wider text-[#64748B] dark:text-[#7D93AE]">Total Customers</p>
-          <p className="text-xl font-bold font-mono text-[#0F1923] dark:text-[#F8FAFE]">{customers.top10.length}</p>
+          <p className="text-xl font-bold font-mono text-[#0F1923] dark:text-[#F8FAFE]">{customersAgg.top10.length}</p>
         </div>
         <div className="bg-white dark:bg-[#1B2A3E] border border-gray-200 dark:border-[#243348] rounded-xl p-4 flex flex-col gap-1">
           <p className="text-[10px] font-semibold uppercase tracking-wider text-[#64748B] dark:text-[#7D93AE]">Combined LTV</p>

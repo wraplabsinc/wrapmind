@@ -1,4 +1,4 @@
-import { useReports } from '../context/ReportsContext';
+import { useReports } from '../../context/ReportsContext';
 
 export default function EmployeesTab() {
   const { employees, invoices, loading } = useReports();
@@ -31,16 +31,11 @@ export default function EmployeesTab() {
   }
 
   // Derive additional metrics from invoices if needed
-  const enrichedEmployees = employees.map(emp => {
-    const empInvoices = invoices.filter(inv => inv.employeeId === emp.employeeId);
-    const closedJobs = empInvoices.length;
-    const totalRevenue = empInvoices.reduce((sum, inv) => sum + inv.amount, 0);
-    const avgJob = closedJobs > 0 ? totalRevenue / closedJobs : 0;
-    return { ...emp, jobsCompleted: closedJobs, avgJobValue: avgJob };
-  });
+  // employeesAgg already contains aggregated metrics
+  const enrichedEmployees = employeesAgg;
 
   // Sort by revenue descending for ranking
-  const sortedEmployees = [...enrichedEmployees].sort((a, b) => b.revenue - a.revenue);
+  const sortedEmployees = [...employeesAgg].sort((a, b) => b.revenue - a.revenue);
 
   // Helper
   const fmt$ = (n) => {
