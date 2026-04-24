@@ -6,15 +6,14 @@ import { useQuery, useMutation } from '@apollo/client/react';
 export const MARKETING_CAMPAIGN_FIELDS = gql`
   fragment MarketingCampaignFields on marketing_campaigns {
     id
-    shop_id
+    org_id
+    location_id
     name
-    type
+    channel
     status
-    subject
-    body
-    sent_at
-    stats
-    created_by
+    budget
+    start_date
+    end_date
     created_at
     updated_at
   }
@@ -23,12 +22,12 @@ export const MARKETING_CAMPAIGN_FIELDS = gql`
 // ─── Queries ─────────────────────────────────────────────────────────────────
 
 /**
- * List marketing campaigns for a shop.
+ * List marketing campaigns for an org/location.
  */
 export const LIST_MARKETING_CAMPAIGNS = gql`
-  query ListMarketingCampaigns($shopId: UUID!, $first: Int, $offset: Int) {
+  query ListMarketingCampaigns($orgId: UUID!, $locationId: UUID!, $first: Int, $offset: Int) {
     marketing_campaignsCollection(
-      filter: { shop_id: { eq: $shopId } }
+      filter: { org_id: { eq: $orgId }, location_id: { eq: $locationId } }
       first: $first
       offset: $offset
       orderBy: [{ created_at: DESC }]
@@ -67,24 +66,24 @@ export const GET_MARKETING_CAMPAIGN = gql`
 
 export const CREATE_MARKETING_CAMPAIGN = gql`
   mutation CreateMarketingCampaign(
-    $shopId: UUID!
+    $orgId: UUID!
+    $locationId: UUID!
     $name: String!
-    $type: String!
+    $channel: String!
     $status: String
-    $subject: String
-    $body: String
-    $sentAt: DateTime
-    $stats: JSON
+    $budget: Float
+    $startDate: DateTime
+    $endDate: DateTime
   ) {
-    insertIntomarketing_campaignsCollection(objects: [{
-      shop_id: $shopId
+    insertIntocampaignsCollection(objects: [{
+      org_id: $orgId
+      location_id: $locationId
       name: $name
-      type: $type
+      channel: $channel
       status: $status
-      subject: $subject
-      body: $body
-      sent_at: $sentAt
-      stats: $stats
+      budget: $budget
+      start_date: $startDate
+      end_date: $endDate
     }]) {
       returning {
         ...MarketingCampaignFields
@@ -98,23 +97,21 @@ export const UPDATE_MARKETING_CAMPAIGN = gql`
   mutation UpdateMarketingCampaign(
     $id: UUID!
     $name: String
-    $type: String
+    $channel: String
     $status: String
-    $subject: String
-    $body: String
-    $sentAt: DateTime
-    $stats: JSON
+    $budget: Float
+    $startDate: DateTime
+    $endDate: DateTime
   ) {
     updatemarketing_campaignsCollection(
       filter: { id: { eq: $id } }
       set: {
         name: $name
-        type: $type
+        channel: $channel
         status: $status
-        subject: $subject
-        body: $body
-        sent_at: $sentAt
-        stats: $stats
+        budget: $budget
+        start_date: $startDate
+        end_date: $endDate
       }
     ) {
       returning {
@@ -135,10 +132,10 @@ export const DELETE_MARKETING_CAMPAIGN = gql`
 
 // ─── Apollo React Hooks ───────────────────────────────────────────────────────
 
-export function USE_MARKETING_CAMPAIGNS({ shopId, first = 100, offset = 0 } = {}) {
+export function USE_MARKETING_CAMPAIGNS({ orgId, locationId, first = 100, offset = 0 } = {}) {
   const { data, loading, error, refetch } = useQuery(LIST_MARKETING_CAMPAIGNS, {
-    variables: { shopId, first, offset },
-    skip: !shopId,
+    variables: { orgId, locationId, first, offset },
+    skip: !orgId || !locationId,
   });
   const edges = data?.marketing_campaignsCollection?.edges ?? [];
   const marketingCampaigns = edges.map(e => e.node);
@@ -156,8 +153,8 @@ export function USE_MARKETING_CAMPAIGN(id) {
 
 export function USE_CREATE_MARKETING_CAMPAIGN() {
   return useMutation(CREATE_MARKETING_CAMPAIGN, {
-    update(cache, { data: { insertIntomarketing_campaignsCollection } }) {
-      const returning = insertIntomarketing_campaignsCollection?.returning ?? [];
+    update(cache, { data: { insertIntocampaignsCollection } }) {
+      const returning = insertIntocampaignsCollection?.returning ?? [];
       if (!returning[0]) return;
       const newCampaign = returning[0];
       cache.modify({
