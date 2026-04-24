@@ -4,31 +4,29 @@ import { useQuery, useMutation } from '@apollo/client/react';
 // ─── Fragments ────────────────────────────────────────────────────────────────
 
 export const VEHICLE_FIELDS = gql`
-  fragment VehicleFields on Vehicle {
+  fragment VehicleFields on vehicles {
     id
-    orgId
-    customerId
+    org_id
+    customer_id
     year
     make
     model
     trim
     vin
-    vehicleType
+    vehicle_type
     color
-    lengthMm
-    widthMm
-    heightMm
-    wheelbaseMm
-    curbWeightKg
-    wrapStatus
-    wrapColor
+    length_mm
+    width_mm
+    height_mm
+    wheelbase_mm
+    curb_weight_kg
+    wrap_status
+    wrap_color
     tags
     notes
-    lastServiceAt
-    createdAt
-    updatedAt
-    locationId
-    leadId
+    last_service_at
+    created_at
+    updated_at
   }
 `;
 
@@ -40,27 +38,25 @@ export const VEHICLE_FIELDS = gql`
 export const LIST_VEHICLES = gql`
   query ListVehicles($orgId: UUID!, $first: Int, $offset: Int) {
     vehiclesCollection(
-      filter: { orgId: { eq: $orgId } }
+      filter: { org_id: { eq: $orgId } }
       first: $first
       offset: $offset
-      orderBy: [{ createdAt: DESC }]
+      orderBy: [{ created_at: DESC }]
     ) {
       edges {
         node {
           id
-          customerId
+          customer_id
           year
           make
           model
           trim
           vin
-          vehicleType
+          vehicle_type
           color
-          wrapStatus
-          wrapColor
-          createdAt
-          locationId
-          leadId
+          wrap_status
+          wrap_color
+          created_at
         }
       }
       pageInfo {
@@ -78,9 +74,9 @@ export const LIST_VEHICLES = gql`
 export const LIST_VEHICLES_BY_CUSTOMER = gql`
   query ListVehiclesByCustomer($customerId: UUID!, $first: Int) {
     vehiclesCollection(
-      filter: { customerId: { eq: $customerId } }
+      filter: { customer_id: { eq: $customerId } }
       first: $first
-      orderBy: [{ createdAt: DESC }]
+      orderBy: [{ created_at: DESC }]
     ) {
       edges {
         node {
@@ -97,8 +93,12 @@ export const LIST_VEHICLES_BY_CUSTOMER = gql`
  */
 export const GET_VEHICLE = gql`
   query GetVehicle($id: UUID!) {
-    vehicle(id: $id) {
-      ...VehicleFields
+    vehiclesCollection(filter: { id: { eq: $id } }, first: 1) {
+      edges {
+        node {
+          ...VehicleFields
+        }
+      }
     }
   }
   ${VEHICLE_FIELDS}
@@ -129,32 +129,27 @@ export const CREATE_VEHICLE = gql`
     $wrapColor: String
     $tags: [String!]
     $notes: String
-    $locationId: UUID
   ) {
-    vehicleInsert(
-      collection: "vehicles"
-      records: [{
-        orgId: $orgId
-        customerId: $customerId
-        year: $year
-        make: $make
-        model: $model
-        trim: $trim
-        vin: $vin
-        vehicleType: $vehicleType
-        color: $color
-        lengthMm: $lengthMm
-        widthMm: $widthMm
-        heightMm: $heightMm
-        wheelbaseMm: $wheelbaseMm
-        curbWeightKg: $curbWeightKg
-        wrapStatus: $wrapStatus
-        wrapColor: $wrapColor
-        tags: $tags
-        notes: $notes
-        locationId: $locationId
-      }]
-    ) {
+    insertIntovehiclesCollection(objects: [{
+      org_id: $orgId
+      customer_id: $customerId
+      year: $year
+      make: $make
+      model: $model
+      trim: $trim
+      vin: $vin
+      vehicle_type: $vehicleType
+      color: $color
+      length_mm: $lengthMm
+      width_mm: $widthMm
+      height_mm: $heightMm
+      wheelbase_mm: $wheelbaseMm
+      curb_weight_kg: $curbWeightKg
+      wrap_status: $wrapStatus
+      wrap_color: $wrapColor
+      tags: $tags
+      notes: $notes
+    }]) {
       edges {
         node {
           ...VehicleFields
@@ -187,30 +182,30 @@ export const UPDATE_VEHICLE = gql`
     $wrapColor: String
     $tags: [String!]
     $notes: String
-    $locationId: UUID
-    $leadId: UUID
   ) {
-    vehicleUpdate(id: $id, set: {
+    updatevehiclesCollection(set: {
       year: $year
       make: $make
       model: $model
       trim: $trim
       vin: $vin
-      vehicleType: $vehicleType
+      vehicle_type: $vehicleType
       color: $color
-      lengthMm: $lengthMm
-      widthMm: $widthMm
-      heightMm: $heightMm
-      wheelbaseMm: $wheelbaseMm
-      curbWeightKg: $curbWeightKg
-      wrapStatus: $wrapStatus
-      wrapColor: $wrapColor
+      length_mm: $lengthMm
+      width_mm: $widthMm
+      height_mm: $heightMm
+      wheelbase_mm: $wheelbaseMm
+      curb_weight_kg: $curbWeightKg
+      wrap_status: $wrapStatus
+      wrap_color: $wrapColor
       tags: $tags
       notes: $notes
-      locationId: $locationId
-      leadId: $leadId
-    }) {
-      ...VehicleFields
+    }, filter: { id: { eq: $id } }) {
+      edges {
+        node {
+          ...VehicleFields
+        }
+      }
     }
   }
   ${VEHICLE_FIELDS}
@@ -221,7 +216,7 @@ export const UPDATE_VEHICLE = gql`
  */
 export const DELETE_VEHICLE = gql`
   mutation DeleteVehicle($id: UUID!) {
-    vehicleDelete(id: $id) {
+    deleteFromvehiclesCollection(filter: { id: { eq: $id } }) {
       id
     }
   }
@@ -270,7 +265,8 @@ export function USE_VEHICLE(id) {
     skip: !id,
   });
 
-  return { vehicle: data?.vehicle ?? null, loading, error };
+  const vehicles = data?.vehiclesCollection?.edges ?? [];
+  return { vehicle: vehicles[0]?.node ?? null, loading, error };
 }
 
 /**
@@ -279,9 +275,9 @@ export function USE_VEHICLE(id) {
  */
 export function USE_CREATE_VEHICLE() {
   return useMutation(CREATE_VEHICLE, {
-    update(cache, { data: { vehicleInsert } }) {
-      if (!vehicleInsert?.edges?.[0]?.node) return;
-      const newVehicle = vehicleInsert.edges[0].node;
+    update(cache, { data: { insertIntovehiclesCollection } }) {
+      if (!insertIntovehiclesCollection?.edges?.[0]?.node) return;
+      const newVehicle = insertIntovehiclesCollection.edges[0].node;
       cache.modify({
         fields: {
           // eslint-disable-next-line no-unused-vars
@@ -289,7 +285,7 @@ export function USE_CREATE_VEHICLE() {
             return {
               ...existing,
               edges: [
-                { __typename: 'VehicleEdge', node: newVehicle },
+                { __typename: 'vehiclesEdge', node: newVehicle },
                 ...existing.edges,
               ],
             };
@@ -314,8 +310,8 @@ export function USE_UPDATE_VEHICLE() {
  */
 export function USE_DELETE_VEHICLE() {
   return useMutation(DELETE_VEHICLE, {
-    update(cache, { data: { vehicleDelete } }) {
-      if (!vehicleDelete?.id) return;
+    update(cache, { data: { deleteFromvehiclesCollection } }) {
+      if (!deleteFromvehiclesCollection?.id) return;
       cache.modify({
         fields: {
           // eslint-disable-next-line no-unused-vars
@@ -323,7 +319,7 @@ export function USE_DELETE_VEHICLE() {
             return {
               ...existing,
               edges: existing.edges.filter(
-                e => e.node?.id !== vehicleDelete.id
+                e => e.node?.id !== deleteFromvehiclesCollection.id
               ),
             };
           },

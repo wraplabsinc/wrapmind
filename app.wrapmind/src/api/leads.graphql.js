@@ -21,13 +21,6 @@ export const LEAD_FIELDS = gql`
     notes
     created_at
     updated_at
-    vehicle_year
-    vehicle_make
-    vehicle_model
-    vehicle_vin
-    vehicle_type
-    vehicle_color
-    follow_up_date
   }
 `;
 
@@ -62,13 +55,6 @@ export const LIST_LEADS = gql`
           notes
           created_at
           updated_at
-          vehicle_year
-          vehicle_make
-          vehicle_model
-          vehicle_vin
-          vehicle_type
-          vehicle_color
-          follow_up_date
         }
       }
       pageInfo {
@@ -111,13 +97,6 @@ export const CREATE_LEAD = gql`
     $priority: String
     $status: String
     $notes: String
-    $vehicleYear: Int
-    $vehicleMake: String
-    $vehicleModel: String
-    $vehicleVin: String
-    $vehicleType: String
-    $vehicleColor: String
-    $followUpDate: TIMESTAMPTZ
   ) {
     insertIntoleadsCollection(objects: [{
       org_id: $orgId
@@ -131,13 +110,6 @@ export const CREATE_LEAD = gql`
       priority: $priority
       status: $status
       notes: $notes
-      vehicle_year: $vehicleYear
-      vehicle_make: $vehicleMake
-      vehicle_model: $vehicleModel
-      vehicle_vin: $vehicleVin
-      vehicle_type: $vehicleType
-      vehicle_color: $vehicleColor
-      follow_up_date: $followUpDate
     }]) {
       returning {
         ...LeadFields
@@ -161,13 +133,6 @@ export const UPDATE_LEAD = gql`
     $assigneeId: UUID
     $customerId: UUID
     $notes: String
-    $vehicleYear: Int
-    $vehicleMake: String
-    $vehicleModel: String
-    $vehicleVin: String
-    $vehicleType: String
-    $vehicleColor: String
-    $followUpDate: TIMESTAMPTZ
   ) {
     updateleadsCollection(
       filter: { id: { eq: $id } }
@@ -183,13 +148,6 @@ export const UPDATE_LEAD = gql`
         assignee_id: $assigneeId
         customer_id: $customerId
         notes: $notes
-        vehicle_year: $vehicleYear
-        vehicle_make: $vehicleMake
-        vehicle_model: $vehicleModel
-        vehicle_vin: $vehicleVin
-        vehicle_type: $vehicleType
-        vehicle_color: $vehicleColor
-        follow_up_date: $followUpDate
       }
     ) {
       returning {
@@ -234,13 +192,6 @@ export function normalizeLead(row = {}) {
     notes: row.notes,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
-    vehicleYear: row.vehicle_year,
-    vehicleMake: row.vehicle_make,
-    vehicleModel: row.vehicle_model,
-    vehicleVin: row.vehicle_vin,
-    vehicleType: row.vehicle_type,
-    vehicleColor: row.vehicle_color,
-    followUpDate: row.follow_up_date,
   };
 }
 
@@ -500,6 +451,34 @@ export function USE_CREATE_INTAKE_LEAD() {
                 { __typename: 'intake_leadsEdge', node: newLead },
                 ...existing.edges,
               ],
+            };
+          },
+        },
+      });
+    },
+  });
+}
+
+export function USE_DELETE_INTAKE_LEAD() {
+  return useMutation(gql`
+    mutation DeleteIntakeLead($id: UUID!) {
+      deleteFromintake_leadsCollection(filter: { id: { eq: $id } }) {
+        returning {
+          id
+        }
+      }
+    }
+  `, {
+    update(cache, { data: { deleteFromintake_leadsCollection } }) {
+      const returning = deleteFromintake_leadsCollection?.returning ?? [];
+      if (!returning[0]?.id) return;
+      cache.modify({
+        fields: {
+          // eslint-disable-next-line no-unused-vars
+          intake_leadsCollection(existing = { edges: [] }, { readField }) {
+            return {
+              ...existing,
+              edges: existing.edges.filter(e => e.node?.id !== returning[0].id),
             };
           },
         },

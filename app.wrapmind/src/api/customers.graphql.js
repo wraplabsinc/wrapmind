@@ -5,6 +5,8 @@ import { gql } from '@apollo/client';
 export const CUSTOMER_FIELDS = gql`
   fragment CustomerFields on Customer {
     id
+    orgId
+    locationId
     name
     email
     phone
@@ -12,13 +14,12 @@ export const CUSTOMER_FIELDS = gql`
     address
     tags
     source
+    referralSourceId
     assigneeId
     notes
     status
-    discProfile
     createdAt
     updatedAt
-    lastActivityAt
   }
 `;
 
@@ -64,8 +65,12 @@ export const LIST_CUSTOMERS = gql`
  */
 export const GET_CUSTOMER = gql`
   query GetCustomer($id: UUID!) {
-    customer(id: $id) {
-      ...CustomerFields
+    customersCollection(filter: { id: { eq: $id } }, first: 1) {
+      edges {
+        node {
+          ...CustomerFields
+        }
+      }
     }
   }
   ${CUSTOMER_FIELDS}
@@ -76,21 +81,25 @@ export const GET_CUSTOMER = gql`
  */
 export const GET_CUSTOMER_WITH_VEHICLES = gql`
   query GetCustomerWithVehicles($id: UUID!) {
-    customer(id: $id) {
-      ...CustomerFields
-      vehiclesCollection(first: 50) {
-        edges {
-          node {
-            id
-            year
-            make
-            model
-            vin
-            vehicleType
-            color
-            wrapStatus
-            wrapColor
-            createdAt
+    customersCollection(filter: { id: { eq: $id } }, first: 1) {
+      edges {
+        node {
+          ...CustomerFields
+          vehiclesCollection(first: 50) {
+            edges {
+              node {
+                id
+                year
+                make
+                model
+                vin
+                vehicleType
+                color
+                wrapStatus
+                wrapColor
+                createdAt
+              }
+            }
           }
         }
       }
@@ -110,6 +119,7 @@ const CUSTOMER_INPUT = `
   $address: String
   $tags: [String!]
   $source: String
+  $referralSourceId: UUID
   $assigneeId: UUID
   $notes: String
   $status: String
@@ -124,6 +134,7 @@ const CUSTOMER_VARIABLES = `
   address: $address
   tags: $tags
   source: $source
+  referralSourceId: $referralSourceId
   assigneeId: $assigneeId
   notes: $notes
   status: $status
@@ -136,9 +147,8 @@ export const CREATE_CUSTOMER = gql`
   mutation CreateCustomer(
     ${CUSTOMER_INPUT}
   ) {
-    customerInsert(
-      collection: "customers"
-      records: [{ ${CUSTOMER_VARIABLES} }]
+    insertIntocustomersCollection(
+      objects: [{ ${CUSTOMER_VARIABLES} }]
     ) {
       edges {
         node {
@@ -155,20 +165,28 @@ export const CREATE_CUSTOMER = gql`
  * pg_graphql update uses set: { field: value }
  */
 export const UPDATE_CUSTOMER = gql`
-  mutation UpdateCustomer($id: UUID!, $name: String, $email: String, $phone: String, $company: String, $address: String, $tags: [String!], $source: String, $assigneeId: UUID, $notes: String, $status: String) {
-    customerUpdate(id: $id, set: {
-      name: $name
-      email: $email
-      phone: $phone
-      company: $company
-      address: $address
-      tags: $tags
-      source: $source
-      assigneeId: $assigneeId
-      notes: $notes
-      status: $status
-    }) {
-      ...CustomerFields
+  mutation UpdateCustomer($id: UUID!, $name: String, $email: String, $phone: String, $company: String, $address: String, $tags: [String!], $source: String, $referralSourceId: UUID, $assigneeId: UUID, $notes: String, $status: String) {
+    updatecustomersCollection(
+      filter: { id: { eq: $id } }
+      set: {
+        name: $name
+        email: $email
+        phone: $phone
+        company: $company
+        address: $address
+        tags: $tags
+        source: $source
+        referralSourceId: $referralSourceId
+        assigneeId: $assigneeId
+        notes: $notes
+        status: $status
+      }
+    ) {
+      edges {
+        node {
+          ...CustomerFields
+        }
+      }
     }
   }
   ${CUSTOMER_FIELDS}
@@ -179,7 +197,7 @@ export const UPDATE_CUSTOMER = gql`
  */
 export const DELETE_CUSTOMER = gql`
   mutation DeleteCustomer($id: UUID!) {
-    customerDelete(id: $id) {
+    deleteFromcustomersCollection(filter: { id: { eq: $id } }) {
       id
     }
   }
@@ -215,7 +233,7 @@ export function USE_CUSTOMER(id) {
     skip: !id,
   });
 
-  return { customer: data?.customer ?? null, loading, error };
+  return { customer: data?.customersCollection?.edges?.[0]?.node ?? null, loading, error };
 }
 
 /**
@@ -228,7 +246,7 @@ export function USE_CUSTOMER_WITH_VEHICLES(id) {
     skip: !id,
   });
 
-  return { customer: data?.customer ?? null, loading, error };
+  return { customer: data?.customersCollection?.edges?.[0]?.node ?? null, loading, error };
 }
 
 /**
@@ -237,9 +255,9 @@ export function USE_CUSTOMER_WITH_VEHICLES(id) {
  */
 export function USE_CREATE_CUSTOMER() {
   return useMutation(CREATE_CUSTOMER, {
-    update(cache, { data: { customerInsert } }) {
-      if (!customerInsert?.edges?.[0]?.node) return;
-      const newCustomer = customerInsert.edges[0].node;
+    update(cache, { data: { insertIntocustomersCollection } }) {
+      if (!insertIntocustomersCollection?.edges?.[0]?.node) return;
+      const newCustomer = insertIntocustomersCollection.edges[0].node;
       // Prepend to list cache — append edge to existing collection
       cache.modify({
         fields: {
@@ -248,7 +266,7 @@ export function USE_CREATE_CUSTOMER() {
             return {
               ...existing,
               edges: [
-                { __typename: 'CustomerEdge', node: newCustomer },
+                { __typename: 'customersEdge', node: newCustomer },
                 ...existing.edges,
               ],
             };
@@ -273,8 +291,8 @@ export function USE_UPDATE_CUSTOMER() {
  */
 export function USE_DELETE_CUSTOMER() {
   return useMutation(DELETE_CUSTOMER, {
-    update(cache, { data: { customerDelete } }) {
-      if (!customerDelete?.id) return;
+    update(cache, { data: { deleteFromcustomersCollection } }) {
+      if (!deleteFromcustomersCollection?.id) return;
       cache.modify({
         fields: {
           // eslint-disable-next-line no-unused-vars
@@ -282,7 +300,7 @@ export function USE_DELETE_CUSTOMER() {
             return {
               ...existing,
               edges: existing.edges.filter(
-                e => e.node?.id !== customerDelete.id
+                e => e.node?.id !== deleteFromcustomersCollection.id
               ),
             };
           },
@@ -291,5 +309,3 @@ export function USE_DELETE_CUSTOMER() {
     },
   });
 }
-
-

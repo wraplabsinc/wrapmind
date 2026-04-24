@@ -10,13 +10,13 @@ export const INVOICE_FIELDS = gql`
     location_id
     invoice_number
     estimate_id
-    client_id
-    vehicle_json
-    line_items_json
+    customer_id
+    vehicle_id
+    line_items
     subtotal
-    tax
+    tax_amount
+    discount
     total
-    deposit_amount
     amount_paid
     amount_due
     status
@@ -55,13 +55,13 @@ export const LIST_INVOICES = gql`
           status
           location_id
           estimate_id
-          client_id
-          vehicle_json
-          line_items_json
+          customer_id
+          vehicle_id
+          line_items
           subtotal
-          tax
+          tax_amount
+          discount
           total
-          deposit_amount
           amount_paid
           amount_due
           payments
@@ -100,25 +100,25 @@ export const GET_INVOICE = gql`
   ${INVOICE_FIELDS}
 `;
 
-// ─── Mutations ──────────────────────────────────────────────────────────────
+// ─── Mutations ───────────────────────────────────────────────────────────────
 
 /**
  * Create an invoice.
  * pg_graphql uses insertInto<Collection>(objects: []).
- * line_items_json and payments are passed as JSON strings.
+ * line_items and payments are passed as JSON strings.
  */
 export const CREATE_INVOICE = gql`
   mutation CreateInvoice(
     $orgId: UUID!
     $locationId: UUID!
     $invoiceNumber: String!
-    $clientId: UUID!
+    $customerId: UUID!
     $estimateId: UUID
-    $vehicleJson: String
+    $vehicleId: UUID
     $status: String!
     $lineItems: String
     $subtotal: BigFloat
-    $tax: BigFloat
+    $taxAmount: BigFloat
     $discount: BigFloat
     $total: BigFloat!
     $amountPaid: BigFloat
@@ -133,13 +133,13 @@ export const CREATE_INVOICE = gql`
       org_id: $orgId
       location_id: $locationId
       invoice_number: $invoiceNumber
-      client_id: $clientId
+      customer_id: $customerId
       estimate_id: $estimateId
-      vehicle_json: $vehicleJson
+      vehicle_id: $vehicleId
       status: $status
-      line_items_json: $lineItems
+      line_items: $lineItems
       subtotal: $subtotal
-      tax: $tax
+      tax_amount: $taxAmount
       discount: $discount
       total: $total
       amount_paid: $amountPaid
@@ -168,7 +168,7 @@ export const UPDATE_INVOICE = gql`
     $status: String
     $lineItems: String
     $subtotal: BigFloat
-    $tax: BigFloat
+    $taxAmount: BigFloat
     $discount: BigFloat
     $total: BigFloat
     $amountPaid: BigFloat
@@ -185,9 +185,9 @@ export const UPDATE_INVOICE = gql`
       filter: { id: { eq: $id } }
       set: {
         status: $status
-        line_items_json: $lineItems
+        line_items: $lineItems
         subtotal: $subtotal
-        tax: $tax
+        tax_amount: $taxAmount
         discount: $discount
         total: $total
         amount_paid: $amountPaid
@@ -235,14 +235,13 @@ export function normalizeInvoice(row = {}) {
     locationId: row.location_id,
     invoiceNumber: row.invoice_number,
     estimateId: row.estimate_id,
-    customerId: row.client_id,
-    vehicleId: null,          // vehicle_json is a separate JSONB column
-    vehicleJson: row.vehicle_json,
+    customerId: row.customer_id,
+    vehicleId: row.vehicle_id,
     status: row.status,
-    lineItems: row.line_items_json ? (typeof row.line_items_json === 'string' ? JSON.parse(row.line_items_json) : row.line_items_json) : [],
+    lineItems: row.line_items ? (typeof row.line_items === 'string' ? JSON.parse(row.line_items) : row.line_items) : [],
     subtotal: row.subtotal != null ? Number(row.subtotal) : 0,
     taxRate: 0.0875,          // Always derive from TAX_RATE constant; not stored
-    taxAmount: row.tax != null ? Number(row.tax) : 0,
+    taxAmount: row.tax_amount != null ? Number(row.tax_amount) : 0,
     discount: row.discount != null ? Number(row.discount) : 0,
     total: row.total != null ? Number(row.total) : 0,
     amountPaid: row.amount_paid != null ? Number(row.amount_paid) : 0,
