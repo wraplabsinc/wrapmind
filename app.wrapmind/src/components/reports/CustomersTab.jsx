@@ -1,5 +1,4 @@
 import { useReports } from '../../context/ReportsContext';
-import { BarChart } from './ReportsCharts';
 
 export default function CustomersTab() {
   const { customersAgg, invoices, loading } = useReports();

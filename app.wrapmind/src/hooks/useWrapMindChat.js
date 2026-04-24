@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { streamChat } from '../lib/ai.js';
+import supabase from '../lib/supabase.js';
 import { buildWrapMindContext } from '../lib/wrapmindContext';
 import { TOOL_DEFINITIONS, MUTATING_TOOLS, executeToolCall } from '../lib/agentTools.js';
 
@@ -196,10 +197,12 @@ export function useWrapMindChat(contexts = {}) {
   const sendMessage = useCallback(async (text) => {
     if (!text?.trim() || isLoading) return;
 
-    if (!import.meta.env.VITE_WRAPMIND_API_URL || !import.meta.env.VITE_WRAPMIND_API_KEY) {
-      setError('WrapMind AI requires VITE_WRAPMIND_API_URL and VITE_WRAPMIND_API_KEY in your .env file.');
-      return;
-    }
+    // Verify Supabase authentication for AI access
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) {
+    setError('You must be logged in to use WrapMind AI.');
+    return;
+  }
 
     setPendingToolCalls([]);
     setError(null);

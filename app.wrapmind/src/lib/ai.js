@@ -1,36 +1,18 @@
 /**
  * ai.js — Central AI wrapper for WrapMind.
- * All AI calls route through the wrapmind-api proxy (/api/ai/*).
- * Requires VITE_WRAPMIND_API_URL and VITE_WRAPMIND_API_KEY in .env
+ * All AI calls route through Supabase Edge Functions (JWT-authenticated).
+ * Uses OpenRouter for LLM inference with PII scrubbing, usage tracking, and circuit breaker.
  */
-
 import { enforceRateLimit } from './aiRateLimiter';
+import supabase, { supabaseUrl } from './supabase';
+
 
 const CHAT_MODEL  = 'claude-haiku-4-5';
-const SMART_MODEL = 'claude-sonnet-4-5';
 
-function getApiUrl() {
-  const url = import.meta.env.VITE_WRAPMIND_API_URL;
-  if (!url) {
-    throw new Error('WrapMind AI requires VITE_WRAPMIND_API_URL in your .env file.');
-  }
-  return url;
-}
 
-function getApiKey() {
-  const key = import.meta.env.VITE_WRAPMIND_API_KEY;
-  if (!key) {
-    throw new Error('WrapMind AI requires VITE_WRAPMIND_API_KEY in your .env file.');
-  }
-  return key;
-}
 
-function proxyHeaders() {
-  return {
-    'Content-Type': 'application/json',
-    'X-WrapMind-Key': getApiKey(),
-  };
-}
+
+
 
 // ─── streamChat ───────────────────────────────────────────────────────────────
 // Streaming chat with optional tool use.
@@ -39,20 +21,35 @@ function proxyHeaders() {
 export async function streamChat({ messages, system, tools = [], onChunk, signal, model = CHAT_MODEL }) {
   enforceRateLimit();
 
-  const response = await fetch(`${getApiUrl()}/api/ai/chat`, {
-    method: 'POST',
-    headers: proxyHeaders(),
-    signal,
-    body: JSON.stringify({
-      messages,
-      ...(system ? { system } : {}),
-      ...(tools.length ? { tools } : {}),
-      ...(model !== CHAT_MODEL ? { model } : {}),
-    }),
-  });
+  // Build message list
+  const finalMessages = [];
+  if (system) finalMessages.push({ role: 'system', content: system });
+  finalMessages.push(...messages);
+
+  // Get current session JWT
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) throw new Error('Not authenticated');
+
+  // Call ai-chat Edge Function with streaming
+  const response = await fetch(
+    `${supabaseUrl.replace('https://', 'https://')}/functions/v1/ai-chat`,
+    {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${session.access_token}`,
+        'Content-Type': 'application/json',
+      },
+      signal,
+      body: JSON.stringify({
+        messages: finalMessages,
+        model,
+        ...(tools.length ? { tools } : {}),
+      }),
+    }
+  );
 
   if (!response.ok) {
-    let msg = `API error ${response.status}`;
+    let msg = `AI chat error ${response.status}`;
     try { const j = await response.json(); msg = j?.error || msg; } catch { /* ignore */ }
     throw new Error(msg);
   }
@@ -108,39 +105,57 @@ export async function streamChat({ messages, system, tools = [], onChunk, signal
 // ─── generateText ─────────────────────────────────────────────────────────────
 // Single-turn, non-streaming. Used for follow-up drafts and estimate generation.
 export async function generateText({ prompt, system, model = SMART_MODEL, maxTokens = 2048 }) {
-  const response = await fetch(`${getApiUrl()}/api/ai/generate`, {
-    method: 'POST',
-    headers: proxyHeaders(),
-    body: JSON.stringify({ prompt, ...(system ? { system } : {}), model, maxTokens }),
+  enforceRateLimit();
+
+  // Build message list for chat completion
+  const messages = [];
+  if (system) {
+    messages.push({ role: 'system', content: system });
+  }
+  messages.push({ role: 'user', content: prompt });
+
+  const { data, error } = await supabase.functions.invoke('ai-text-generate', {
+    body: { messages, model },
   });
 
-  if (!response.ok) {
-    let msg = `API error ${response.status}`;
-    try { const j = await response.json(); msg = j?.error || msg; } catch { /* ignore */ }
-    throw new Error(msg);
+  if (error) {
+    throw new Error(error.message || 'AI generation failed');
   }
 
-  const data = await response.json();
-  return data.text || '';
+  if (!data?.message) {
+    throw new Error('Invalid response from AI service');
+  }
+
+  return data.message;
 }
 
 // ─── analyzeVehicleImage ──────────────────────────────────────────────────────
 // Send a base64 data URL to the vision proxy. Returns structured vehicle JSON or null.
 export async function analyzeVehicleImage(base64DataUrl) {
-  const response = await fetch(`${getApiUrl()}/api/ai/vision`, {
-    method: 'POST',
-    headers: proxyHeaders(),
-    body: JSON.stringify({ image: base64DataUrl }),
-  });
+  enforceRateLimit();
 
-  if (!response.ok) {
-    let msg = `Vision API error ${response.status}`;
-    try { const j = await response.json(); msg = j?.error || msg; } catch { /* ignore */ }
-    throw new Error(msg);
+  // Parse data URL to extract media type and base64 payload
+  let mediaType = 'image/jpeg';
+  let base64Data = base64DataUrl;
+  if (base64DataUrl.startsWith('data:')) {
+    const commaIdx = base64DataUrl.indexOf(',');
+    if (commaIdx !== -1) {
+      const meta = base64DataUrl.slice(0, commaIdx);
+      base64Data = base64DataUrl.slice(commaIdx + 1);
+      const typeMatch = meta.match(/data:([^;]+);/);
+      if (typeMatch) mediaType = typeMatch[1];
+    }
   }
 
-  const data = await response.json();
-  return data.vehicle || null;
+  const { data, error } = await supabase.functions.invoke('ai-vision-analyze', {
+    body: { photos: [{ data: base64Data, media_type: mediaType }] },
+  });
+
+  if (error) {
+    throw new Error(error.message || 'Vision analysis failed');
+  }
+
+  return data?.vehicle || null;
 }
 
 // ─── generateEstimateFromText ─────────────────────────────────────────────────
