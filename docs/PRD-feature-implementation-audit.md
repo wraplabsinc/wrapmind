@@ -505,7 +505,7 @@ This PRD systematically audits every feature in the WrapMind UI against three st
 
 ## High-Priority Gaps
 
-1. **Supabase GraphQL Wiring** ~~(135 features)~~ — ✅ **RESOLVED** — All 16 `*.graphql.js` files are aligned with pg_graphql v1 schema. Apollo contexts are wired. Remaining: apply DB migrations (e.g. `ai_conversations`).
+1. **Supabase GraphQL Wiring** ~~(135 features)~~ — ✅ **RESOLVED** — All 16 `*.graphql.js` files aligned with pg_graphql v1 schema. **Schema migrations fully applied to production** (20250413200000 → 20250426000000): `estimates` renamed (`estimate_id`→`estimate_number`, `client_id`→`customer_id`), `vehicles`/`invoices` `client_id`→`customer_id`, new DISC columns on `customers`, new vehicle/lead fields, `estimate_templates` restructured, all RLS policies enforced, `ai_conversations` live.
 
 2. ~~**AI Features**~~ **(RESOLVED — Phase 1 & 2 complete)** — All AI features now connected via Supabase Edge Functions + OpenRouter. PII scrubbing, usage ledger, and circuit breaker in place.
 
@@ -525,7 +525,7 @@ This PRD systematically audits every feature in the WrapMind UI against three st
 
 1. ~~**Phase 1:** Supabase Schema & RLS~~ ✅ **COMPLETE** — Core schema, RLS policies, and `auth_org_id()` helper in place.
 2. ~~**Phase 2:** GraphQL Queries~~ ✅ **COMPLETE** — All 16 `*.graphql.js` Apollo queries/mutations aligned with pg_graphql v1.
-3. **Phase 3:** Apply DB Migrations — Run `20250426000000_create_ai_conversations.sql` to unblock AI chat history.
+3. ~~**Phase 3:** Apply DB Migrations~~ ✅ **COMPLETE** — All pending migrations (20250413200000 → 20250426000000) applied to production. Schema is fully aligned with GraphQL field names.
 4. **Phase 4:** External Integrations — Stripe, ShopMonkey, Carfax, Slack
 5. **Phase 5:** Reports — Dedicated PRD and implementation
 6. **Phase 6:** Realtime — Supabase subscriptions
