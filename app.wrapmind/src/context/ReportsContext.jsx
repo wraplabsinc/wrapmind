@@ -1,19 +1,14 @@
 import { createContext, useContext, useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useAuth } from './AuthContext.jsx';
 import { useLocations } from './LocationContext';
-import {
-  USE_ESTIMATES,
-  USE_INVOICES,
-  USE_CUSTOMERS,
-  USE_EMPLOYEES,
-  USE_APPOINTMENTS,
-  USE_LEADS,
-  USE_INTAKE_LEADS,
-  USE_CAMPAIGNS,
-  USE_REVIEW_REQUESTS,
-  USE_EMPLOYEES as USE_GAMIFICATION_EMPLOYEES,
-} from '../api';
-import { USE_EMPLOYEES as USE_EMP_FROM_GAMIFICATION } from '../api/gamification.graphql.js';
+import { USE_ESTIMATES } from '../api/estimates.graphql.js';
+import { USE_INVOICES } from '../api/invoices.graphql.js';
+import { USE_CUSTOMERS } from '../api/customers.graphql.js';
+import { USE_EMPLOYEES } from '../api/employees.graphql.js';
+import { USE_APPOINTMENTS } from '../api/appointments.graphql.js';
+import { USE_LEADS, USE_INTAKE_LEADS } from '../api/leads.graphql.js';
+import { USE_CAMPAIGNS } from '../api/marketing-campaigns.graphql.js';
+import { USE_REVIEW_REQUESTS } from '../api/marketing.graphql.js';
 import { aggregateRevenue, aggregateEstimates, aggregateCustomers, aggregateEmployees, aggregateMarketing, aggregateOperations, DEFAULT_DAYS } from '../lib/reportsAggregation';
 
 const ReportsContext = createContext(null);
@@ -55,8 +50,8 @@ export function ReportsProvider({ children }) {
   const { campaigns: apolloCampaigns, loading: campLoading, error: campError } = USE_CAMPAIGNS({ shopId: orgId, first: 200 });
   const { reviewRequests: apolloReviewRequests, loading: rrLoading, error: rrError } = USE_REVIEW_REQUESTS({ orgId, first: 300 });
 
-  // Bays (for utilization) — short fetch
-  const { bays: apolloBays } = USE_BAYS ? USE_BAYS({ orgId, first: 50 }) : { bays: [], loading: false, error: null };
+  // Bays (for utilization) — not yet implemented; placeholder
+  const apolloBays = [];
 
   // Derived data: apply location filter (locationId === null means all)
   const estimates = useMemo(() => {
