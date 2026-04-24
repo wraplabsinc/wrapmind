@@ -38,7 +38,7 @@ export default function VinSearch({ onSelect, selectedCar }) {
       } else {
         setResults([]);
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('VIN decode exception:', err);
       setResults([]);
     } finally {
