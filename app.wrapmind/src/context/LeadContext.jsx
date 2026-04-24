@@ -13,13 +13,7 @@ import {
   LEAD_STATUSES,
   LEAD_SOURCES,
   PRIORITIES,
-  SEED_LEADS,
 } from '../components/leadhub/leadData.js';
-
-// ─── Seed data ────────────────────────────────────────────────────────────────
-
-// Uses the same SEED_LEADS from leadData.js (already date-relative)
-// No transformation needed — seed leads match the DB schema shape
 
 // ─── Storage helpers ─────────────────────────────────────────────────────────
 
@@ -60,8 +54,8 @@ export function LeadProvider({ children }) {
   const hasApolloData = !apolloLoading && !apolloError && apolloLeads.length > 0;
 
   const [leads, setLeads] = useState(() => {
-    if (isDevAuth) return SEED_LEADS;
-    return loadFromStorage() ?? SEED_LEADS;
+    // seed removed
+    return loadFromStorage() ?? [];
   });
 
   // Sync Apollo data once available

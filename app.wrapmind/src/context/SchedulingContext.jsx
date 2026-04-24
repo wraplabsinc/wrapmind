@@ -50,50 +50,7 @@ function makeSeedDate(daysFromNow) {
   return d.toISOString().split('T')[0];
 }
 
-const SEED_APPOINTMENTS = [
-  {
-    id: 'appt-001', locationId: 'loc-001',
-    customerId: 'c001', customerName: 'Marcus Bell', customerPhone: '(310) 555-0142',
-    vehicleLabel: '2023 Tesla Model 3',
-    service: 'Full Wrap', estimateId: 'est-001', technicianId: 'tech-001',
-    date: makeSeedDate(2), startTime: '09:00', endTime: '17:00',
-    status: 'confirmed', type: 'appointment',
-    notes: 'Handle charge port area carefully.',
-    reminderQueued: true, reminderSent: false,
-    reminderAt: new Date(Date.now() + 1 * 86400000).toISOString(),
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'appt-002', locationId: 'loc-002',
-    customerId: 'c002', customerName: 'Devon Walsh', customerPhone: '(424) 555-0293',
-    vehicleLabel: '2022 BMW M4',
-    service: 'Full Wrap', estimateId: 'est-002', technicianId: 'tech-002',
-    date: makeSeedDate(5), startTime: '08:00', endTime: '18:00',
-    status: 'scheduled', type: 'appointment',
-    notes: '',
-    reminderQueued: true, reminderSent: false,
-    reminderAt: new Date(Date.now() + 4 * 86400000).toISOString(),
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'appt-003', locationId: 'loc-001',
-    customerId: 'c003', customerName: 'Tina Marsh', customerPhone: '(818) 555-0381',
-    vehicleLabel: '2021 Ford F-150 Raptor',
-    service: 'Hood & Roof', estimateId: 'est-003', technicianId: 'tech-003',
-    date: makeSeedDate(7), startTime: '10:00', endTime: '12:00',
-    status: 'scheduled', type: 'appointment',
-    notes: 'Surface in good condition from prior wrap removal.',
-    reminderQueued: true, reminderSent: false,
-    reminderAt: new Date(Date.now() + 6 * 86400000).toISOString(),
-    createdAt: new Date().toISOString(),
-  },
-];
 
-const SEED_TECHNICIANS = [
-  { id: 'tech-001', name: 'Jamie K.', color: '#3B82F6', active: true },
-  { id: 'tech-002', name: 'Alex R.',  color: '#8B5CF6', active: true },
-  { id: 'tech-003', name: 'Sam T.',   color: '#10B981', active: true },
-];
 
 // ─── Storage helpers ─────────────────────────────────────────────────────────
 
@@ -125,8 +82,8 @@ export function SchedulingProvider({ children }) {
 
   // Appointments state: Apollo once loaded, otherwise localStorage/seed
   const [appointments, setAppointments] = useState(() => {
-    if (isDevAuth) return SEED_APPOINTMENTS;
-    return loadFromStorage(STORAGE_KEY, SEED_APPOINTMENTS);
+    // seed removed
+    return loadFromStorage(STORAGE_KEY, []);
   });
 
   // Sync Apollo data once (guard with ref)
@@ -147,7 +104,7 @@ export function SchedulingProvider({ children }) {
 
   // ── Technicians (local only — no backend table) ─────────────────────────────
   const [technicians, setTechnicians] = useState(() =>
-    loadFromStorage(TECHS_KEY, SEED_TECHNICIANS)
+    loadFromStorage(TECHS_KEY, [])
   );
 
   useEffect(() => {

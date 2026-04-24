@@ -10,7 +10,6 @@ import Toggle from '../ui/Toggle';
 import Button from '../ui/Button';
 import {
   DEFAULT_COLUMNS,
-  SEED_ESTIMATES,
   TAG_COLORS,
   ASSIGNEES,
   COLUMN_COLOR_PRESETS,
@@ -81,7 +80,7 @@ export default function WorkflowPage({ onNavigate }) {
   const initial = loadColumns();
   const [columnsState, setColumnsState] = useState(initial.columns);
   const [hiddenColumns, setHiddenColumns] = useState(initial.hidden);
-  const [cards, setCards] = useState(SEED_ESTIMATES);
+  const [cards, setCards] = useState([]);
   const [view, setView] = useState('columns'); // 'columns' | 'list'
   const [search, setSearch] = useState('');
   const [filtersOpen, setFiltersOpen] = useState(false);

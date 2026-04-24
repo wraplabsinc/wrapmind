@@ -42,12 +42,6 @@ export const LEVELS = [
 
 // ─── Seed data ────────────────────────────────────────────────────────────────
 
-const SEED_EMPLOYEES = [
-  { id: 'e1', name: 'Tavo R.',   initials: 'TR', role: 'Lead Installer', color: '#2E8BF0', isActive: true },
-  { id: 'e2', name: 'Maria L.',  initials: 'ML', role: 'Estimator',      color: '#8B5CF6', isActive: true },
-  { id: 'e3', name: 'Daniel V.', initials: 'DV', role: 'Installer',     color: '#22C55E', isActive: true },
-  { id: 'e4', name: 'Chris M.',  initials: 'CM', role: 'Sales',         color: '#F59E0B', isActive: true },
-];
 
 function daysAgo(n) {
   const d = new Date();
@@ -55,30 +49,6 @@ function daysAgo(n) {
   return d.toISOString();
 }
 
-const SEED_EVENTS = [
-  { id: 'ev1',  employeeId: 'e1', achievementId: 'full_wrap_sold',     xp: 150, note: 'Ram 1500 full wrap',         awardedBy: 'system', timestamp: daysAgo(28) },
-  { id: 'ev2',  employeeId: 'e1', achievementId: 'estimate_created',   xp: 10,  note: '',                             awardedBy: 'system', timestamp: daysAgo(25) },
-  { id: 'ev3',  employeeId: 'e1', achievementId: 'estimate_approved',  xp: 25,  note: 'Cyber Monday deal approved',   awardedBy: 'system', timestamp: daysAgo(22) },
-  { id: 'ev4',  employeeId: 'e1', achievementId: 'lead_converted',     xp: 75,  note: 'Fleet client closed',          awardedBy: 'system', timestamp: daysAgo(18) },
-  { id: 'ev5',  employeeId: 'e1', achievementId: 'five_star_review',  xp: 150, note: 'Google review from Torres',    awardedBy: 'owner',  timestamp: daysAgo(10) },
-  { id: 'ev6',  employeeId: 'e1', achievementId: 'perfect_week',      xp: 200, note: '',                             awardedBy: 'system', timestamp: daysAgo(5)  },
-  { id: 'ev7',  employeeId: 'e2', achievementId: 'estimate_created',   xp: 10,  note: '',                             awardedBy: 'system', timestamp: daysAgo(27) },
-  { id: 'ev8',  employeeId: 'e2', achievementId: 'estimate_approved',  xp: 25,  note: 'Sprinter wrap approved',       awardedBy: 'system', timestamp: daysAgo(24) },
-  { id: 'ev9',  employeeId: 'e2', achievementId: 'ten_estimates_week',xp: 100, note: '12 estimates in one week!',   awardedBy: 'system', timestamp: daysAgo(20) },
-  { id: 'ev10', employeeId: 'e2', achievementId: 'upsell_closed',     xp: 100, note: 'Added window tint upsell',     awardedBy: 'system', timestamp: daysAgo(14) },
-  { id: 'ev11', employeeId: 'e2', achievementId: 'referral',          xp: 50,  note: 'Referred by Garcia family',    awardedBy: 'system', timestamp: daysAgo(8)  },
-  { id: 'ev12', employeeId: 'e2', achievementId: 'manual_bonus',      xp: 75,  note: 'Great attitude this month',    awardedBy: 'owner',  timestamp: daysAgo(3)  },
-  { id: 'ev13', employeeId: 'e3', achievementId: 'estimate_created',   xp: 10,  note: '',                             awardedBy: 'system', timestamp: daysAgo(26) },
-  { id: 'ev14', employeeId: 'e3', achievementId: 'estimate_approved', xp: 25,  note: 'Tacoma partial approved',      awardedBy: 'system', timestamp: daysAgo(21) },
-  { id: 'ev15', employeeId: 'e3', achievementId: 'lead_converted',    xp: 75,  note: 'Walk-in converted same day',   awardedBy: 'system', timestamp: daysAgo(16) },
-  { id: 'ev16', employeeId: 'e3', achievementId: 'first_job_day',     xp: 5,   note: 'Logged at 8:42 AM',           awardedBy: 'system', timestamp: daysAgo(12) },
-  { id: 'ev17', employeeId: 'e3', achievementId: 'referral',          xp: 50,  note: 'Referral from Hernandez',      awardedBy: 'system', timestamp: daysAgo(7)  },
-  { id: 'ev18', employeeId: 'e4', achievementId: 'estimate_created',  xp: 10,  note: '',                             awardedBy: 'system', timestamp: daysAgo(29) },
-  { id: 'ev19', employeeId: 'e4', achievementId: 'upsell_closed',     xp: 100, note: 'PPF package upsell',           awardedBy: 'system', timestamp: daysAgo(23) },
-  { id: 'ev20', employeeId: 'e4', achievementId: 'revenue_milestone', xp: 200, note: 'Hit $5k on Friday!',           awardedBy: 'system', timestamp: daysAgo(17) },
-  { id: 'ev21', employeeId: 'e4', achievementId: 'estimate_approved', xp: 25,  note: 'Tesla Model Y approved',        awardedBy: 'system', timestamp: daysAgo(11) },
-  { id: 'ev22', employeeId: 'e4', achievementId: 'first_job_day',    xp: 5,   note: 'First in at 8:15 AM',         awardedBy: 'system', timestamp: daysAgo(4)  },
-];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -167,7 +137,7 @@ function loadEmployees() {
     const raw = localStorage.getItem(LS_EMP_KEY);
     if (raw) { const p = JSON.parse(raw); if (Array.isArray(p) && p.length > 0) return p; }
   } catch { /* ignore */ }
-  return SEED_EMPLOYEES;
+  return [];
 }
 
 function loadEvents() {
@@ -180,7 +150,7 @@ function loadEvents() {
       }
     }
   } catch { /* ignore */ }
-  return [...SEED_EVENTS].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+  return [];
 }
 
 function saveEmployees(employees) {

@@ -1,5 +1,4 @@
 import { createContext, useContext, useState, useMemo, useCallback, useEffect } from 'react';
-import { VEHICLES } from '../components/lists/listsData.js';
 import { useAuth } from './AuthContext.jsx';
 import {
   USE_VEHICLES,
@@ -62,10 +61,9 @@ export function VehicleProvider({ children }) {
   const hasApolloData = !apolloLoading && !apolloError && apolloVehicles.length > 0;
 
   const baseVehicles = useMemo(() => {
-    if (isDevAuth) return VEHICLES;
     if (hasApolloData) return apolloVehicles;
-    return VEHICLES;
-  }, [isDevAuth, hasApolloData, apolloVehicles]);
+    return [];
+  }, [hasApolloData, apolloVehicles]);
 
   // ── Build enriched vehicle list ─────────────────────────────────────────────
   const enrichedVehicles = useMemo(() => {

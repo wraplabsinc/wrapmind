@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useMemo, useCallback, useEffect } from 'react';
-import { CUSTOMERS as SEED_CUSTOMERS, VEHICLES } from '../components/lists/listsData.js';
+
 import { useEstimates } from './EstimateContext.jsx';
 import { useInvoices } from './InvoiceContext.jsx';
 import { useScheduling } from './SchedulingContext.jsx';
@@ -49,10 +49,11 @@ function saveOverrides(overrides) {
   try { localStorage.setItem(LS_KEY, JSON.stringify(overrides)); } catch { /* noop */ }
 }
 
-// ─── Helper: vehicles for a customer ─────────────────────────────────────────
+// ─── Helper: vehicles for a customer (seed data removed — use VehicleContext) ───
 
 function vehiclesForCustomer(customerId) {
-  return VEHICLES.filter(v => v.customerId === customerId);
+  // Seed data removed. Vehicle data now comes from VehicleContext via Apollo.
+  return [];
 }
 
 // ─── Helper: last activity ISO string ────────────────────────────────────────
@@ -140,13 +141,11 @@ export function CustomerProvider({ children }) {
   const hasApolloData = !apolloLoading && !apolloError && apolloCustomers.length > 0;
 
   const baseCustomers = useMemo(() => {
-    // Dev auth: always use seed data
-    if (isDevAuth) return SEED_CUSTOMERS;
     // Apollo data available: use it
     if (hasApolloData) return apolloCustomers;
-    // Apollo loading/failed: use seed data as fallback
-    return SEED_CUSTOMERS;
-  }, [isDevAuth, hasApolloData, apolloCustomers]);
+    // Apollo not yet loaded: return empty until GraphQL resolves
+    return [];
+  }, [hasApolloData, apolloCustomers]);
 
   const graphqlLoading = apolloLoading && !isDevAuth;
 
