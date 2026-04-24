@@ -4,19 +4,19 @@ import { useQuery, useMutation } from '@apollo/client/react';
 // ─── Fragments ────────────────────────────────────────────────────────────────
 
 export const ESTIMATE_TEMPLATE_FIELDS = gql`
-  fragment EstimateTemplateFields on EstimateTemplate {
+  fragment EstimateTemplateFields on estimate_templates {
     id
-    orgId
-    locationId
+    org_id
+    location_id
     name
     package
-    modifierSelections
+    modifier_selections
     material
-    materialColor
-    basePrice
-    createdById
-    createdAt
-    updatedAt
+    material_color
+    base_price
+    created_by_id
+    created_at
+    updated_at
   }
 `;
 
@@ -28,9 +28,9 @@ export const ESTIMATE_TEMPLATE_FIELDS = gql`
  */
 export const LIST_ESTIMATE_TEMPLATES = gql`
   query ListEstimateTemplates($orgId: UUID!, $locationId: UUID, $first: Int, $offset: Int) {
-    estimateTemplatesCollection(
+    estimate_templatesCollection(
       filter: {
-        orgId: { eq: $orgId }
+        org_id: { eq: $orgId }
       }
       first: $first
       offset: $offset
@@ -39,17 +39,17 @@ export const LIST_ESTIMATE_TEMPLATES = gql`
       edges {
         node {
           id
-          orgId
-          locationId
+          org_id
+          location_id
           name
           package
-          modifierSelections
+          modifier_selections
           material
-          materialColor
-          basePrice
-          createdById
-          createdAt
-          updatedAt
+          material_color
+          base_price
+          created_by_id
+          created_at
+          updated_at
         }
       }
       pageInfo {
@@ -66,8 +66,12 @@ export const LIST_ESTIMATE_TEMPLATES = gql`
  */
 export const GET_ESTIMATE_TEMPLATE = gql`
   query GetEstimateTemplate($id: UUID!) {
-    estimateTemplate(id: $id) {
-      ...EstimateTemplateFields
+    estimate_templatesCollection(filter: { id: { eq: $id } }, first: 1) {
+      edges {
+        node {
+          ...EstimateTemplateFields
+        }
+      }
     }
   }
   ${ESTIMATE_TEMPLATE_FIELDS}
@@ -75,43 +79,34 @@ export const GET_ESTIMATE_TEMPLATE = gql`
 
 // ─── Mutations ────────────────────────────────────────────────────────────────
 
-const ESTIMATE_TEMPLATE_INPUT = `
-  $orgId: UUID!
-  $locationId: UUID!
-  $name: String!
-  $package: String
-  $modifierSelections: JSON
-  $material: String
-  $materialColor: String
-  $basePrice: Float
-`;
-
-const ESTIMATE_TEMPLATE_VARIABLES = `
-  orgId: $orgId
-  locationId: $locationId
-  name: $name
-  package: $package
-  modifierSelections: $modifierSelections
-  material: $material
-  materialColor: $materialColor
-  basePrice: $basePrice
-`;
-
 /**
  * Create a new estimate template.
  */
 export const CREATE_ESTIMATE_TEMPLATE = gql`
   mutation CreateEstimateTemplate(
-    ${ESTIMATE_TEMPLATE_INPUT}
+    $orgId: UUID!
+    $locationId: UUID!
+    $name: String!
+    $package: String
+    $modifierSelections: JSON
+    $material: String
+    $materialColor: String
+    $basePrice: Float
+    $createdById: UUID
   ) {
-    estimateTemplateInsert(
-      collection: "estimateTemplates"
-      records: [{ ${ESTIMATE_TEMPLATE_VARIABLES} }]
-    ) {
-      edges {
-        node {
-          ...EstimateTemplateFields
-        }
+    insertIntoestimate_templatesCollection(objects: [{
+      org_id: $orgId
+      location_id: $locationId
+      name: $name
+      package: $package
+      modifier_selections: $modifierSelections
+      material: $material
+      material_color: $materialColor
+      base_price: $basePrice
+      created_by_id: $createdById
+    }]) {
+      returning {
+        ...EstimateTemplateFields
       }
     }
   }
@@ -131,15 +126,20 @@ export const UPDATE_ESTIMATE_TEMPLATE = gql`
     $materialColor: String
     $basePrice: Float
   ) {
-    estimateTemplateUpdate(id: $id, set: {
-      name: $name
-      package: $package
-      modifierSelections: $modifierSelections
-      material: $material
-      materialColor: $materialColor
-      basePrice: $basePrice
-    }) {
-      ...EstimateTemplateFields
+    updateestimate_templatesCollection(
+      filter: { id: { eq: $id } }
+      set: {
+        name: $name
+        package: $package
+        modifier_selections: $modifierSelections
+        material: $material
+        material_color: $materialColor
+        base_price: $basePrice
+      }
+    ) {
+      returning {
+        ...EstimateTemplateFields
+      }
     }
   }
   ${ESTIMATE_TEMPLATE_FIELDS}
@@ -150,13 +150,36 @@ export const UPDATE_ESTIMATE_TEMPLATE = gql`
  */
 export const DELETE_ESTIMATE_TEMPLATE = gql`
   mutation DeleteEstimateTemplate($id: UUID!) {
-    estimateTemplateDelete(id: $id) {
-      id
+    deleteFromestimate_templatesCollection(filter: { id: { eq: $id } }) {
+      returning {
+        id
+      }
     }
   }
 `;
 
 // ─── Apollo React Hooks ───────────────────────────────────────────────────────
+
+/**
+ * Normalize a DB estimate_template row (snake_case) → app shape (camelCase).
+ */
+export function normalizeEstimateTemplate(row = {}) {
+  if (!row || !row.id) return null;
+  return {
+    id: row.id,
+    orgId: row.org_id,
+    locationId: row.location_id,
+    name: row.name,
+    package: row.package,
+    modifierSelections: row.modifier_selections,
+    material: row.material,
+    materialColor: row.material_color,
+    basePrice: row.base_price != null ? Number(row.base_price) : null,
+    createdById: row.created_by_id,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
 
 /**
  * List estimate templates for an org.
@@ -168,15 +191,15 @@ export function USE_ESTIMATE_TEMPLATES({ orgId, locationId, first = 100, offset 
     skip: !orgId,
   });
 
-  let edges = data?.estimateTemplatesCollection?.edges ?? [];
+  let edges = data?.estimate_templatesCollection?.edges ?? [];
 
-  // Client-side location filter (pg_graphql filter on locationId is also valid)
+  // Client-side location filter
   if (locationId) {
-    edges = edges.filter(e => e.node.locationId === locationId);
+    edges = edges.filter(e => e.node.location_id === locationId);
   }
 
-  const estimateTemplates = edges.map(e => e.node);
-  const pageInfo = data?.estimateTemplatesCollection?.pageInfo ?? {};
+  const estimateTemplates = edges.map(e => normalizeEstimateTemplate(e.node));
+  const pageInfo = data?.estimate_templatesCollection?.pageInfo ?? {};
 
   return { estimateTemplates, loading, error, refetch, ...pageInfo };
 }
@@ -191,7 +214,8 @@ export function USE_ESTIMATE_TEMPLATE(id) {
     skip: !id,
   });
 
-  return { estimateTemplate: data?.estimateTemplate ?? null, loading, error };
+  const edge = data?.estimate_templatesCollection?.edges?.[0];
+  return { estimateTemplate: edge ? normalizeEstimateTemplate(edge.node) : null, loading, error };
 }
 
 /**
@@ -200,17 +224,18 @@ export function USE_ESTIMATE_TEMPLATE(id) {
  */
 export function USE_CREATE_ESTIMATE_TEMPLATE() {
   return useMutation(CREATE_ESTIMATE_TEMPLATE, {
-    update(cache, { data: { estimateTemplateInsert } }) {
-      if (!estimateTemplateInsert?.edges?.[0]?.node) return;
-      const newEstimateTemplate = estimateTemplateInsert.edges[0].node;
+    update(cache, { data: { insertIntoestimate_templatesCollection } }) {
+      const returning = insertIntoestimate_templatesCollection?.returning ?? [];
+      if (!returning[0]) return;
+      const newTemplate = normalizeEstimateTemplate(returning[0]);
       cache.modify({
         fields: {
           // eslint-disable-next-line no-unused-vars
-          estimateTemplatesCollection(existing = { edges: [] }, { readField }) {
+          estimate_templatesCollection(existing = { edges: [] }, { readField }) {
             return {
               ...existing,
               edges: [
-                { __typename: 'EstimateTemplateEdge', node: newEstimateTemplate },
+                { __typename: 'estimate_templatesEdge', node: newTemplate },
                 ...existing.edges,
               ],
             };
@@ -235,16 +260,17 @@ export function USE_UPDATE_ESTIMATE_TEMPLATE() {
  */
 export function USE_DELETE_ESTIMATE_TEMPLATE() {
   return useMutation(DELETE_ESTIMATE_TEMPLATE, {
-    update(cache, { data: { estimateTemplateDelete } }) {
-      if (!estimateTemplateDelete?.id) return;
+    update(cache, { data: { deleteFromestimate_templatesCollection } }) {
+      const returning = deleteFromestimate_templatesCollection?.returning ?? [];
+      if (!returning[0]?.id) return;
       cache.modify({
         fields: {
           // eslint-disable-next-line no-unused-vars
-          estimateTemplatesCollection(existing = { edges: [] }, { readField }) {
+          estimate_templatesCollection(existing = { edges: [] }, { readField }) {
             return {
               ...existing,
               edges: existing.edges.filter(
-                e => e.node?.id !== estimateTemplateDelete.id
+                e => e.node?.id !== returning[0].id
               ),
             };
           },

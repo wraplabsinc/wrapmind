@@ -8,9 +8,9 @@ export const ESTIMATE_FIELDS = gql`
     id
     org_id
     location_id
-    estimate_id
+    estimate_number
     status
-    client_id
+    customer_id
     vehicle_id
     package
     material
@@ -22,7 +22,7 @@ export const ESTIMATE_FIELDS = gql`
     discount
     total
     notes
-    created_by
+    created_by_id
     assigned_to_id
     sent_at
     expires_at
@@ -53,10 +53,10 @@ export const LIST_ESTIMATES = gql`
       edges {
         node {
           id
-          estimate_id
+          estimate_number
           status
           location_id
-          client_id
+          customer_id
           vehicle_id
           package
           material
@@ -68,6 +68,7 @@ export const LIST_ESTIMATES = gql`
           discount
           total
           notes
+          created_by_id
           assigned_to_id
           sent_at
           expires_at
@@ -108,8 +109,8 @@ export const GET_ESTIMATE = gql`
 const ESTIMATE_INPUT = `
   $orgId: UUID!
   $locationId: UUID!
-  $clientId: UUID!
-  $estimateId: String!
+  $customerId: UUID!
+  $estimateNumber: String!
   $status: String
   $package: String
   $material: String
@@ -122,13 +123,14 @@ const ESTIMATE_INPUT = `
   $total: Float
   $notes: String
   $assignedToId: UUID
+  $createdById: UUID
 `;
 
 const ESTIMATE_VARIABLES = `
   org_id: $orgId
   location_id: $locationId
-  client_id: $clientId
-  estimate_id: $estimateId
+  customer_id: $customerId
+  estimate_number: $estimateNumber
   status: $status
   package: $package
   material: $material
@@ -141,6 +143,7 @@ const ESTIMATE_VARIABLES = `
   total: $total
   notes: $notes
   assigned_to_id: $assignedToId
+  created_by_id: $createdById
 `;
 
 /**
@@ -186,6 +189,7 @@ export const UPDATE_ESTIMATE = gql`
     $approvedAt: TIMESTAMPTZ
     $declinedAt: TIMESTAMPTZ
     $convertedToInvoiceId: UUID
+    $createdById: UUID
   ) {
     updateestimatesCollection(
       filter: { id: { eq: $id } }
@@ -207,6 +211,7 @@ export const UPDATE_ESTIMATE = gql`
         approved_at: $approvedAt
         declined_at: $declinedAt
         converted_to_invoice_id: $convertedToInvoiceId
+        created_by_id: $createdById
       }
     ) {
       returning {
@@ -265,9 +270,9 @@ export function normalizeEstimate(row = {}) {
     id: row.id,
     orgId: row.org_id,
     locationId: row.location_id,
-    estimateNumber: row.estimate_id,
+    estimateNumber: row.estimate_number,
     status: row.status,
-    customerId: row.client_id,
+    customerId: row.customer_id,
     vehicleId: row.vehicle_id,
     package: row.package,
     material: row.material,
@@ -279,7 +284,7 @@ export function normalizeEstimate(row = {}) {
     discount: row.discount != null ? Number(row.discount) : 0,
     total: row.total != null ? Number(row.total) : null,
     notes: row.notes,
-    createdById: row.created_by,
+    createdById: row.created_by_id,
     assignedToId: row.assigned_to_id,
     sentAt: row.sent_at,
     expiresAt: row.expires_at,
