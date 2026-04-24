@@ -5,6 +5,8 @@ import { useInvoices } from '../../context/InvoiceContext';
 import { useNotifications } from '../../context/NotificationsContext';
 import { celebrate } from '../../lib/celebrate';
 import Button from '../ui/Button';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -50,6 +52,167 @@ function calcLineItems(lineItems) {
   const taxAmount = parseFloat((subtotal * TAX_RATE).toFixed(2));
   const total = parseFloat((subtotal + taxAmount).toFixed(2));
   return { subtotal, taxAmount, total };
+}
+
+function generateInvoicePDF(invoice) {
+  const doc = new jsPDF({ unit: 'pt', format: 'letter' });
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const margin = 40;
+  let y = margin;
+
+  const primary = [46, 139, 240];
+  const dark = [15, 25, 35];
+  const gray = [100, 121, 139];
+  const green = [16, 185, 129];
+  const red = [239, 68, 68];
+
+  // White background
+  doc.setFillColor(255, 255, 255);
+  doc.rect(0, 0, pageWidth, pageHeight, 'F');
+
+  // Shop header
+  doc.setFontSize(24);
+  doc.setTextColor(...primary);
+  doc.setFont('helvetica', 'bold');
+  doc.text('WrapMind', margin, y);
+
+  doc.setFontSize(9);
+  doc.setTextColor(...gray);
+  doc.setFont('helvetica', 'normal');
+  doc.text('1234 Vinyl Ave, Los Angeles CA 90001', margin, y + 14);
+  doc.text('(310) 555-0100', margin, y + 26);
+
+  // Invoice title & meta (right aligned)
+  doc.setFontSize(18);
+  doc.setTextColor(...dark);
+  doc.setFont('helvetica', 'bold');
+  doc.text('INVOICE', pageWidth - margin, y, { align: 'right' });
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(...gray);
+  doc.text(invoice.invoiceNumber, pageWidth - margin, y + 16, { align: 'right' });
+  doc.text(`Issued: ${fmtDate(invoice.issuedAt)}`, pageWidth - margin, y + 30, { align: 'right' });
+  doc.text(`Due: ${fmtDate(invoice.dueAt)}`, pageWidth - margin, y + 44, { align: 'right' });
+
+  y += 70;
+
+  // Bill To
+  doc.setFontSize(10);
+  doc.setTextColor(...gray);
+  doc.setFont('helvetica', 'bold');
+  doc.text('BILL TO', margin, y);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(...dark);
+  doc.text(invoice.customerName, margin, y + 14);
+  doc.setFontSize(9);
+  doc.setTextColor(...gray);
+  if (invoice.customerEmail) doc.text(invoice.customerEmail, margin, y + 26);
+  if (invoice.customerPhone) doc.text(invoice.customerPhone, margin, y + 38);
+  if (invoice.vehicleLabel) doc.text(invoice.vehicleLabel, margin, y + 50);
+
+  y += 80;
+
+  // Line items table
+  const tableBody = invoice.lineItems.map(li => [
+    li.description,
+    String(li.qty),
+    fmt(li.total),
+  ]);
+
+  autoTable(doc, {
+    startY: y,
+    margin: { left: margin, right: margin },
+    head: [['Description', 'Qty', 'Total']],
+    body: tableBody,
+    theme: 'grid',
+    headStyles: { fillColor: primary, textColor: 255, fontStyle: 'bold' },
+    bodyStyles: { textColor: dark },
+    columnStyles: {
+      0: { cellWidth: 'auto' },
+      1: { cellWidth: 60, halign: 'center' },
+      2: { cellWidth: 80, halign: 'right' },
+    },
+    styles: { fontSize: 9, cellPadding: 6 },
+  });
+
+  let finalY = doc.lastAutoTable.finalY + 20;
+
+  // Pricing breakdown
+  const totalsX = pageWidth - margin - 160;
+  const valueX = pageWidth - margin;
+
+  doc.setFontSize(9);
+  doc.setTextColor(...gray);
+  doc.setFont('helvetica', 'normal');
+  doc.text('Subtotal', totalsX, finalY);
+  doc.setTextColor(...dark);
+  doc.text(fmt(invoice.subtotal), valueX, finalY, { align: 'right' });
+  finalY += 14;
+
+  if (invoice.discount > 0) {
+    doc.setTextColor(...gray);
+    doc.text('Discount', totalsX, finalY);
+    doc.setTextColor(...dark);
+    doc.text(`-${fmt(invoice.discount)}`, valueX, finalY, { align: 'right' });
+    finalY += 14;
+  }
+
+  doc.setTextColor(...gray);
+  doc.text(`Tax (${(TAX_RATE * 100).toFixed(2)}%)`, totalsX, finalY);
+  doc.setTextColor(...dark);
+  doc.text(fmt(invoice.taxAmount), valueX, finalY, { align: 'right' });
+  finalY += 14;
+
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...dark);
+  doc.text('Total', totalsX, finalY);
+  doc.text(fmt(invoice.total), valueX, finalY, { align: 'right' });
+  doc.setFont('helvetica', 'normal');
+  finalY += 14;
+
+  doc.setTextColor(...gray);
+  doc.text('Amount Paid', totalsX, finalY);
+  doc.setTextColor(...green);
+  doc.text(fmt(invoice.amountPaid), valueX, finalY, { align: 'right' });
+  doc.setTextColor(...dark);
+  finalY += 14;
+
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...dark);
+  doc.text('Balance Due', totalsX, finalY);
+  doc.setTextColor(invoice.amountDue <= 0 ? green : red);
+  doc.text(fmt(invoice.amountDue), valueX, finalY, { align: 'right' });
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(...dark);
+  finalY += 24;
+
+  // Notes / Terms
+  if (invoice.terms || invoice.notes) {
+    doc.setFontSize(9);
+    doc.setTextColor(...gray);
+    if (invoice.terms) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Terms:', margin, finalY);
+      doc.setFont('helvetica', 'normal');
+      doc.text(invoice.terms, margin + 35, finalY);
+      finalY += 14;
+    }
+    if (invoice.notes) {
+      const splitNotes = doc.splitTextToSize(invoice.notes, pageWidth - margin * 2);
+      doc.text(splitNotes, margin, finalY);
+      finalY += splitNotes.length * 12 + 6;
+    }
+    finalY += 10;
+  }
+
+  // Footer
+  doc.setFontSize(8);
+  doc.setTextColor(...gray);
+  doc.text('Thank you for your business!', margin, pageHeight - margin);
+  doc.text('Page 1 of 1', pageWidth - margin, pageHeight - margin, { align: 'right' });
+
+  doc.save(`${invoice.invoiceNumber}.pdf`);
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -187,6 +350,16 @@ function InvoiceDetailPanel({ invoice, onClose, onRecordPayment, activityLog }) 
         <div className="h-11 flex items-center px-4 border-b border-gray-200 dark:border-[#243348] flex-shrink-0">
           <span className="font-semibold text-[#0F1923] dark:text-[#F8FAFE] text-sm flex-1">{invoice.invoiceNumber}</span>
           <StatusBadge status={invoice.status} />
+          <button
+            onClick={() => generateInvoicePDF(invoice)}
+            className="ml-3 text-[#64748B] dark:text-[#7D93AE] hover:text-[#0F1923] dark:hover:text-[#F8FAFE] flex items-center gap-1 text-xs font-medium"
+            title="Download PDF"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            PDF
+          </button>
           <button onClick={onClose} className="ml-3 text-[#64748B] dark:text-[#7D93AE] hover:text-[#0F1923] dark:hover:text-[#F8FAFE]">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
