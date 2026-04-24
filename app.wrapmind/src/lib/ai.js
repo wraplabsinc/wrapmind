@@ -7,8 +7,9 @@ import { enforceRateLimit } from './aiRateLimiter';
 import supabase, { supabaseUrl } from './supabase';
 
 
-const CHAT_MODEL   = 'claude-haiku-4-5';
-const SMART_MODEL  = 'anthropic/claude-sonnet-4-5'; // use this for non-streaming text generation
+// Model selection is handled entirely by OPENROUTER_MODEL env var on the Edge Functions.
+// No client-side model constants needed — all calls route through ai-text-generate / ai-chat
+// which resolve the actual model server-side.
 
 
 
@@ -19,7 +20,7 @@ const SMART_MODEL  = 'anthropic/claude-sonnet-4-5'; // use this for non-streamin
 // Streaming chat with optional tool use.
 // onChunk(text) called for each text delta.
 // Returns { content: string, toolUseBlocks: [{id, name, input}] }
-export async function streamChat({ messages, system, tools = [], onChunk, signal, model = CHAT_MODEL }) {
+export async function streamChat({ messages, system, tools = [], onChunk, signal, model = undefined }) {
   enforceRateLimit();
 
   // Build message list
@@ -105,7 +106,7 @@ export async function streamChat({ messages, system, tools = [], onChunk, signal
 
 // ─── generateText ─────────────────────────────────────────────────────────────
 // Single-turn, non-streaming. Used for follow-up drafts and estimate generation.
-export async function generateText({ prompt, system, model = SMART_MODEL, maxTokens = 2048 }) {
+export async function generateText({ prompt, system, model = undefined, maxTokens = 2048 }) {
   enforceRateLimit();
 
   // Build message list for chat completion
