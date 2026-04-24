@@ -359,24 +359,27 @@ This PRD systematically audits every feature in the WrapMind UI against three st
 
 ## 16. Chat / AI
 
-| Feature | Status | Notes |
-|---------|--------|-------|
-| AI Estimate Generator | 🔌 Needs External | lib/ai.js — needs OpenAI/Anthropic API |
-| Photo Mode (AI) | 🔌 Needs External | analyzeVehicleImage() → AI vision |
-| Text Mode (AI) | 🔌 Needs External | Free-text → AI |
-| Loading States | ✅ Implemented | Phase UI states |
-| Draft Estimate Display | 🔌 Needs External | AI output |
-| Alternative Suggestions | 🔌 Needs External | AI multi-option |
-| Use This Estimate | 🔌 Needs External | AI output → wizard |
-| AI Follow-up Writer | 🔌 Needs External | generateFollowUp() → AI |
-| SMS Character Count | ✅ Implemented | Client-side count |
-| Copy to Clipboard | ✅ Implemented | navigator API |
-| Email/SMS Tabs | ✅ Implemented | Tab state |
-| DISC Personality Analysis | 🔌 Needs External | personalityEngine.js → AI service |
-| Shop Context for AI | ✅ Implemented | buildWrapMindContext() from localStorage |
-| AI Rate Limiting | 🔌 Needs External | Server-side (Supabase Edge Function) |
+> **Status Update (April 24, 2026):** All AI features below are now fully implemented via Supabase Edge Functions + OpenRouter. Phase 1 & 2 complete.
 
-**Summary:** All AI features are fully wired to the lib/ai.js interface but the underlying AI API is not connected.
+|| Feature | Status | Notes |
+|---------|--------|-------|
+|| AI Estimate Generator | ✅ Implemented | `ai-generate-estimate` EF → `ai-text-generate` → OpenRouter |
+|| Photo Mode (AI) | ✅ Implemented | `ai-vision-analyze` EF → OpenRouter vision |
+|| Text Mode (AI) | ✅ Implemented | `ai-text-generate` EF → OpenRouter |
+|| Loading States | ✅ Implemented | Phase UI states |
+|| Draft Estimate Display | ✅ Implemented | AI output → wizard |
+|| Alternative Suggestions | ✅ Implemented | AI multi-option via `ai-text-generate` |
+|| Use This Estimate | ✅ Implemented | AI output → wizard |
+|| AI Follow-up Writer | ✅ Implemented | `ai-follow-up-writer` EF → OpenRouter |
+|| SMS Character Count | ✅ Implemented | Client-side count |
+|| Copy to Clipboard | ✅ Implemented | navigator API |
+|| Email/SMS Tabs | ✅ Implemented | Tab state |
+|| DISC Personality Analysis | ✅ Implemented | `ai-personality-analysis` EF (hybrid heuristic + AI) |
+|| Shop Context for AI | ✅ Implemented | `buildWrapMindContext()` |
+|| AI Rate Limiting | ✅ Implemented | Client-side `aiRateLimiter.js` + circuit breaker in EF |
+|| Streaming Chat | ✅ Implemented | `ai-chat` EF with SSE streaming |
+
+**Summary:** All AI features are fully wired. OpenRouter handles LLM inference. PII scrubbing, usage ledger, and circuit breaker are all in place.
 
 ---
 
@@ -490,13 +493,13 @@ This PRD systematically audits every feature in the WrapMind UI against three st
 | 13. Reports | 0 | 0 | 0 | 4 |
 | 14. Settings | 7 | 1 | 4 | 0 |
 | 15. Notifications | 2 | 13 | 0 | 0 |
-| 16. Chat / AI | 5 | 0 | 9 | 0 |
+| 16. Chat / AI | 16 | 0 | 0 | 0 |
 | 17. Audit Log | 2 | 5 | 0 | 0 |
 | 18. Feedback / Beta | 1 | 0 | 0 | 2 |
 | 19. UI Primitives | 23 | 0 | 0 | 0 |
 | 20. Theme / i18n | 5 | 0 | 0 | 2 |
 | 21. Global | 5 | 2 | 0 | 0 |
-| **Totals** | **91** | **135** | **21** | **8** |
+| **Totals** | **102** | **135** | **12** | **8** |
 
 ---
 
@@ -504,7 +507,7 @@ This PRD systematically audits every feature in the WrapMind UI against three st
 
 1. **Supabase GraphQL** (135 features) — The largest gap. All CRUD, queries, and status transitions across Customers, Vehicles, Estimates, Invoices, Scheduling, Leads, Marketing, Performance, Workflow, Notifications, and Audit Log need to be wired to Supabase.
 
-2. **AI Features** (9 features) — AI Estimate Generator, Follow-up Writer, Vehicle Image Analysis, DISC Personality Analysis all need an AI API connection (OpenAI/Anthropic). Currently stubs in `lib/ai.js`.
+2. ~~**AI Features**~~ **(RESOLVED — Phase 1 & 2 complete)** — All AI features now connected via Supabase Edge Functions + OpenRouter. PII scrubbing, usage ledger, and circuit breaker in place.
 
 3. **External Integrations** — Stripe (payments), ShopMonkey (shop sync), Carfax (VIN data), Slack (notifications) are wired in Settings UI but not connected.
 
@@ -522,7 +525,7 @@ This PRD systematically audits every feature in the WrapMind UI against three st
 
 1. **Phase 1:** Supabase Schema & RLS — Get the core schema migrated (Customers, Vehicles first per existing PRD)
 2. **Phase 2:** GraphQL Queries — Wire Apollo Client queries per section
-3. **Phase 3:** AI Integration — Connect lib/ai.js to OpenAI/Anthropic
+3. ~~**Phase 3:** AI Integration~~ ✅ **COMPLETE** — Connected lib/ai.js to OpenRouter via Supabase Edge Functions. PII scrubbing, usage ledger, and circuit breaker implemented.
 4. **Phase 4:** External Integrations — Stripe, ShopMonkey, Carfax, Slack
 5. **Phase 5:** Reports — Dedicated PRD and implementation
 6. **Phase 6:** Realtime — Supabase subscriptions
