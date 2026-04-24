@@ -4,20 +4,19 @@ import { useQuery, useMutation } from '@apollo/client/react';
 // ─── Fragments ────────────────────────────────────────────────────────────────
 
 export const LOCATION_FIELDS = gql`
-  fragment LocationFields on Location {
+  fragment LocationFields on locations {
     id
-    orgId
+    org_id
     name
-    nickname
     address
     city
     state
     zip
     phone
     color
-    isActive
-    createdAt
-    updatedAt
+    is_active
+    created_at
+    updated_at
   }
 `;
 
@@ -27,10 +26,10 @@ export const LOCATION_FIELDS = gql`
 export const LIST_LOCATIONS = gql`
   query ListLocations($orgId: UUID!, $first: Int, $offset: Int) {
     locationsCollection(
-      filter: { orgId: { eq: $orgId } }
+      filter: { org_id: { eq: $orgId } }
       first: $first
       offset: $offset
-      orderBy: [{ createdAt: DESC }]
+      orderBy: [{ created_at: DESC }]
     ) {
       edges {
         node {
@@ -60,24 +59,19 @@ export const CREATE_LOCATION = gql`
     $phone: String
     $color: String
   ) {
-    locationInsert(
-      collection: "locations"
-      records: [{
-        orgId: $orgId
-        name: $name
-        nickname: $nickname
-        address: $address
-        city: $city
-        state: $state
-        zip: $zip
-        phone: $phone
-        color: $color
-      }]
-    ) {
-      edges {
-        node {
-          ...LocationFields
-        }
+    insertIntolocationsCollection(objects: [{
+      org_id: $orgId
+      name: $name
+      nickname: $nickname
+      address: $address
+      city: $city
+      state: $state
+      zip: $zip
+      phone: $phone
+      color: $color
+    }]) {
+      returning {
+        ...LocationFields
       }
     }
   }
@@ -97,18 +91,23 @@ export const UPDATE_LOCATION = gql`
     $color: String
     $isActive: Boolean
   ) {
-    locationUpdate(id: $id, set: {
-      name: $name
-      nickname: $nickname
-      address: $address
-      city: $city
-      state: $state
-      zip: $zip
-      phone: $phone
-      color: $color
-      isActive: $isActive
-    }) {
-      ...LocationFields
+    updatelocationsCollection(
+      filter: { id: { eq: $id } }
+      set: {
+        name: $name
+        nickname: $nickname
+        address: $address
+        city: $city
+        state: $state
+        zip: $zip
+        phone: $phone
+        color: $color
+        is_active: $isActive
+      }
+    ) {
+      returning {
+        ...LocationFields
+      }
     }
   }
   ${LOCATION_FIELDS}
@@ -116,8 +115,10 @@ export const UPDATE_LOCATION = gql`
 
 export const DELETE_LOCATION = gql`
   mutation DeleteLocation($id: UUID!) {
-    locationDelete(id: $id) {
-      id
+    deletefromlocationsCollection(filter: { id: { eq: $id } }) {
+      returning {
+        id
+      }
     }
   }
 `;
@@ -135,9 +136,10 @@ export function USE_LOCATIONS({ orgId, first = 100, offset = 0 } = {}) {
 
 export function USE_CREATE_LOCATION() {
   return useMutation(CREATE_LOCATION, {
-    update(cache, { data: { locationInsert } }) {
-      if (!locationInsert?.edges?.[0]?.node) return;
-      const newLoc = locationInsert.edges[0].node;
+    update(cache, { data: { insertIntolocationsCollection } }) {
+      const returning = insertIntolocationsCollection?.returning ?? [];
+      if (!returning[0]) return;
+      const newLoc = returning[0];
       cache.modify({
         fields: {
           // eslint-disable-next-line no-unused-vars
@@ -145,7 +147,7 @@ export function USE_CREATE_LOCATION() {
             return {
               ...existing,
               edges: [
-                { __typename: 'LocationEdge', node: newLoc },
+                { __typename: 'locationsEdge', node: newLoc },
                 ...existing.edges,
               ],
             };
@@ -162,8 +164,9 @@ export function USE_UPDATE_LOCATION() {
 
 export function USE_DELETE_LOCATION() {
   return useMutation(DELETE_LOCATION, {
-    update(cache, { data: { locationDelete } }) {
-      if (!locationDelete?.id) return;
+    update(cache, { data: { deletefromlocationsCollection } }) {
+      const returning = deletefromlocationsCollection?.returning ?? [];
+      if (!returning[0]?.id) return;
       cache.modify({
         fields: {
           // eslint-disable-next-line no-unused-vars
@@ -171,7 +174,7 @@ export function USE_DELETE_LOCATION() {
             return {
               ...existing,
               edges: existing.edges.filter(
-                e => e.node?.id !== locationDelete.id
+                e => e.node?.id !== returning[0].id
               ),
             };
           },
