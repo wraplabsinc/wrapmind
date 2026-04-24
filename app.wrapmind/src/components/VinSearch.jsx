@@ -24,18 +24,22 @@ export default function VinSearch({ onSelect, selectedCar }) {
     setLoading(true);
     setSearched(true);
     try {
-      const { data, error } = await supabase.rpc('find_car_by_vin', {
-        p_vin: vin.toUpperCase(),
+      // Call unified Edge Function — local DB lookup + NHTSA fallback, auto-persist
+      const { data, error } = await supabase.functions.invoke('vin-decoder', {
+        body: { vin: vin.toUpperCase() },
       });
 
       if (error) {
-        console.error('VIN search error:', error.message);
+        console.error('VIN decode error:', error);
         setResults([]);
+      } else if (data?.success && data.vehicle) {
+        // Edge Function returns { success: true, vehicle: { ... } }
+        setResults([data.vehicle]);
       } else {
-        setResults(Array.isArray(data) ? data : [data]);
+        setResults([]);
       }
-    } catch (err) {
-      console.error('Exception:', err);
+    } catch (err: any) {
+      console.error('VIN decode exception:', err);
       setResults([]);
     } finally {
       setLoading(false);
