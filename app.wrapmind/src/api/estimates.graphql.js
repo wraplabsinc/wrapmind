@@ -4,34 +4,33 @@ import { useQuery, useMutation } from '@apollo/client/react';
 // ─── Fragments ────────────────────────────────────────────────────────────────
 
 export const ESTIMATE_FIELDS = gql`
-  fragment EstimateFields on Estimate {
+  fragment EstimateFields on estimates {
     id
-    orgId
-    locationId
-    estimateNumber
+    org_id
+    location_id
+    estimate_id
     status
-    customerId
-    vehicleId
+    client_id
+    vehicle_id
     package
-    modifierSelections
     material
-    materialColor
-    laborHours
-    basePrice
-    laborCost
-    materialCost
+    material_color
+    labor_hours
+    base_price
+    labor_cost
+    material_cost
     discount
     total
     notes
-    createdById
-    assignedToId
-    sentAt
-    expiresAt
-    approvedAt
-    declinedAt
-    convertedToInvoiceId
-    createdAt
-    updatedAt
+    created_by
+    assigned_to_id
+    sent_at
+    expires_at
+    approved_at
+    declined_at
+    converted_to_invoice_id
+    created_at
+    updated_at
   }
 `;
 
@@ -45,39 +44,38 @@ export const LIST_ESTIMATES = gql`
   query ListEstimates($orgId: UUID!, $locationId: UUID, $first: Int, $offset: Int) {
     estimatesCollection(
       filter: {
-        orgId: { eq: $orgId }
+        org_id: { eq: $orgId }
       }
       first: $first
       offset: $offset
-      orderBy: [{ createdAt: DESC }]
+      orderBy: [{ created_at: DESC }]
     ) {
       edges {
         node {
           id
-          estimateNumber
+          estimate_id
           status
-          locationId
-          customerId
-          vehicleId
+          location_id
+          client_id
+          vehicle_id
           package
-          modifierSelections
           material
-          materialColor
-          laborHours
-          basePrice
-          laborCost
-          materialCost
+          material_color
+          labor_hours
+          base_price
+          labor_cost
+          material_cost
           discount
           total
           notes
-          assignedToId
-          sentAt
-          expiresAt
-          approvedAt
-          declinedAt
-          convertedToInvoiceId
-          createdAt
-          updatedAt
+          assigned_to_id
+          sent_at
+          expires_at
+          approved_at
+          declined_at
+          converted_to_invoice_id
+          created_at
+          updated_at
         }
       }
       pageInfo {
@@ -94,8 +92,12 @@ export const LIST_ESTIMATES = gql`
  */
 export const GET_ESTIMATE = gql`
   query GetEstimate($id: UUID!) {
-    estimate(id: $id) {
-      ...EstimateFields
+    estimatesCollection(filter: { id: { eq: $id } }, first: 1) {
+      edges {
+        node {
+          ...EstimateFields
+        }
+      }
     }
   }
   ${ESTIMATE_FIELDS}
@@ -106,11 +108,10 @@ export const GET_ESTIMATE = gql`
 const ESTIMATE_INPUT = `
   $orgId: UUID!
   $locationId: UUID!
-  $customerId: UUID!
-  $estimateNumber: String!
+  $clientId: UUID!
+  $estimateId: String!
   $status: String
   $package: String
-  $modifierSelections: JSON
   $material: String
   $materialColor: String
   $laborHours: Float
@@ -124,40 +125,37 @@ const ESTIMATE_INPUT = `
 `;
 
 const ESTIMATE_VARIABLES = `
-  orgId: $orgId
-  locationId: $locationId
-  customerId: $customerId
-  estimateNumber: $estimateNumber
+  org_id: $orgId
+  location_id: $locationId
+  client_id: $clientId
+  estimate_id: $estimateId
   status: $status
   package: $package
-  modifierSelections: $modifierSelections
   material: $material
-  materialColor: $materialColor
-  laborHours: $laborHours
-  basePrice: $basePrice
-  laborCost: $laborCost
-  materialCost: $materialCost
+  material_color: $materialColor
+  labor_hours: $laborHours
+  base_price: $basePrice
+  labor_cost: $laborCost
+  material_cost: $materialCost
   discount: $discount
   total: $total
   notes: $notes
-  assignedToId: $assignedToId
+  assigned_to_id: $assignedToId
 `;
 
 /**
  * Create a new estimate.
+ * pg_graphql uses insertInto<Collection> with objects: [].
  */
 export const CREATE_ESTIMATE = gql`
   mutation CreateEstimate(
     ${ESTIMATE_INPUT}
   ) {
-    estimateInsert(
-      collection: "estimates"
-      records: [{ ${ESTIMATE_VARIABLES} }]
-    ) {
-      edges {
-        node {
-          ...EstimateFields
-        }
+    insertIntoestimatesCollection(objects: [{
+      ${ESTIMATE_VARIABLES}
+    }]) {
+      returning {
+        ...EstimateFields
       }
     }
   }
@@ -166,13 +164,13 @@ export const CREATE_ESTIMATE = gql`
 
 /**
  * Update an existing estimate.
+ * pg_graphql uses update<Collection> with filter + set:.
  */
 export const UPDATE_ESTIMATE = gql`
   mutation UpdateEstimate(
     $id: UUID!
     $status: String
     $package: String
-    $modifierSelections: JSON
     $material: String
     $materialColor: String
     $laborHours: Float
@@ -189,27 +187,31 @@ export const UPDATE_ESTIMATE = gql`
     $declinedAt: TIMESTAMPTZ
     $convertedToInvoiceId: UUID
   ) {
-    estimateUpdate(id: $id, set: {
-      status: $status
-      package: $package
-      modifierSelections: $modifierSelections
-      material: $material
-      materialColor: $materialColor
-      laborHours: $laborHours
-      basePrice: $basePrice
-      laborCost: $laborCost
-      materialCost: $materialCost
-      discount: $discount
-      total: $total
-      notes: $notes
-      assignedToId: $assignedToId
-      sentAt: $sentAt
-      expiresAt: $expiresAt
-      approvedAt: $approvedAt
-      declinedAt: $declinedAt
-      convertedToInvoiceId: $convertedToInvoiceId
-    }) {
-      ...EstimateFields
+    updateestimatesCollection(
+      filter: { id: { eq: $id } }
+      set: {
+        status: $status
+        package: $package
+        material: $material
+        material_color: $materialColor
+        labor_hours: $laborHours
+        base_price: $basePrice
+        labor_cost: $laborCost
+        material_cost: $materialCost
+        discount: $discount
+        total: $total
+        notes: $notes
+        assigned_to_id: $assignedToId
+        sent_at: $sentAt
+        expires_at: $expiresAt
+        approved_at: $approvedAt
+        declined_at: $declinedAt
+        converted_to_invoice_id: $convertedToInvoiceId
+      }
+    ) {
+      returning {
+        ...EstimateFields
+      }
     }
   }
   ${ESTIMATE_FIELDS}
@@ -220,8 +222,10 @@ export const UPDATE_ESTIMATE = gql`
  */
 export const DELETE_ESTIMATE = gql`
   mutation DeleteEstimate($id: UUID!) {
-    estimateDelete(id: $id) {
-      id
+    deleteFromestimatesCollection(filter: { id: { eq: $id } }) {
+      returning {
+        id
+      }
     }
   }
 `;
@@ -242,13 +246,49 @@ export function USE_ESTIMATES({ orgId, locationId, first = 100, offset = 0 } = {
 
   // Client-side location filter (pg_graphql filter on locationId is also valid)
   if (locationId) {
-    edges = edges.filter(e => e.node.locationId === locationId);
+    edges = edges.filter(e => e.node.location_id === locationId);
   }
 
-  const estimates = edges.map(e => e.node);
+  // Normalize snake_case DB fields → camelCase for app consumers
+  const estimates = edges.map(e => normalizeEstimate(e.node));
   const pageInfo = data?.estimatesCollection?.pageInfo ?? {};
 
   return { estimates, loading, error, refetch, ...pageInfo };
+}
+
+/**
+ * Normalize a DB estimate row (snake_case) → app shape (camelCase).
+ */
+export function normalizeEstimate(row = {}) {
+  if (!row || !row.id) return null;
+  return {
+    id: row.id,
+    orgId: row.org_id,
+    locationId: row.location_id,
+    estimateNumber: row.estimate_id,
+    status: row.status,
+    customerId: row.client_id,
+    vehicleId: row.vehicle_id,
+    package: row.package,
+    material: row.material,
+    materialColor: row.material_color,
+    laborHours: row.labor_hours != null ? Number(row.labor_hours) : null,
+    basePrice: row.base_price != null ? Number(row.base_price) : null,
+    laborCost: row.labor_cost != null ? Number(row.labor_cost) : null,
+    materialCost: row.material_cost != null ? Number(row.material_cost) : null,
+    discount: row.discount != null ? Number(row.discount) : 0,
+    total: row.total != null ? Number(row.total) : null,
+    notes: row.notes,
+    createdById: row.created_by,
+    assignedToId: row.assigned_to_id,
+    sentAt: row.sent_at,
+    expiresAt: row.expires_at,
+    approvedAt: row.approved_at,
+    declinedAt: row.declined_at,
+    convertedToInvoiceId: row.converted_to_invoice_id,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
 }
 
 /**
@@ -261,7 +301,8 @@ export function USE_ESTIMATE(id) {
     skip: !id,
   });
 
-  return { estimate: data?.estimate ?? null, loading, error };
+  const edge = data?.estimatesCollection?.edges?.[0];
+  return { estimate: edge ? normalizeEstimate(edge.node) : null, loading, error };
 }
 
 /**
@@ -270,9 +311,10 @@ export function USE_ESTIMATE(id) {
  */
 export function USE_CREATE_ESTIMATE() {
   return useMutation(CREATE_ESTIMATE, {
-    update(cache, { data: { estimateInsert } }) {
-      if (!estimateInsert?.edges?.[0]?.node) return;
-      const newEstimate = estimateInsert.edges[0].node;
+    update(cache, { data: { insertIntoestimatesCollection } }) {
+      const returning = insertIntoestimatesCollection?.returning ?? [];
+      if (!returning[0]) return;
+      const newEstimate = normalizeEstimate(returning[0]);
       cache.modify({
         fields: {
           // eslint-disable-next-line no-unused-vars
@@ -280,7 +322,7 @@ export function USE_CREATE_ESTIMATE() {
             return {
               ...existing,
               edges: [
-                { __typename: 'EstimateEdge', node: newEstimate },
+                { __typename: 'estimatesEdge', node: newEstimate },
                 ...existing.edges,
               ],
             };
@@ -305,8 +347,9 @@ export function USE_UPDATE_ESTIMATE() {
  */
 export function USE_DELETE_ESTIMATE() {
   return useMutation(DELETE_ESTIMATE, {
-    update(cache, { data: { estimateDelete } }) {
-      if (!estimateDelete?.id) return;
+    update(cache, { data: { deleteFromestimatesCollection } }) {
+      const returning = deleteFromestimatesCollection?.returning ?? [];
+      if (!returning[0]?.id) return;
       cache.modify({
         fields: {
           // eslint-disable-next-line no-unused-vars
@@ -314,7 +357,7 @@ export function USE_DELETE_ESTIMATE() {
             return {
               ...existing,
               edges: existing.edges.filter(
-                e => e.node?.id !== estimateDelete.id
+                e => e.node?.id !== returning[0].id
               ),
             };
           },
