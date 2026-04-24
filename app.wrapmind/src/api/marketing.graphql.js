@@ -386,6 +386,97 @@ export const UPDATE_REVIEW = gql`
 `;
 
 // ════════════════════════════════════════════════════════════════════════════
+// REVIEW REQUESTS
+// DB: review_requests  |  Collection: review_requestsCollection
+// ════════════════════════════════════════════════════════════════════════════
+
+export const REVIEW_REQUEST_FIELDS = gql`
+  fragment ReviewRequestFields on review_requests {
+    id
+    org_id
+    estimate_id
+    client_id
+    sent_at
+    clicked_at
+    reviewed
+    rating
+    created_at
+  }
+`;
+
+export const LIST_REVIEW_REQUESTS = gql`
+  query ListReviewRequests($orgId: UUID!, $first: Int, $offset: Int) {
+    review_requestsCollection(
+      filter: { org_id: { eq: $orgId } }
+      first: $first
+      offset: $offset
+      orderBy: [{ sent_at: DESC }]
+    ) {
+      edges {
+        node {
+          id
+          org_id
+          estimate_id
+          client_id
+          sent_at
+          clicked_at
+          reviewed
+          rating
+          created_at
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+  ${REVIEW_REQUEST_FIELDS}
+`;
+
+export const CREATE_REVIEW_REQUEST = gql`
+  mutation CreateReviewRequest(
+    $orgId: UUID!
+    $estimateId: UUID
+    $clientId: UUID!
+  ) {
+    insertIntoreview_requestsCollection(objects: [{
+      org_id: $orgId
+      estimate_id: $estimateId
+      client_id: $clientId
+    }]) {
+      returning {
+        ...ReviewRequestFields
+      }
+    }
+  }
+  ${REVIEW_REQUEST_FIELDS}
+`;
+
+export const UPDATE_REVIEW_REQUEST = gql`
+  mutation UpdateReviewRequest(
+    $id: UUID!
+    $clickedAt: TIMESTAMPTZ
+    $reviewed: Boolean
+    $rating: Int
+  ) {
+    updatereview_requestsCollection(
+      filter: { id: { eq: $id } }
+      set: {
+        clicked_at: $clickedAt
+        reviewed: $reviewed
+        rating: $rating
+      }
+    ) {
+      returning {
+        ...ReviewRequestFields
+      }
+    }
+  }
+  ${REVIEW_REQUEST_FIELDS}
+`;
+
+// ════════════════════════════════════════════════════════════════════════════
 // NORMALIZE FUNCTIONS
 // snake_case (DB) → camelCase (app)
 // ════════════════════════════════════════════════════════════════════════════
@@ -451,6 +542,21 @@ export function normalizeReview(row = {}) {
     createdAt: row.created_at,
     deletedAt: row.deleted_at,
     reviewed: row.rating != null,
+  };
+}
+
+export function normalizeReviewRequest(row = {}) {
+  if (!row || !row.id) return null;
+  return {
+    id: row.id,
+    orgId: row.org_id,
+    estimateId: row.estimate_id,
+    clientId: row.client_id,
+    sentAt: row.sent_at,
+    clickedAt: row.clicked_at,
+    reviewed: row.reviewed,
+    rating: row.rating,
+    createdAt: row.created_at,
   };
 }
 
@@ -710,4 +816,28 @@ export function USE_UPDATE_REVIEW() {
       });
     },
   });
+}
+
+// ── Review Requests ─────────────────────────────────────────────────────────
+
+export function USE_REVIEW_REQUESTS({ orgId, first = 300, offset = 0 } = {}) {
+  const { data, loading, error, refetch } = useQuery(LIST_REVIEW_REQUESTS, {
+    variables: { orgId, first, offset },
+    skip: !orgId,
+  });
+  const edges = data?.review_requestsCollection?.edges ?? [];
+  return {
+    reviewRequests: edges.map(e => normalizeReviewRequest(e.node)),
+    loading,
+    error,
+    refetch,
+  };
+}
+
+export function USE_CREATE_REVIEW_REQUEST() {
+  return useMutation(CREATE_REVIEW_REQUEST);
+}
+
+export function USE_UPDATE_REVIEW_REQUEST() {
+  return useMutation(UPDATE_REVIEW_REQUEST);
 }
