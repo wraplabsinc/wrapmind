@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useAuditLog } from '../../context/AuditLogContext';
 import { useRoles } from '../../context/RolesContext';
+import { useCustomers } from '../../context/CustomerContext.jsx';
 import {
-  CUSTOMERS, VEHICLES, CUSTOMER_TAGS, TEAM_MEMBERS, SOURCES,
+  VEHICLES, CUSTOMER_TAGS, TEAM_MEMBERS, SOURCES,
   tagStyle, initialsOf, daysSince, fmtCurrency, vehiclesForCustomer,
 } from './listsData';
 import CustomerDetailPanel from './CustomerDetailPanel';
@@ -637,15 +638,10 @@ export default function CustomersPage({ onNavigate }) {
 
   const actor = useMemo(() => ({ role: currentRole, label: currentRole }), [currentRole]);
 
-  // ── State ──
-  const [customers, setCustomers] = useState(() => {
-    try {
-      const parsed = JSON.parse(localStorage.getItem('wm-customers-v1'));
-      return Array.isArray(parsed) ? parsed : CUSTOMERS;
-    }
-    catch { return CUSTOMERS; }
-  });
+  // ── GraphQL-backed customers ──
+  const { customers, createCustomer, updateCustomer, deleteCustomer, loading: customersLoading, error: customersError } = useCustomers();
 
+  // ── State ──
   const [search, setSearch] = useState('');
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
   const [sortCol, setSortCol] = useState('lastActivityAt');
@@ -659,25 +655,6 @@ export default function CustomersPage({ onNavigate }) {
 
   const filtersRef = useRef(null);
   const filtersBtnRef = useRef(null);
-
-  // Persist customers
-  useEffect(() => {
-    localStorage.setItem('wm-customers-v1', JSON.stringify(customers));
-  }, [customers]);
-
-  // Listen for external writes to wm-customers-v1 (e.g. from LeadHub)
-  useEffect(() => {
-    const handler = (e) => {
-      if (e.key === 'wm-customers-v1') {
-        try {
-          const updated = JSON.parse(e.newValue || '[]');
-          if (Array.isArray(updated)) setCustomers(updated);
-        } catch { /* ignore */ }
-      }
-    };
-    window.addEventListener('storage', handler);
-    return () => window.removeEventListener('storage', handler);
-  }, []);
 
   // Click-outside for filters
   useEffect(() => {
@@ -790,40 +767,44 @@ export default function CustomersPage({ onNavigate }) {
   }, []);
 
   // ── CRUD ──
-  const handleSaveCustomer = useCallback((form) => {
+  const handleSaveCustomer = useCallback(async (form) => {
+    const addressStr = [form.street, form.city, form.state, form.zip].filter(Boolean).join(', ');
     if (editCustomer && editCustomer.id) {
-      // Edit
-      setCustomers(prev => prev.map(c => c.id === editCustomer.id
-        ? {
-            ...c,
-            name: form.name, phone: form.phone, email: form.email,
-            company: form.company || null,
-            address: { street: form.street, city: form.city, state: form.state, zip: form.zip },
-            source: form.source, assignee: form.assignee,
-            tags: form.tags, notes: form.notes,
-          }
-        : c
-      ));
-    } else {
-      // Create
-      const newC = {
-        id: `c${Date.now()}`,
-        name: form.name, phone: form.phone, email: form.email,
+      // Edit via GraphQL
+      updateCustomer(editCustomer.id, {
+        name: form.name,
+        phone: form.phone || null,
+        email: form.email || null,
         company: form.company || null,
-        address: { street: form.street, city: form.city, state: form.state, zip: form.zip },
-        tags: form.tags, source: form.source, assignee: form.assignee,
-        vehicleIds: [], estimateCount: 0, totalSpent: 0, lifetimeValue: 0,
-        lastActivityAt: new Date().toISOString(), createdAt: new Date().toISOString(),
-        status: 'active', notes: form.notes, activities: [],
-      };
-      setCustomers(prev => [newC, ...prev]);
-      addLog('DATA', 'CUSTOMER_CREATED', {
-        severity: 'success', actor, target: newC.name,
-        details: { id: newC.id, source: newC.source, tags: newC.tags },
+        address: addressStr || null,
+        source: form.source,
+        assignee: form.assignee,
+        tags: form.tags,
+        notes: form.notes || null,
       });
+    } else {
+      // Create via GraphQL
+      const result = await createCustomer({
+        name: form.name,
+        phone: form.phone || null,
+        email: form.email || null,
+        company: form.company || null,
+        address: addressStr || null,
+        source: form.source,
+        assigneeId: form.assignee === 'Unassigned' ? null : form.assignee,
+        tags: form.tags,
+        notes: form.notes || null,
+        status: 'active',
+      });
+      if (!result.error) {
+        addLog('DATA', 'CUSTOMER_CREATED', {
+          severity: 'success', actor, target: form.name,
+          details: { source: form.source, tags: form.tags },
+        });
+      }
     }
     setEditCustomer(null);
-  }, [editCustomer, actor, addLog]);
+  }, [editCustomer, actor, addLog, createCustomer, updateCustomer]);
 
   const handleDeleteConfirm = useCallback(() => {
     if (!deleteTarget) return;
@@ -831,10 +812,10 @@ export default function CustomersPage({ onNavigate }) {
       severity: 'critical', actor, target: deleteTarget.name,
       details: { id: deleteTarget.id },
     });
-    setCustomers(prev => prev.filter(c => c.id !== deleteTarget.id));
+    deleteCustomer(deleteTarget.id);
     if (selectedCustomer?.id === deleteTarget.id) setSelectedCustomer(null);
     setDeleteTarget(null);
-  }, [deleteTarget, actor, addLog, selectedCustomer]);
+  }, [deleteTarget, actor, addLog, deleteCustomer, selectedCustomer]);
 
   // ── Export CSV ──
   const handleExport = useCallback(() => {
@@ -1064,7 +1045,20 @@ export default function CustomersPage({ onNavigate }) {
 
       {/* ── Content area ── */}
       <div className="flex-1 overflow-auto">
-        {filtered.length === 0 ? (
+        {customersError && (
+          <div className="flex items-center justify-center py-20 text-sm text-red-500 dark:text-red-400">
+            Error loading customers. Please refresh.
+          </div>
+        )}
+        {customersLoading ? (
+          <div className="flex items-center justify-center py-20 text-sm text-[#64748B] dark:text-[#7D93AE]">
+            <svg className="animate-spin mr-2 h-4 w-4 text-[#2E8BF0]" viewBox="0 0 24 24" fill="none">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+            Loading customers…
+          </div>
+        ) : filtered.length === 0 ? (
           <EmptyState onClear={clearFilters} />
         ) : viewMode === 'table' ? (
 
@@ -1187,9 +1181,7 @@ export default function CustomersPage({ onNavigate }) {
                           onEdit={() => setEditCustomer(customer)}
                           onNewEstimate={() => { setSelectedCustomer(null); onNavigate('estimate'); }}
                           onArchive={() => {
-                            setCustomers(prev => prev.map(c =>
-                              c.id === customer.id ? { ...c, status: 'archived' } : c
-                            ));
+                            updateCustomer(customer.id, { status: 'archived' });
                           }}
                           onDelete={() => setDeleteTarget(customer)}
                         />
@@ -1241,9 +1233,7 @@ export default function CustomersPage({ onNavigate }) {
                         onEdit={() => setEditCustomer(customer)}
                         onNewEstimate={() => { setSelectedCustomer(null); onNavigate('estimate'); }}
                         onArchive={() => {
-                          setCustomers(prev => prev.map(c =>
-                            c.id === customer.id ? { ...c, status: 'archived' } : c
-                          ));
+                          updateCustomer(customer.id, { status: 'archived' });
                         }}
                         onDelete={() => setDeleteTarget(customer)}
                       />

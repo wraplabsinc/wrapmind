@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import {
-  VEHICLES, CUSTOMERS, VEHICLE_TYPES, WRAP_STATUS,
+  VEHICLE_TYPES, WRAP_STATUS,
   initialsOf, daysSince, vehicleLabel, customerForVehicle,
 } from './listsData';
 import { useAuditLog } from '../../context/AuditLogContext';
 import { useRoles } from '../../context/RolesContext';
+import { useVehicleContext } from '../../context/VehicleContext.jsx';
+import { useCustomers } from '../../context/CustomerContext.jsx';
 import VehicleDetailPanel from './VehicleDetailPanel';
 import Button from '../ui/Button';
 
@@ -35,10 +37,6 @@ function colorSwatch(colorName) {
     if (lower.includes(key)) return hex;
   }
   return '#9CA3AF';
-}
-
-function generateId() {
-  return 'v' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 }
 
 // ─── Make Logo Map ────────────────────────────────────────────────────────────
@@ -637,13 +635,11 @@ export default function VehiclesPage({ onNavigate }) {
   const { can, currentRole } = useRoles();
   const actor = useMemo(() => ({ role: currentRole, label: currentRole.charAt(0).toUpperCase() + currentRole.slice(1) }), [currentRole]);
 
-  // ── State ──────────────────────────────────────────────────────────────────
-  const [vehicles, setVehicles] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('wm-vehicles-v1')) || VEHICLES; }
-    catch { return VEHICLES; }
-  });
-  const [customers] = useState(CUSTOMERS);
+  // ── GraphQL-backed data ────────────────────────────────────────────────────
+  const { vehicles, createVehicle, updateVehicle, deleteVehicle, loading: vehiclesLoading, error: vehiclesError } = useVehicleContext();
+  const { customers } = useCustomers();
 
+  // ── State ──────────────────────────────────────────────────────────────────
   const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'table'
   const [search, setSearch] = useState('');
   const [showStats, setShowStats] = useState(true);
@@ -664,12 +660,6 @@ export default function VehiclesPage({ onNavigate }) {
     yearMax: '',
     hasOwner: 'all', // 'all' | 'yes' | 'no'
   });
-
-  // Persist to localStorage
-  useEffect(() => {
-    try { localStorage.setItem('wm-vehicles-v1', JSON.stringify(vehicles)); }
-    catch {}
-  }, [vehicles]);
 
   // Close filter dropdown on outside click
   useEffect(() => {
@@ -788,30 +778,46 @@ export default function VehiclesPage({ onNavigate }) {
     setFilters({ types: [], makes: [], statuses: [], yearMin: '', yearMax: '', hasOwner: 'all' });
   }, []);
 
-  const handleSaveVehicle = useCallback((formData) => {
+  const handleSaveVehicle = useCallback(async (formData) => {
+    const payload = {
+      year: formData.year,
+      make: formData.make,
+      model: formData.model,
+      trim: formData.trim || null,
+      vin: formData.vin || null,
+      vehicleType: formData.type || formData.vehicleType || 'sedan',
+      color: formData.color || null,
+      wrapStatus: formData.wrapStatus || 'bare',
+      wrapColor: formData.wrapColor || null,
+      tags: formData.tags || [],
+      notes: formData.notes || null,
+      customerId: formData.customerId || null,
+      locationId: formData.locationId || null,
+    };
     if (formData.id) {
-      // Edit
-      setVehicles(prev => prev.map(v => v.id === formData.id ? { ...v, ...formData } : v));
+      // Edit via GraphQL
+      updateVehicle(formData.id, payload);
       addLog('DATA', 'VEHICLE_UPDATED', {
         severity: 'success', actor,
         target: vehicleLabel(formData),
         details: { id: formData.id },
       });
     } else {
-      // New
-      const newV = { ...formData, id: generateId(), createdAt: new Date().toISOString() };
-      setVehicles(prev => [newV, ...prev]);
-      addLog('DATA', 'VEHICLE_CREATED', {
-        severity: 'success', actor,
-        target: vehicleLabel(newV),
-        details: { id: newV.id, make: newV.make, model: newV.model, year: newV.year },
-      });
+      // Create via GraphQL
+      const result = await createVehicle(payload);
+      if (!result.error) {
+        addLog('DATA', 'VEHICLE_CREATED', {
+          severity: 'success', actor,
+          target: vehicleLabel(formData),
+          details: { make: formData.make, model: formData.model, year: formData.year },
+        });
+      }
     }
     setEditVehicle(null);
-  }, [addLog, actor]);
+  }, [addLog, actor, createVehicle, updateVehicle]);
 
   const handleDeleteVehicle = useCallback((vehicle) => {
-    setVehicles(prev => prev.filter(v => v.id !== vehicle.id));
+    deleteVehicle(vehicle.id);
     addLog('DATA', 'VEHICLE_DELETED', {
       severity: 'critical', actor,
       target: vehicleLabel(vehicle),
@@ -819,7 +825,7 @@ export default function VehiclesPage({ onNavigate }) {
     });
     setDeleteConfirm(null);
     if (selectedVehicle?.id === vehicle.id) setSelectedVehicle(null);
-  }, [addLog, actor, selectedVehicle]);
+  }, [addLog, actor, deleteVehicle, selectedVehicle]);
 
   // Handle panel delete signal from VehicleDetailPanel
   const handlePanelEdit = useCallback((vehicle) => {
@@ -1133,8 +1139,26 @@ export default function VehiclesPage({ onNavigate }) {
       <div className="flex-1 overflow-auto">
         <div className="px-6 py-5">
 
+          {/* Error state */}
+          {vehiclesError && (
+            <div className="flex items-center justify-center py-24 text-sm text-red-500 dark:text-red-400">
+              Error loading vehicles. Please refresh.
+            </div>
+          )}
+
+          {/* Loading state */}
+          {vehiclesLoading && (
+            <div className="flex items-center justify-center py-24 text-sm text-[#64748B] dark:text-[#7D93AE]">
+              <svg className="animate-spin mr-2 h-4 w-4 text-[#2E8BF0]" viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              Loading vehicles…
+            </div>
+          )}
+
           {/* Empty state */}
-          {displayed.length === 0 && (
+          {!vehiclesLoading && !vehiclesError && displayed.length === 0 && (
             <div className="flex flex-col items-center justify-center py-24 text-center">
               <div className="w-20 h-20 rounded-full bg-[#EFF6FF] dark:bg-[#1B2A3E] flex items-center justify-center mb-4">
                 <VehicleTypeIcon type="sedan" className="w-12 h-12" />
