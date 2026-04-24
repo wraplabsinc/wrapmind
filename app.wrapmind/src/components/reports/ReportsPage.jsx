@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { useReports } from '../../context/ReportsContext';
 import { useLocations } from '../../context/LocationContext';
-import RevenueTab from './reports/RevenueTab';
-import EstimatesTab from './reports/EstimatesTab';
-import CustomersTab from './reports/CustomersTab';
-import EmployeesTab from './reports/EmployeesTab';
-import MarketingTab from './reports/MarketingTab';
-import OperationsTab from './reports/OperationsTab';
+import RevenueTab from './RevenueTab';
+import EstimatesTab from './EstimatesTab';
+import CustomersTab from './CustomersTab';
+import EmployeesTab from './EmployeesTab';
+import MarketingTab from './MarketingTab';
+import OperationsTab from './OperationsTab';
 
 const TABS = [
   { id: 'revenue',    label: 'Revenue',    icon: '💰' },

@@ -1,4 +1,4 @@
-import { useReports } from '../context/ReportsContext';
+import { useReports } from '../../context/ReportsContext';
 import { RevenueChart } from './ReportsCharts';
 
 export default function RevenueTab() {

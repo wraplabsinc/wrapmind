@@ -140,3 +140,91 @@ export function SimpleBarChart({ data, valueKey, labelKey }: { data: any[], valu
     </div>
   );
 }
+
+
+// ── Donut Chart ─────────────────────────────────────────────────────────────────
+
+interface DonutSlice {
+  label: string;
+  value: number;
+  color: string;
+}
+
+export function DonutChart({ data }: { data: DonutSlice[] }) {
+  const total = data.reduce((sum, d) => sum + d.value, 0);
+  const radius = 70;
+  const circumference = 2 * Math.PI * radius;
+  let offset = 0;
+
+  return (
+    <div className="flex items-center justify-center">
+      <svg viewBox="0 0 160 160" width="160" height="160">
+        {data.map((d, i) => {
+          const pct = total > 0 ? d.value / total : 0;
+          const strokeDasharray = pct * circumference;
+          const strokeDashoffset = offset;
+          offset += strokeDasharray;
+          const cx = 80, cy = 80;
+          return (
+            <circle
+              key={i}
+              cx={cx}
+              cy={cy}
+              r={radius}
+              fill="transparent"
+              stroke={d.color}
+              strokeWidth="20"
+              strokeDasharray={`${strokeDasharray} ${circumference}`}
+              strokeDashoffset={-strokeDashoffset}
+            />
+          );
+        })}
+      </svg>
+      <div className="absolute flex items-center justify-center w-20 h-20 bg-[#F8FAFE] dark:bg-[#1B2A3E] rounded-full">
+        <span className="text-lg font-bold text-[#0F1923] dark:text-[#F8FAFE]">{data.length}</span>
+      </div>
+    </div>
+  );
+}
+
+// ── Heatmap Chart ───────────────────────────────────────────────────────────────
+
+export function HeatmapChart({ data, days, hours }: { data: any[], days: string[], hours: number[] }) {
+  // data expected: array of {hour: number, [day]: number}
+  const maxVal = Math.max(...data.flatMap(d => days.map(dd => d[dd] || 0)));
+  const getColor = (val: number) => {
+    if (val >= 75) return '#10B981';
+    if (val >= 50) return '#F59E0B';
+    if (val >= 25) return '#F59E0B80';
+    return '#E2E8F0';
+  };
+
+  return (
+    <table className="w-full text-xs">
+      <thead>
+        <tr>
+          <th className="pb-2 pr-2 text-[#64748B] dark:text-[#7D93AE] text-left">Hour</th>
+          {days.map(d => <th key={d} className="pb-2 text-[#64748B] dark:text-[#7D93AE] text-center w-12">{d}</th>)}
+        </tr>
+      </thead>
+      <tbody>
+        {data.map(row => (
+          <tr key={row.hour}>
+            <td className="py-1 pr-2 text-[#64748B] dark:text-[#7D93AE] text-right">{row.hour}:00</td>
+            {days.map(day => {
+              const val = row[day] || 0;
+              return (
+                <td key={day} className="py-1 text-center">
+                  <div className="w-8 h-6 rounded mx-auto flex items-center justify-center text-[10px] font-medium"
+                       style={{ backgroundColor: getColor(val), color: val >= 50 ? '#fff' : '#64748B' }}>
+                    {val}%
+                  </div>
+                </td>
+              );
+            })}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}

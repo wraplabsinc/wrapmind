@@ -1,19 +1,19 @@
-import { useReports } from '../context/ReportsContext';
+import { useReports } from '../../context/ReportsContext';
 import { FunnelChart } from './ReportsCharts';
 
 const FUNNEL_COLORS = ['#2E8BF0', '#3D9CF5', '#4CAFF0', '#3DB88C', '#2EC47A', '#1FD068'];
 
 export default function EstimatesTab() {
-  const { estimates, invoices, marketing, loading } = useReports();
+  const { estimatesAgg, invoices, marketingAgg, loading } = useReports();
 
   const exportEstimatesCSV = () => {
     const headers = ['Status', 'Count', 'Pipeline Value', 'Avg Deal Size'];
     const rows = [
-      `Sent,${estimates.sent},${fmt$(estimates.pipelineValue)},${fmt$(estimates.avgDealSize)}`,
-      `Approved,${estimates.approved},-,-`,
-      `Declined,${estimates.declined},-,-`,
-      `Expired,${estimates.expired},-,-`,
-      `Draft,${estimates.draft},-,-`,
+      `Sent,${estimatesAgg.sent},${fmt$(estimatesAgg.pipelineValue)},${fmt$(estimatesAgg.avgDealSize)}`,
+      `Approved,${estimatesAgg.approved},-,-`,
+      `Declined,${estimatesAgg.declined},-,-`,
+      `Expired,${estimatesAgg.expired},-,-`,
+      `Draft,${estimatesAgg.draft},-,-`,
     ];
     const csv = [headers.join(','), ...rows].join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -32,10 +32,10 @@ export default function EstimatesTab() {
 
   // Funnel stages pulled from marketing aggregation
   const funnelStages = [
-    { label: 'Leads',            count: marketing.leadConvFunnel?.[0]?.count || 0 },
-    { label: 'Estimates Sent',   count: marketing.leadConvFunnel?.[1]?.count || 0 },
-    { label: 'Approved',         count: estimates.approved },
-    { label: 'Converted',        count: marketing.leadConvFunnel?.[2]?.count || 0 },
+    { label: 'Leads',            count: marketingAgg.leadConvFunnel?.[0]?.count || 0 },
+    { label: 'Estimates Sent',   count: marketingAgg.leadConvFunnel?.[1]?.count || 0 },
+    { label: 'Approved',         count: estimatesAgg.approved },
+    { label: 'Converted',        count: marketingAgg.leadConvFunnel?.[2]?.count || 0 },
     { label: 'Paid',             count: invoices.filter(i => i.status === 'paid').length },
   ];
 
@@ -57,20 +57,20 @@ export default function EstimatesTab() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <div className="bg-white dark:bg-[#1B2A3E] border border-gray-200 dark:border-[#243348] rounded-xl p-4 flex flex-col gap-1">
           <p className="text-[10px] font-semibold uppercase tracking-wider text-[#64748B] dark:text-[#7D93AE]">Pipeline Value</p>
-          <p className="text-xl font-bold font-mono text-[#0F1923] dark:text-[#F8FAFE]">{fmt$(estimates.pipelineValue)}</p>
+          <p className="text-xl font-bold font-mono text-[#0F1923] dark:text-[#F8FAFE]">{fmt$(estimatesAgg.pipelineValue)}</p>
         </div>
         <div className="bg-white dark:bg-[#1B2A3E] border border-gray-200 dark:border-[#243348] rounded-xl p-4 flex flex-col gap-1">
           <p className="text-[10px] font-semibold uppercase tracking-wider text-[#64748B] dark:text-[#7D93AE]">Avg Deal Size</p>
-          <p className="text-xl font-bold font-mono text-[#0F1923] dark:text-[#F8FAFE]">{fmt$(estimates.avgDealSize)}</p>
+          <p className="text-xl font-bold font-mono text-[#0F1923] dark:text-[#F8FAFE]">{fmt$(estimatesAgg.avgDealSize)}</p>
         </div>
         <div className="bg-white dark:bg-[#1B2A3E] border border-gray-200 dark:border-[#243348] rounded-xl p-4 flex flex-col gap-1">
           <p className="text-[10px] font-semibold uppercase tracking-wider text-[#64748B] dark:text-[#7D93AE]">Conversion Rate</p>
-          <p className="text-xl font-bold font-mono text-[#0F1923] dark:text-[#F8FAFE]">{estimates.conversionRate}%</p>
+          <p className="text-xl font-bold font-mono text-[#0F1923] dark:text-[#F8FAFE]">{estimatesAgg.conversionRate}%</p>
         </div>
         <div className="bg-white dark:bg-[#1B2A3E] border border-gray-200 dark:border-[#243348] rounded-xl p-4 flex flex-col gap-1">
           <p className="text-[10px] font-semibold uppercase tracking-wider text-[#64748B] dark:text-[#7D93AE]">Sent / Approved</p>
           <p className="text-xl font-bold font-mono text-[#0F1923] dark:text-[#F8FAFE]">
-            {estimates.sent > 0 ? `${estimates.approved}/${estimates.sent}` : '0/0'}
+            {estimatesAgg.sent > 0 ? `${estimatesAgg.approved}/${estimatesAgg.sent}` : '0/0'}
           </p>
         </div>
       </div>
@@ -107,13 +107,13 @@ export default function EstimatesTab() {
           </thead>
           <tbody>
             {[
-              { label: 'Sent',       count: estimates.sent },
-              { label: 'Approved',   count: estimates.approved },
-              { label: 'Declined',   count: estimates.declined },
-              { label: 'Expired',    count: estimates.expired },
-              { label: 'Draft',      count: estimates.draft },
+              { label: 'Sent',       count: estimatesAgg.sent },
+              { label: 'Approved',   count: estimatesAgg.approved },
+              { label: 'Declined',   count: estimatesAgg.declined },
+              { label: 'Expired',    count: estimatesAgg.expired },
+              { label: 'Draft',      count: estimatesAgg.draft },
             ].map((status) => {
-              const total = estimates.sent + estimates.approved + estimates.declined + estimates.expired + estimates.draft;
+              const total = estimatesAgg.sent + estimatesAgg.approved + estimatesAgg.declined + estimatesAgg.expired + estimatesAgg.draft;
               const pct = total > 0 ? ((status.count / total) * 100).toFixed(1) : '0.0';
               return (
                 <tr key={status.label} className="border-b border-gray-50 dark:border-[#1B2A3A]/50 last:border-0">

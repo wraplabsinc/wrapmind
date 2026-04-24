@@ -4,10 +4,12 @@ import { useLocations } from './LocationContext';
 import { USE_ESTIMATES } from '../api/estimates.graphql.js';
 import { USE_INVOICES } from '../api/invoices.graphql.js';
 import { USE_CUSTOMERS } from '../api/customers.graphql.js';
-import { USE_EMPLOYEES } from '../api/employees.graphql.js';
+// USE_EMPLOYEES sourced from gamification module
+// (Employee/technician records stored in gamification_employees table)
+import { USE_EMPLOYEES } from '../api/gamification.graphql.js';
 import { USE_APPOINTMENTS } from '../api/appointments.graphql.js';
 import { USE_LEADS, USE_INTAKE_LEADS } from '../api/leads.graphql.js';
-import { USE_CAMPAIGNS } from '../api/marketing-campaigns.graphql.js';
+import { USE_MARKETING_CAMPAIGNS } from '../api/marketing-campaigns.graphql.js';
 import { USE_REVIEW_REQUESTS } from '../api/marketing.graphql.js';
 import { aggregateRevenue, aggregateEstimates, aggregateCustomers, aggregateEmployees, aggregateMarketing, aggregateOperations, DEFAULT_DAYS } from '../lib/reportsAggregation';
 
@@ -47,7 +49,7 @@ export function ReportsProvider({ children }) {
   const { appointments: apolloAppointments, loading: apptLoading, error: apptError } = USE_APPOINTMENTS({ orgId, first: 1000 });
   const { leads: apolloLeads, loading: leadsLoading, error: leadsError } = USE_LEADS({ orgId, first: 500 });
   const { intakeLeads: apolloIntakeLeads, loading: intakeLoading, error: intakeError } = USE_INTAKE_LEADS({ orgId, first: 300 });
-  const { campaigns: apolloCampaigns, loading: campLoading, error: campError } = USE_CAMPAIGNS({ shopId: orgId, first: 200 });
+  const { campaigns: apolloCampaigns, loading: campLoading, error: campError } = USE_MARKETING_CAMPAIGNS({ shopId: orgId, first: 200 });
   const { reviewRequests: apolloReviewRequests, loading: rrLoading, error: rrError } = USE_REVIEW_REQUESTS({ orgId, first: 300 });
 
   // Bays (for utilization) — not yet implemented; placeholder
@@ -139,11 +141,11 @@ export function ReportsProvider({ children }) {
 
     // Aggregated reports (KPI + chart data)
     revenue,
-    estimates: estimatesAgg,
-    customers: customersAgg,
-    employees: employeesAgg,
-    marketing: marketingAgg,
-    operations: operationsAgg,
+    estimatesAgg,
+    customersAgg,
+    employeesAgg,
+    marketingAgg,
+    operationsAgg,
 
     // Loading
     loading,
