@@ -1,22 +1,33 @@
 import { gql } from '@apollo/client';
-import { useQuery } from '@apollo/client/react';
+import { useQuery, useMutation } from '@apollo/client/react';
 
-// ─── Fragment ────────────────────────────────────────────────────────────────
+// ─── Fragments ────────────────────────────────────────────────────────────────
 
 export const AUDIT_LOG_FIELDS = gql`
-  fragment AuditLogFields on AuditLog {
+  fragment AuditLogFields on audit_log {
     id
-    orgId
-    locationId
-    actorId
-    actorRole
-    actorLabel
+    org_id
+    user_id
     action
-    severity
-    target
-    targetId
-    details
-    createdAt
+    entity_type
+    entity_id
+    before_json
+    after_json
+    created_at
+  }
+`;
+
+export const EMPLOYEE_FIELDS = gql`
+  fragment EmployeeFields on employees {
+    id
+    org_id
+    profile_id
+    name
+    initials
+    role
+    color
+    is_active
+    created_at
   }
 `;
 
@@ -24,26 +35,25 @@ export const AUDIT_LOG_FIELDS = gql`
 
 /**
  * List audit log entries for an org.
- * Ordered by createdAt desc (most recent first).
- * Supports optional filters: actorId, targetId, action, severity.
+ * Ordered by created_at desc (most recent first).
+ * Supports optional filters: user_id, entity_id, action.
  */
 export const LIST_AUDIT_LOG = gql`
   query ListAuditLog(
     $orgId: UUID!
-    $actorId: UUID
-    $targetId: UUID
+    $userId: UUID
+    $entityId: UUID
     $action: String
-    $severity: String
     $first: Int
     $offset: Int
   ) {
-    auditLogsCollection(
+    audit_logCollection(
       filter: {
-        orgId: { eq: $orgId }
+        org_id: { eq: $orgId }
       }
       first: $first
       offset: $offset
-      orderBy: [{ createdAt: DESC }]
+      orderBy: [{ created_at: DESC }]
     ) {
       edges {
         node {
@@ -64,14 +74,68 @@ export const LIST_AUDIT_LOG = gql`
  */
 export const GET_AUDIT_LOG_ENTRY = gql`
   query GetAuditLogEntry($id: UUID!) {
-    auditLog(id: $id) {
-      ...AuditLogFields
+    audit_logCollection(filter: { id: { eq: $id } }, first: 1) {
+      edges {
+        node {
+          ...AuditLogFields
+        }
+      }
+    }
+  }
+  ${AUDIT_LOG_FIELDS}
+`;
+
+// ─── Mutations ──────────────────────────────────────────────────────────────
+
+/**
+ * Insert a new audit log entry.
+ */
+export const INSERT_AUDIT_LOG = gql`
+  mutation InsertAuditLog(
+    $orgId: UUID!
+    $userId: UUID!
+    $action: String!
+    $entityType: String!
+    $entityId: UUID!
+    $beforeJson: String
+    $afterJson: String
+  ) {
+    insertIntoaudit_logCollection(objects: [{
+      org_id: $orgId
+      user_id: $userId
+      action: $action
+      entity_type: $entityType
+      entity_id: $entityId
+      before_json: $beforeJson
+      after_json: $afterJson
+    }]) {
+      returning {
+        ...AuditLogFields
+      }
     }
   }
   ${AUDIT_LOG_FIELDS}
 `;
 
 // ─── Apollo React Hooks ─────────────────────────────────────────────────────
+
+/**
+ * Normalize a DB audit log row (snake_case) → app shape (camelCase).
+ */
+export function normalizeAuditLog(row = {}) {
+  if (!row || !row.id) return null;
+  return {
+    id: row.id,
+    orgId: row.org_id,
+    userId: row.user_id,
+    action: row.action,
+    entityType: row.entity_type,
+    entityId: row.entity_id,
+    beforeJson: row.before_json,
+    afterJson: row.after_json,
+    createdAt: row.created_at,
+  };
+}
 
 /**
  * List audit log entries for an org.
@@ -86,8 +150,9 @@ export function USE_AUDIT_LOG({ orgId, first = 100, offset = 0 } = {}) {
     variables: { orgId, first, offset },
     skip: !orgId,
   });
-  const auditLogs = data?.auditLogsCollection?.edges?.map(e => e.node) ?? [];
-  const pageInfo = data?.auditLogsCollection?.pageInfo ?? {};
+  const edges = data?.audit_logCollection?.edges ?? [];
+  const auditLogs = edges.map(e => normalizeAuditLog(e.node));
+  const pageInfo = data?.audit_logCollection?.pageInfo ?? {};
   return { auditLogs, loading, error, refetch, ...pageInfo };
 }
 
@@ -101,5 +166,34 @@ export function USE_AUDIT_LOG_ENTRY(id) {
     variables: { id },
     skip: !id,
   });
-  return { entry: data?.auditLog ?? null, loading, error };
+  const edge = data?.audit_logCollection?.edges?.[0];
+  return { entry: edge ? normalizeAuditLog(edge.node) : null, loading, error };
+}
+
+/**
+ * Insert an audit log entry.
+ * Returns [insertAuditLog, { loading, error, data }]
+ */
+export function USE_INSERT_AUDIT_LOG() {
+  return useMutation(INSERT_AUDIT_LOG, {
+    update(cache, { data: { insertIntoaudit_logCollection } }) {
+      const returning = insertIntoaudit_logCollection?.returning ?? [];
+      if (!returning[0]) return;
+      const newEntry = normalizeAuditLog(returning[0]);
+      cache.modify({
+        fields: {
+          // eslint-disable-next-line no-unused-vars
+          audit_logCollection(existing = { edges: [] }, { readField }) {
+            return {
+              ...existing,
+              edges: [
+                { __typename: 'audit_logEdge', node: newEntry },
+                ...existing.edges,
+              ],
+            };
+          },
+        },
+      });
+    },
+  });
 }

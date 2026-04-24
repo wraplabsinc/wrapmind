@@ -4,25 +4,25 @@ import { useQuery, useMutation } from '@apollo/client/react';
 // ─── Fragments ────────────────────────────────────────────────────────────────
 
 export const APPOINTMENT_FIELDS = gql`
-  fragment AppointmentFields on Appointment {
+  fragment AppointmentFields on appointments {
     id
-    orgId
-    locationId
-    estimateId
-    customerId
-    vehicleId
-    technicianId
+    org_id
+    location_id
+    customer_id
+    vehicle_id
+    technician_id
     service
     date
-    startTime
-    endTime
+    start_time
+    end_time
     status
-    reminderQueued
-    reminderSent
-    reminderAt
     notes
-    createdAt
-    updatedAt
+    reminder_at
+    reminder_sent
+    reminder_queued
+    created_at
+    updated_at
+    estimate_id
   }
 `;
 
@@ -36,31 +36,32 @@ export const LIST_APPOINTMENTS = gql`
   query ListAppointments($orgId: UUID!, $first: Int, $offset: Int) {
     appointmentsCollection(
       filter: {
-        orgId: { eq: $orgId }
+        org_id: { eq: $orgId }
       }
       first: $first
       offset: $offset
-      orderBy: [{ date: ASC }, { startTime: ASC }]
+      orderBy: [{ date: ASC }, { start_time: ASC }]
     ) {
       edges {
         node {
           id
-          locationId
-          estimateId
-          customerId
-          vehicleId
-          technicianId
+          org_id
+          location_id
+          customer_id
+          vehicle_id
+          technician_id
           service
           date
-          startTime
-          endTime
+          start_time
+          end_time
           status
-          reminderQueued
-          reminderSent
-          reminderAt
           notes
-          createdAt
-          updatedAt
+          reminder_at
+          reminder_sent
+          reminder_queued
+          created_at
+          updated_at
+          estimate_id
         }
       }
       pageInfo {
@@ -77,8 +78,12 @@ export const LIST_APPOINTMENTS = gql`
  */
 export const GET_APPOINTMENT = gql`
   query GetAppointment($id: UUID!) {
-    appointment(id: $id) {
-      ...AppointmentFields
+    appointmentsCollection(filter: { id: { eq: $id } }, first: 1) {
+      edges {
+        node {
+          ...AppointmentFields
+        }
+      }
     }
   }
   ${APPOINTMENT_FIELDS}
@@ -106,25 +111,25 @@ export const CREATE_APPOINTMENT = gql`
     $reminderAt: timestamptz
     $notes: String
   ) {
-    appointmentInsert(
-      input: {
-        orgId: $orgId
-        locationId: $locationId
-        technicianId: $technicianId
-        estimateId: $estimateId
-        customerId: $customerId
-        vehicleId: $vehicleId
-        service: $service
-        date: $date
-        startTime: $startTime
-        endTime: $endTime
-        status: $status
-        reminderQueued: $reminderQueued
-        reminderAt: $reminderAt
-        notes: $notes
+    insertIntoappointmentsCollection(objects: [{
+      org_id: $orgId
+      location_id: $locationId
+      technician_id: $technicianId
+      estimate_id: $estimateId
+      customer_id: $customerId
+      vehicle_id: $vehicleId
+      service: $service
+      date: $date
+      start_time: $startTime
+      end_time: $endTime
+      status: $status
+      reminder_queued: $reminderQueued
+      reminder_at: $reminderAt
+      notes: $notes
+    }]) {
+      returning {
+        ...AppointmentFields
       }
-    ) {
-      ...AppointmentFields
     }
   }
   ${APPOINTMENT_FIELDS}
@@ -147,22 +152,24 @@ export const UPDATE_APPOINTMENT = gql`
     $reminderAt: timestamptz
     $notes: String
   ) {
-    appointmentUpdate(
-      id: $id
+    updateappointmentsCollection(
+      filter: { id: { eq: $id } }
       set: {
-        technicianId: $technicianId
+        technician_id: $technicianId
         service: $service
         date: $date
-        startTime: $startTime
-        endTime: $endTime
+        start_time: $startTime
+        end_time: $endTime
         status: $status
-        reminderQueued: $reminderQueued
-        reminderSent: $reminderSent
-        reminderAt: $reminderAt
+        reminder_queued: $reminderQueued
+        reminder_sent: $reminderSent
+        reminder_at: $reminderAt
         notes: $notes
       }
     ) {
-      ...AppointmentFields
+      returning {
+        ...AppointmentFields
+      }
     }
   }
   ${APPOINTMENT_FIELDS}
@@ -173,13 +180,42 @@ export const UPDATE_APPOINTMENT = gql`
  */
 export const DELETE_APPOINTMENT = gql`
   mutation DeleteAppointment($id: UUID!) {
-    appointmentDelete(id: $id) {
-      id
+    deleteFromappointmentsCollection(filter: { id: { eq: $id } }) {
+      returning {
+        id
+      }
     }
   }
 `;
 
 // ─── Apollo React Hooks ─────────────────────────────────────────────────────
+
+/**
+ * Normalize a DB appointment row (snake_case) → app shape (camelCase).
+ */
+export function normalizeAppointment(row = {}) {
+  if (!row || !row.id) return null;
+  return {
+    id: row.id,
+    orgId: row.org_id,
+    locationId: row.location_id,
+    customerId: row.customer_id,
+    vehicleId: row.vehicle_id,
+    technicianId: row.technician_id,
+    service: row.service,
+    date: row.date,
+    startTime: row.start_time,
+    endTime: row.end_time,
+    status: row.status,
+    notes: row.notes,
+    reminderAt: row.reminder_at,
+    reminderSent: row.reminder_sent,
+    reminderQueued: row.reminder_queued,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    estimateId: row.estimate_id,
+  };
+}
 
 /**
  * List appointments for an org.
@@ -192,7 +228,7 @@ export function USE_APPOINTMENTS({ orgId, first = 300, offset = 0 } = {}) {
   });
 
   const edges = data?.appointmentsCollection?.edges ?? [];
-  const appointments = edges.map(e => e.node);
+  const appointments = edges.map(e => normalizeAppointment(e.node));
   const pageInfo = data?.appointmentsCollection?.pageInfo ?? {};
 
   return { appointments, loading, error, refetch, ...pageInfo };
@@ -208,7 +244,8 @@ export function USE_APPOINTMENT(id) {
     skip: !id,
   });
 
-  return { appointment: data?.appointment ?? null, loading, error };
+  const edge = data?.appointmentsCollection?.edges?.[0];
+  return { appointment: edge ? normalizeAppointment(edge.node) : null, loading, error };
 }
 
 /**
@@ -217,9 +254,10 @@ export function USE_APPOINTMENT(id) {
  */
 export function USE_CREATE_APPOINTMENT() {
   return useMutation(CREATE_APPOINTMENT, {
-    update(cache, { data: { appointmentInsert } }) {
-      if (!appointmentInsert?.edges?.[0]?.node) return;
-      const newAppt = appointmentInsert.edges[0].node;
+    update(cache, { data: { insertIntoappointmentsCollection } }) {
+      const returning = insertIntoappointmentsCollection?.returning ?? [];
+      if (!returning[0]) return;
+      const newAppt = normalizeAppointment(returning[0]);
       cache.modify({
         fields: {
           // eslint-disable-next-line no-unused-vars
@@ -227,7 +265,7 @@ export function USE_CREATE_APPOINTMENT() {
             return {
               ...existing,
               edges: [
-                { __typename: 'AppointmentEdge', node: newAppt },
+                { __typename: 'appointmentsEdge', node: newAppt },
                 ...existing.edges,
               ],
             };
@@ -243,7 +281,28 @@ export function USE_CREATE_APPOINTMENT() {
  * Returns [updateAppointment, { loading, error, data }]
  */
 export function USE_UPDATE_APPOINTMENT() {
-  return useMutation(UPDATE_APPOINTMENT);
+  return useMutation(UPDATE_APPOINTMENT, {
+    update(cache, { data: { updateappointmentsCollection } }) {
+      const returning = updateappointmentsCollection?.returning ?? [];
+      if (!returning[0]) return;
+      const updated = normalizeAppointment(returning[0]);
+      cache.modify({
+        fields: {
+          // eslint-disable-next-line no-unused-vars
+          appointmentsCollection(existing = { edges: [] }, { readField }) {
+            return {
+              ...existing,
+              edges: existing.edges.map(e =>
+                e.node?.id === updated.id
+                  ? { ...e, node: { ...e.node, ...updated } }
+                  : e
+              ),
+            };
+          },
+        },
+      });
+    },
+  });
 }
 
 /**
@@ -252,8 +311,9 @@ export function USE_UPDATE_APPOINTMENT() {
  */
 export function USE_DELETE_APPOINTMENT() {
   return useMutation(DELETE_APPOINTMENT, {
-    update(cache, { data: { appointmentDelete } }) {
-      if (!appointmentDelete?.id) return;
+    update(cache, { data: { deleteFromappointmentsCollection } }) {
+      const returning = deleteFromappointmentsCollection?.returning ?? [];
+      if (!returning[0]?.id) return;
       cache.modify({
         fields: {
           // eslint-disable-next-line no-unused-vars
@@ -261,7 +321,7 @@ export function USE_DELETE_APPOINTMENT() {
             return {
               ...existing,
               edges: existing.edges.filter(
-                e => e.node?.id !== appointmentDelete.id
+                e => e.node?.id !== returning[0].id
               ),
             };
           },

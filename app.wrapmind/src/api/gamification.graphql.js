@@ -4,29 +4,29 @@ import { useQuery, useMutation } from '@apollo/client/react';
 // ─── Fragments ────────────────────────────────────────────────────────────────
 
 export const EMPLOYEE_FIELDS = gql`
-  fragment EmployeeFields on Employee {
+  fragment EmployeeFields on employees {
     id
-    orgId
-    profileId
+    org_id
+    profile_id
     name
     initials
     role
     color
-    isActive
-    createdAt
+    is_active
+    created_at
   }
 `;
 
 export const ACHIEVEMENT_EVENT_FIELDS = gql`
-  fragment AchievementEventFields on AchievementEvent {
+  fragment AchievementEventFields on achievement_events {
     id
-    orgId
-    employeeId
-    achievementId
+    org_id
+    employee_id
+    achievement_id
     xp
     note
-    awardedBy
-    awardedAt
+    awarded_by
+    awarded_at
   }
 `;
 
@@ -38,22 +38,22 @@ export const ACHIEVEMENT_EVENT_FIELDS = gql`
 export const LIST_EMPLOYEES = gql`
   query ListEmployees($orgId: UUID!, $first: Int, $offset: Int) {
     employeesCollection(
-      filter: { orgId: { eq: $orgId } }
+      filter: { org_id: { eq: $orgId } }
       first: $first
       offset: $offset
-      orderBy: [{ createdAt: ASC }]
+      orderBy: [{ created_at: ASC }]
     ) {
       edges {
         node {
           id
-          orgId
-          profileId
+          org_id
+          profile_id
           name
           initials
           role
           color
-          isActive
-          createdAt
+          is_active
+          created_at
         }
       }
       pageInfo {
@@ -70,8 +70,12 @@ export const LIST_EMPLOYEES = gql`
  */
 export const GET_EMPLOYEE = gql`
   query GetEmployee($id: UUID!) {
-    employee(id: $id) {
-      ...EmployeeFields
+    employeesCollection(filter: { id: { eq: $id } }, first: 1) {
+      edges {
+        node {
+          ...EmployeeFields
+        }
+      }
     }
   }
   ${EMPLOYEE_FIELDS}
@@ -82,22 +86,22 @@ export const GET_EMPLOYEE = gql`
  */
 export const LIST_ACHIEVEMENT_EVENTS = gql`
   query ListAchievementEvents($orgId: UUID!, $first: Int, $offset: Int) {
-    achievementEventsCollection(
-      filter: { orgId: { eq: $orgId } }
+    achievement_eventsCollection(
+      filter: { org_id: { eq: $orgId } }
       first: $first
       offset: $offset
-      orderBy: [{ awardedAt: DESC }]
+      orderBy: [{ awarded_at: DESC }]
     ) {
       edges {
         node {
           id
-          orgId
-          employeeId
-          achievementId
+          org_id
+          employee_id
+          achievement_id
           xp
           note
-          awardedBy
-          awardedAt
+          awarded_by
+          awarded_at
         }
       }
       pageInfo {
@@ -121,18 +125,18 @@ export const CREATE_EMPLOYEE = gql`
     $color: String
     $isActive: Boolean
   ) {
-    employeeInsert(
-      input: {
-        orgId: $orgId
-        profileId: $profileId
-        name: $name
-        initials: $initials
-        role: $role
-        color: $color
-        isActive: $isActive
+    insertIntoemployeesCollection(objects: [{
+      org_id: $orgId
+      profile_id: $profileId
+      name: $name
+      initials: $initials
+      role: $role
+      color: $color
+      is_active: $isActive
+    }]) {
+      returning {
+        ...EmployeeFields
       }
-    ) {
-      ...EmployeeFields
     }
   }
   ${EMPLOYEE_FIELDS}
@@ -147,17 +151,19 @@ export const UPDATE_EMPLOYEE = gql`
     $color: String
     $isActive: Boolean
   ) {
-    employeeUpdate(
-      id: $id
+    updateemployeesCollection(
+      filter: { id: { eq: $id } }
       set: {
         name: $name
         initials: $initials
         role: $role
         color: $color
-        isActive: $isActive
+        is_active: $isActive
       }
     ) {
-      ...EmployeeFields
+      returning {
+        ...EmployeeFields
+      }
     }
   }
   ${EMPLOYEE_FIELDS}
@@ -165,8 +171,10 @@ export const UPDATE_EMPLOYEE = gql`
 
 export const DELETE_EMPLOYEE = gql`
   mutation DeleteEmployee($id: UUID!) {
-    employeeDelete(id: $id) {
-      id
+    deletefromemployeesCollection(filter: { id: { eq: $id } }) {
+      returning {
+        id
+      }
     }
   }
 `;
@@ -180,17 +188,17 @@ export const AWARD_ACHIEVEMENT = gql`
     $note: String
     $awardedBy: String
   ) {
-    achievementEventInsert(
-      input: {
-        orgId: $orgId
-        employeeId: $employeeId
-        achievementId: $achievementId
-        xp: $xp
-        note: $note
-        awardedBy: $awardedBy
+    insertIntoachievement_eventsCollection(objects: [{
+      org_id: $orgId
+      employee_id: $employeeId
+      achievement_id: $achievementId
+      xp: $xp
+      note: $note
+      awarded_by: $awardedBy
+    }]) {
+      returning {
+        ...AchievementEventFields
       }
-    ) {
-      ...AchievementEventFields
     }
   }
   ${ACHIEVEMENT_EVENT_FIELDS}
@@ -198,13 +206,48 @@ export const AWARD_ACHIEVEMENT = gql`
 
 // ─── Apollo React Hooks ─────────────────────────────────────────────────────
 
+/**
+ * Normalize a DB employee row (snake_case) → app shape (camelCase).
+ */
+export function normalizeEmployee(row = {}) {
+  if (!row || !row.id) return null;
+  return {
+    id: row.id,
+    orgId: row.org_id,
+    profileId: row.profile_id,
+    name: row.name,
+    initials: row.initials,
+    role: row.role,
+    color: row.color,
+    isActive: row.is_active,
+    createdAt: row.created_at,
+  };
+}
+
+/**
+ * Normalize a DB achievement event row (snake_case) → app shape (camelCase).
+ */
+export function normalizeAchievementEvent(row = {}) {
+  if (!row || !row.id) return null;
+  return {
+    id: row.id,
+    orgId: row.org_id,
+    employeeId: row.employee_id,
+    achievementId: row.achievement_id,
+    xp: row.xp,
+    note: row.note,
+    awardedBy: row.awarded_by,
+    awardedAt: row.awarded_at,
+  };
+}
+
 export function USE_EMPLOYEES({ orgId, first = 100, offset = 0 } = {}) {
   const { data, loading, error, refetch } = useQuery(LIST_EMPLOYEES, {
     variables: { orgId, first, offset },
     skip: !orgId,
   });
   const edges = data?.employeesCollection?.edges ?? [];
-  const employees = edges.map(e => e.node);
+  const employees = edges.map(e => normalizeEmployee(e.node));
   return { employees, loading, error, refetch };
 }
 
@@ -213,7 +256,8 @@ export function USE_EMPLOYEE(id) {
     variables: { id },
     skip: !id,
   });
-  return { employee: data?.employee ?? null, loading, error };
+  const edge = data?.employeesCollection?.edges?.[0];
+  return { employee: edge ? normalizeEmployee(edge.node) : null, loading, error };
 }
 
 export function USE_ACHIEVEMENT_EVENTS({ orgId, first = 300, offset = 0 } = {}) {
@@ -221,16 +265,17 @@ export function USE_ACHIEVEMENT_EVENTS({ orgId, first = 300, offset = 0 } = {}) 
     variables: { orgId, first, offset },
     skip: !orgId,
   });
-  const edges = data?.achievementEventsCollection?.edges ?? [];
-  const events = edges.map(e => e.node);
+  const edges = data?.achievement_eventsCollection?.edges ?? [];
+  const events = edges.map(e => normalizeAchievementEvent(e.node));
   return { events, loading, error, refetch };
 }
 
 export function USE_CREATE_EMPLOYEE() {
   return useMutation(CREATE_EMPLOYEE, {
-    update(cache, { data: { employeeInsert } }) {
-      if (!employeeInsert?.edges?.[0]?.node) return;
-      const newEmp = employeeInsert.edges[0].node;
+    update(cache, { data: { insertIntoemployeesCollection } }) {
+      const returning = insertIntoemployeesCollection?.returning ?? [];
+      if (!returning[0]) return;
+      const newEmp = normalizeEmployee(returning[0]);
       cache.modify({
         fields: {
           // eslint-disable-next-line no-unused-vars
@@ -238,7 +283,7 @@ export function USE_CREATE_EMPLOYEE() {
             return {
               ...existing,
               edges: [
-                { __typename: 'EmployeeEdge', node: newEmp },
+                { __typename: 'employeesEdge', node: newEmp },
                 ...existing.edges,
               ],
             };
@@ -250,13 +295,35 @@ export function USE_CREATE_EMPLOYEE() {
 }
 
 export function USE_UPDATE_EMPLOYEE() {
-  return useMutation(UPDATE_EMPLOYEE);
+  return useMutation(UPDATE_EMPLOYEE, {
+    update(cache, { data: { updateemployeesCollection } }) {
+      const returning = updateemployeesCollection?.returning ?? [];
+      if (!returning[0]) return;
+      const updated = normalizeEmployee(returning[0]);
+      cache.modify({
+        fields: {
+          // eslint-disable-next-line no-unused-vars
+          employeesCollection(existing = { edges: [] }, { readField }) {
+            return {
+              ...existing,
+              edges: existing.edges.map(e =>
+                e.node?.id === updated.id
+                  ? { ...e, node: { ...e.node, ...updated } }
+                  : e
+              ),
+            };
+          },
+        },
+      });
+    },
+  });
 }
 
 export function USE_DELETE_EMPLOYEE() {
   return useMutation(DELETE_EMPLOYEE, {
-    update(cache, { data: { employeeDelete } }) {
-      if (!employeeDelete?.id) return;
+    update(cache, { data: { deletefromemployeesCollection } }) {
+      const returning = deletefromemployeesCollection?.returning ?? [];
+      if (!returning[0]?.id) return;
       cache.modify({
         fields: {
           // eslint-disable-next-line no-unused-vars
@@ -264,7 +331,7 @@ export function USE_DELETE_EMPLOYEE() {
             return {
               ...existing,
               edges: existing.edges.filter(
-                e => e.node?.id !== employeeDelete.id
+                e => e.node?.id !== returning[0].id
               ),
             };
           },
@@ -276,17 +343,18 @@ export function USE_DELETE_EMPLOYEE() {
 
 export function USE_AWARD_ACHIEVEMENT() {
   return useMutation(AWARD_ACHIEVEMENT, {
-    update(cache, { data: { achievementEventInsert } }) {
-      if (!achievementEventInsert?.edges?.[0]?.node) return;
-      const newEvent = achievementEventInsert.edges[0].node;
+    update(cache, { data: { insertIntoachievement_eventsCollection } }) {
+      const returning = insertIntoachievement_eventsCollection?.returning ?? [];
+      if (!returning[0]) return;
+      const newEvent = normalizeAchievementEvent(returning[0]);
       cache.modify({
         fields: {
           // eslint-disable-next-line no-unused-vars
-          achievementEventsCollection(existing = { edges: [] }, { readField }) {
+          achievement_eventsCollection(existing = { edges: [] }, { readField }) {
             return {
               ...existing,
               edges: [
-                { __typename: 'AchievementEventEdge', node: newEvent },
+                { __typename: 'achievement_eventsEdge', node: newEvent },
                 ...existing.edges,
               ],
             };

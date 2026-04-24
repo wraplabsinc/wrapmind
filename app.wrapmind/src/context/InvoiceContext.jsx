@@ -8,6 +8,7 @@ import {
   USE_CREATE_INVOICE,
   USE_UPDATE_INVOICE,
   USE_DELETE_INVOICE,
+  normalizeInvoice,
 } from '../api/invoices.graphql.js';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -291,8 +292,10 @@ export function InvoiceProvider({ children }) {
     if (isDevAuth) return;
     if (!initRef.current && !apolloLoading && !apolloError && apolloInvoices.length > 0) {
       initRef.current = true;
+      // Normalize snake_case DB rows → camelCase app shape
+      const normalized = apolloInvoices.map(normalizeInvoice).filter(Boolean);
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setInvoices(apolloInvoices);
+      setInvoices(normalized);
     }
   }, [apolloLoading, apolloError, apolloInvoices, isDevAuth]);
 
@@ -349,20 +352,19 @@ export function InvoiceProvider({ children }) {
       createInvoiceMutation({
         variables: {
           orgId,
-          locationId:  newInvoice.locationId,
+          locationId:    newInvoice.locationId,
           invoiceNumber: newInvoice.invoiceNumber,
-          customerId:   newInvoice.customerId,
+          clientId:     newInvoice.customerId,
           estimateId:   newInvoice.estimateId    ?? null,
-          vehicleId:    newInvoice.vehicleId     ?? null,
+          vehicleJson:   null,
           status:       newInvoice.status,
-          lineItems:    JSON.stringify(newInvoice.lineItems ?? []),
+          lineItems:     JSON.stringify(newInvoice.lineItems ?? []),
           subtotal:     newInvoice.subtotal      ?? null,
-          taxRate:      newInvoice.taxRate       ?? TAX_RATE,
-          taxAmount:    newInvoice.taxAmount     ?? null,
+          tax:          newInvoice.taxAmount     ?? null,
           discount:     newInvoice.discount      ?? 0,
           total:        newInvoice.total,
-          amountPaid:   newInvoice.amountPaid    ?? 0,
-          amountDue:    newInvoice.amountDue     ?? newInvoice.total,
+          amountPaid:   0,
+          amountDue:    newInvoice.total,
           payments:     JSON.stringify([]),
           terms:        newInvoice.terms         ?? null,
           notes:        newInvoice.notes         ?? null,
