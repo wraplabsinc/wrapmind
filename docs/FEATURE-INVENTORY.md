@@ -278,6 +278,12 @@
 
 ---
 
+**Implementation Status (as of April 24, 2026):**
+- `aiTextGenerationEnabled` — ✅ **Implemented** (JWT-authenticated Edge Functions with OpenRouter)
+- `aiVisionEnabled` — ✅ **Implemented** (Vehicle image analysis with Anthropic via Edge Functions)
+- `aiFollowUpEnabled` — ✅ **Implemented** (via unified text generation)
+- `aiPersonalityEnabled` — ✅ **Implemented** (client-side personality engine)
+
 ## 16. Chat / AI
 
 - **AI Estimate Generator (`AIEstimateGenerator.jsx`)** — Modal with two input modes: text description and photo upload. Two-phase AI: vehicle identification then estimate generation. Data: `generateEstimateFromText()`, `analyzeVehicleImage()` from `lib/ai.js`.

@@ -14,6 +14,11 @@ const REPORTS_KEY    = 'wm-feature-reports';
 const PORTAL_KEY     = 'wm-feature-client-portal';
 const TOOLTIPS_KEY   = 'wm-feature-tooltips';
 const MARKETING_KEY  = 'wm-feature-marketing';
+const AI_ESTIMATE_KEY = 'wm-feature-ai-estimate';
+const AI_FOLLOWUP_KEY = 'wm-feature-ai-followup';
+const AI_VISION_KEY   = 'wm-feature-ai-vision';
+const AI_PERSONALITY_KEY = 'wm-feature-ai-personality';
+
 const SIMPLE_KEY     = 'wm-simple-mode';
 const PLAN_TIER_KEY  = 'wm-plan-tier';
 
@@ -44,6 +49,11 @@ export function FeatureFlagsProvider({ children }) {
   const [marketingEnabled,    setMarketingEnabledState]    = useState(() => readFlag(MARKETING_KEY, false));
   // Simple Mode — hides advanced/technical nav items for non-technical users
   const [simpleMode,          setSimpleModeState]          = useState(() => readFlag(SIMPLE_KEY, false));
+  const [aiEstimateEnabled, setAiEstimateEnabledState] = useState(() => readFlag(AI_ESTIMATE_KEY, true));
+  const [aiFollowUpEnabled, setAiFollowUpEnabledState]   = useState(() => readFlag(AI_FOLLOWUP_KEY, true));
+  const [aiVisionEnabled, setAiVisionEnabledState]       = useState(() => readFlag(AI_VISION_KEY, true));
+  const [aiPersonalityEnabled, setAiPersonalityEnabledState] = useState(() => readFlag(AI_PERSONALITY_KEY, true));
+
   // Plan tier — drives paid-feature gating
   const [planTier,            setPlanTierState]            = useState(readTier);
 
@@ -64,6 +74,11 @@ export function FeatureFlagsProvider({ children }) {
   const setTooltipsEnabled     = makeFlag(setTooltipsEnabledState,     TOOLTIPS_KEY);
   const setMarketingEnabled    = makeFlag(setMarketingEnabledState,    MARKETING_KEY);
   const setSimpleMode          = makeFlag(setSimpleModeState,          SIMPLE_KEY);
+  const setAiEstimateEnabled      = makeFlag(setAiEstimateEnabledState,      AI_ESTIMATE_KEY);
+  const setAiFollowUpEnabled       = makeFlag(setAiFollowUpEnabledState,       AI_FOLLOWUP_KEY);
+  const setAiVisionEnabled         = makeFlag(setAiVisionEnabledState,         AI_VISION_KEY);
+  const setAiPersonalityEnabled    = makeFlag(setAiPersonalityEnabledState,    AI_PERSONALITY_KEY);
+
 
   const setPlanTier = (tier) => {
     if (!VALID_TIERS.includes(tier)) return;
@@ -93,6 +108,10 @@ export function FeatureFlagsProvider({ children }) {
       clientPortalEnabled, setClientPortalEnabled,
       tooltipsEnabled, setTooltipsEnabled,
       marketingEnabled, setMarketingEnabled,
+      aiEstimateEnabled, setAiEstimateEnabled,
+      aiFollowUpEnabled, setAiFollowUpEnabled,
+      aiVisionEnabled, setAiVisionEnabled,
+      aiPersonalityEnabled, setAiPersonalityEnabled,
       simpleMode, setSimpleMode,
       planTier, setPlanTier,
       multiLocationEnabled,

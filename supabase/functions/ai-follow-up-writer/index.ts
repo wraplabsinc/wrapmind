@@ -1,133 +1,197 @@
-// AI-powered follow-up message writer
+// AI-powered follow-up writer — Phase 2 upgrade
+// Generates personalized SMS/email using ai-text-generate
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { scrubPII } from '../_shared/pii-scrubber.ts'
 
-const corsHeaders = {
+const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
-
-interface FollowUpRequest {
-  customerId: string
-  templateType: 'estimate_followup' | 'appointment_reminder' | 'service_completion' | 'custom'
-  context?: {
-    estimateId?: string
-    appointmentId?: string
-    vehicleInfo?: string
-    customerName?: string
-  }
-  customMessage?: string
-  tone?: 'professional' | 'friendly' | 'urgent'
+  'Access-Control-Allow-Headers': 'authorization, content-type',
 }
 
 serve(async (req: Request) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
-  }
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS_HEADERS })
 
   try {
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    )
+    // ── JWT ──
+    const auth = req.headers.get('Authorization') || ''
+    const tokenMatch = auth.match(/^Bearer (.+)$/)
+    if (!tokenMatch) {
+      return new Response(JSON.stringify({ error: 'Authorization required' }), {
+        status: 401, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
+      })
+    }
+    const token = tokenMatch[1]
 
-    const body: FollowUpRequest = await req.json()
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    const supabase = createClient(supabaseUrl, serviceKey)
 
-    if (!body.customerId || !body.templateType) {
-      return new Response(JSON.stringify({
-        error: 'Missing required fields: customerId and templateType are required'
-      }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    // Decode JWT
+    let jwtPayload: any
+    try {
+      jwtPayload = JSON.parse(atob(token.split('.')[1]))
+    } catch {
+      return new Response(JSON.stringify({ error: 'Invalid token' }), {
+        status: 401, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
+      })
+    }
+    const userId = jwtPayload.sub
+    const orgId = jwtPayload['app_metadata']?.org_id
+    if (!orgId) {
+      return new Response(JSON.stringify({ error: 'Missing org_id' }), {
+        status: 403, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
       })
     }
 
-    // Fetch customer data
-    const { data: customer, error: customerError } = await supabase
-      .from('customers')
-      .select('*')
-      .eq('id', body.customerId)
-      .single()
-
-    if (customerError) {
-      throw new Error(`Customer not found: ${customerError.message}`)
-    }
-
-    // Build context for message generation
-    const customerName = body.context?.customerName || customer.name || 'Valued Customer'
-    const vehicleInfo = body.context?.vehicleInfo || ''
-    const tone = body.tone || 'professional'
-
-    // Generate appropriate message based on template type
-    let subject = ''
-    let message = ''
-
-    switch (body.templateType) {
-      case 'estimate_followup':
-        subject = `Follow-up on Your Vehicle Service Estimate`
-        message = `Dear ${customerName},\n\nThank you for considering our automotive services for your ${vehicleInfo || 'vehicle'}.\n\nWe wanted to follow up on the estimate we provided. If you have any questions or would like to proceed with the service, please don't hesitate to reach out.\n\nWe're here to help and look forward to serving you.\n\nBest regards,\nYour Service Team`
-        break
-
-      case 'appointment_reminder':
-        subject = `Appointment Reminder`
-        message = `Hi ${customerName},\n\nThis is a friendly reminder about your upcoming appointment for your ${vehicleInfo || 'vehicle'}.\n\nPlease let us know if you need to reschedule or if you have any questions before your visit.\n\nWe look forward to seeing you!\n\nBest regards,\nYour Service Team`
-        break
-
-      case 'service_completion':
-        subject = `Your Vehicle Service is Complete`
-        message = `Hi ${customerName},\n\nGreat news! Your ${vehicleInfo || 'vehicle'} is ready for pickup. All requested services have been completed.\n\nPlease pick up your vehicle at your earliest convenience. If you have any questions about the service performed, we're happy to help.\n\nThank you for your business!\n\nBest regards,\nYour Service Team`
-        break
-
-      case 'custom':
-        subject = `Message from Your Service Team`
-        message = body.customMessage || `Hi ${customerName},\n\n${body.customMessage || 'Thank you for choosing us for your automotive needs.'}\n\nBest regards,\nYour Service Team`
-        break
-
-      default:
-        subject = `Update from Your Service Team`
-        message = `Dear ${customerName},\n\nThank you for your business. Please reach out if you have any questions.\n\nBest regards,\nYour Service Team`
-    }
-
-    // Store the follow-up record
-    const { data: followUp, error: followUpError } = await supabase
-      .from('follow_ups')
-      .insert({
-        customer_id: body.customerId,
-        template_type: body.templateType,
-        subject,
-        message,
-        tone,
-        context: body.context || null,
-        status: 'generated',
+    // ── Circuit breaker ──
+    const { data: cb } = await supabase.from('ai_circuit_breaker').select('*').eq('feature_key', 'global').single()
+    if (cb && cb.failure_count >= 3 && cb.last_failure_at && 
+        new Date(cb.last_failure_at).getTime() > Date.now() - 5*60*1000) {
+      return new Response(JSON.stringify({ error: 'Circuit breaker open' }), {
+        status: 423, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
       })
-      .select()
-      .single()
-
-    if (followUpError) {
-      console.error('Failed to store follow-up record:', followUpError)
-      // Don't throw, just log - we still want to return the generated message
+    }
+    // ── Feature flag gate ──
+    if (Deno.env.get('ENABLE_AI_FOLLOWUP') === 'false') {
+      return new Response(JSON.stringify({ error: 'Feature temporarily disabled' }), {
+        status: 403,
+        headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
+      })
     }
 
-    return new Response(JSON.stringify({
-      success: true,
-      followUp: {
-        id: followUp?.id,
-        customerId: body.customerId,
-        templateType: body.templateType,
-        subject,
-        message,
-        tone,
-      }
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+
+    // ── Parse request ──
+    const body = await req.json()
+    const { customerId, templateType, context = {}, customMessage, tone = 'professional' } = body
+    if (!customerId || !templateType) {
+      return new Response(JSON.stringify({ error: 'customerId and templateType required' }), {
+        status: 400, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
+      })
+    }
+
+    // ── Fetch customer + optional DISC ──
+    const { data: customer } = await supabase
+      .from('customers').select('name, email, phone').eq('id', customerId).single()
+    if (!customer) throw new Error('Customer not found')
+
+    // Fetch latest DISC analysis if available (for personalization)
+    const { data: disc } = await supabase
+      .from('personality_analyses').select('profile').eq('customer_id', customerId).order('created_at', { ascending: false }).limit(1).maybeSingle()
+
+    // ── Build prompt ──
+    const discStyle = disc?.profile?.communicationStyle || 'friendly'
+    const effectiveTone = tone || discStyle
+
+    let systemPrompt = `You are a professional automotive shop assistant writing personalized follow-up messages.
+Write concise, human-sounding messages. SMS ≤160 chars, email subject ≤60 chars.
+No emojis. No [brackets] placeholders.
+Tone: ${effectiveTone}`
+
+    let userPrompt = `Write a follow-up for customer ${customer.name || 'Valued Customer'}.`
+    if (templateType === 'estimate_followup') {
+      userPrompt += ` Follow up on an estimate.`
+    } else if (templateType === 'appointment_reminder') {
+      userPrompt += ` Reminder about an upcoming appointment.`
+    } else if (templateType === 'service_completion') {
+      userPrompt += ` Notify that vehicle service is complete.`
+    } else {
+      userPrompt += ` Custom message: ${customMessage || 'General follow-up'}`
+    }
+
+    if (context.vehicleInfo) userPrompt += ` Vehicle: ${context.vehicleInfo}.`
+    if (context.estimateId) userPrompt += ` Estimate ID: ${context.estimateId}.`
+
+    userPrompt += `\n\nReturn ONLY JSON:\n{ "sms": "...", "emailSubject": "...", "emailBody": "..." }`
+
+    // ── Call ai-text-generate ──
+    const { data: aiResult, error: aiError } = await supabase.functions.invoke('ai-text-generate', {
+      body: {
+        messages: [{ role: 'user', content: scrubPII(userPrompt) }],
+        system: systemPrompt,
+        model: 'openai/gpt-4o-mini',
+        feature: 'ai-follow-up-writer',
+      },
+      headers: { Authorization: `Bearer ${token}` },
+    })
+
+    if (aiError || !aiResult?.message) {
+      await supabase.rpc('ai_circuit_breaker_record_failure')
+      // Fallback to simple template
+      const fallback = generateFallbackFollowUp(customer.name, templateType, context)
+      await storeFollowUp(supabase, customerId, templateType, fallback, 'fallback')
+      return new Response(JSON.stringify({ success: true, fallback, aiUsed: false }), {
+        headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
+      })
+    }
+
+    // ── Parse response ──
+    let payload: any
+    try {
+      const match = aiResult.message.match(/\{[\s\S]*\}/)
+      if (!match) throw new Error('No JSON')
+      payload = JSON.parse(match[0])
+    } catch (e) {
+      await supabase.rpc('ai_circuit_breaker_record_failure')
+      throw new Error('AI returned malformed JSON')
+    }
+
+    // ── Store follow-up record ──
+    await storeFollowUp(supabase, customerId, templateType, payload, 'ai')
+
+    // Reset circuit breaker on success
+    await supabase.rpc('ai_circuit_breaker_reset')
+
+    return new Response(JSON.stringify({ success: true, followUp: payload, aiUsed: true }), {
+      headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
     })
 
   } catch (error: any) {
-    return new Response(JSON.stringify({
-      error: error.message || 'Internal server error'
-    }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    console.error('ai-follow-up-writer error:', error)
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
     })
   }
 })
+
+function generateFallbackFollowUp(customerName: string, type: string, context: any) {
+  const name = customerName || 'Valued Customer'
+  switch (type) {
+    case 'estimate_followup':
+      return {
+        sms: `Hi ${name}, following up on your estimate. Let us know if you have questions!`,
+        emailSubject: 'Follow-up on Your Estimate',
+        emailBody: `Dear ${name},\n\nJust checking in regarding your recent estimate. We are happy to answer any questions.\n\nBest,\nWrapMind Team`,
+      }
+    case 'appointment_reminder':
+      return {
+        sms: `Hi ${name}, reminder about your appointment tomorrow.`,
+        emailSubject: 'Appointment Reminder',
+        emailBody: `Hi ${name},\n\nThis is a reminder about your upcoming appointment.\n\nBest,\nWrapMind Team`,
+      }
+    case 'service_completion':
+      return {
+        sms: `Hi ${name}, your vehicle service is complete! Pick up at your convenience.`,
+        emailSubject: 'Your Service is Complete',
+        emailBody: `Hi ${name},\n\nGreat news! Your vehicle is ready.\n\nBest,\nWrapMind Team`,
+      }
+    default:
+      return {
+        sms: `Hi ${name}, thank you for your business.`,
+        emailSubject: 'Message from WrapMind',
+        emailBody: `Hi ${name},\n\nThank you for choosing us.\n\nBest,\nWrapMind Team`,
+      }
+  }
+}
+
+async function storeFollowUp(supabase: any, customerId: string, type: string, payload: any, source: string) {
+  await supabase.from('follow_ups').insert({
+    customer_id: customerId,
+    template_type: type,
+    subject: payload.emailSubject,
+    message: payload.sms + '\n\n' + payload.emailBody,
+    tone: 'neutral',
+    status: 'generated',
+    metadata: { source, ai_used: source === 'ai' },
+  }).catch(() => {})
+}

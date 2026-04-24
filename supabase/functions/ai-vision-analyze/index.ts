@@ -67,6 +67,14 @@ serve(async (req: Request) => {
     const user = await verifyResp.json()
     const userId = user.id
 
+    // ── Feature flag gate ──
+    if (Deno.env.get('ENABLE_AI_VISION') === 'false') {
+      return new Response(JSON.stringify({ error: 'Feature temporarily disabled' }), {
+        status: 403,
+        headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
+      })
+    }
+
     // Create service-role client for DB operations
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, serviceRoleKey)
