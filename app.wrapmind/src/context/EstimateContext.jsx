@@ -9,6 +9,7 @@ import {
   USE_CREATE_ESTIMATE,
   USE_UPDATE_ESTIMATE,
   USE_DELETE_ESTIMATE,
+  normalizeEstimate,
 } from '../api/estimates.graphql.js';
 
 const STORAGE_KEY = 'wm-estimates-v1';
@@ -229,8 +230,10 @@ export function EstimateProvider({ children }) {
     if (isDevAuth) return;
     if (!initRef.current && hasApolloData) {
       initRef.current = true;
+      // Normalize snake_case DB rows → camelCase app shape
+      const normalized = apolloEstimates.map(normalizeEstimate).filter(Boolean);
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setEstimates(apolloEstimates);
+      setEstimates(normalized);
     }
   }, [hasApolloData, apolloEstimates, isDevAuth]);
 
@@ -303,8 +306,8 @@ export function EstimateProvider({ children }) {
         variables: {
           orgId,
           locationId:  newEst.locationId,
-          customerId:  newEst.customerId,
-          estimateNumber: newEst.estimateNumber,
+          clientId:   newEst.customerId,
+          estimateId: newEst.estimateNumber,
           status:      newEst.status,
           package:     newEst.package     ?? null,
           material:    newEst.material    ?? null,
