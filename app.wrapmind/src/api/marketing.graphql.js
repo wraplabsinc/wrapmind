@@ -2,30 +2,30 @@ import { gql } from '@apollo/client';
 import { useQuery, useMutation } from '@apollo/client/react';
 
 // ════════════════════════════════════════════════════════════════════════════
-// REVIEW REQUESTS
-// DB: review_requests  |  Collection: review_requestsCollection
+// MARKETING CAMPAIGNS
+// DB: campaigns  |  Collection: marketing_campaignsCollection
 // ════════════════════════════════════════════════════════════════════════════
 
-export const REVIEW_REQUEST_FIELDS = gql`
-  fragment ReviewRequestFields on review_requests {
+export const CAMPAIGN_FIELDS = gql`
+  fragment CampaignFields on marketing_campaigns {
     id
     org_id
     location_id
-    client_id
-    estimate_id
-    rating
-    reviewed
-    sent_at
+    name
+    channel
+    status
+    budget
+    start_date
+    end_date
     created_at
-    clicked_at
-    opened_at
+    updated_at
   }
 `;
 
-export const LIST_REVIEW_REQUESTS = gql`
-  query ListReviewRequests($orgId: UUID!, $first: Int, $offset: Int) {
-    review_requestsCollection(
-      filter: { org_id: { eq: $orgId } }
+export const LIST_CAMPAIGNS = gql`
+  query ListCampaigns($orgId: UUID!, $locationId: UUID!, $first: Int, $offset: Int) {
+    marketing_campaignsCollection(
+      filter: { org_id: { eq: $orgId }, location_id: { eq: $locationId } }
       first: $first
       offset: $offset
       orderBy: [{ created_at: DESC }]
@@ -35,102 +35,14 @@ export const LIST_REVIEW_REQUESTS = gql`
           id
           org_id
           location_id
-          client_id
-          estimate_id
-          rating
-          reviewed
-          sent_at
-          created_at
-          clicked_at
-          opened_at
-        }
-      }
-      pageInfo {
-        hasNextPage
-        endCursor
-      }
-    }
-  }
-  ${REVIEW_REQUEST_FIELDS}
-`;
-
-export const CREATE_REVIEW_REQUEST = gql`
-  mutation CreateReviewRequest(
-    $orgId: UUID!
-    $locationId: UUID!
-    $clientId: UUID!
-    $estimateId: UUID
-  ) {
-    insertIntoreview_requestsCollection(objects: [{
-      org_id: $orgId
-      location_id: $locationId
-      client_id: $clientId
-      estimate_id: $estimateId
-    }]) {
-      returning {
-        ...ReviewRequestFields
-      }
-    }
-  }
-  ${REVIEW_REQUEST_FIELDS}
-`;
-
-export const MARK_REVIEW_CLICKED = gql`
-  mutation MarkReviewClicked($id: UUID!) {
-    updatereview_requestsCollection(
-      filter: { id: { eq: $id } }
-      set: { clicked_at: "now()" }
-    ) {
-      returning {
-        ...ReviewRequestFields
-      }
-    }
-  }
-  ${REVIEW_REQUEST_FIELDS}
-`;
-
-// ════════════════════════════════════════════════════════════════════════════
-// MARKETING CAMPAIGNS
-// DB: marketing_campaigns  |  Collection: marketing_campaignsCollection
-// ════════════════════════════════════════════════════════════════════════════
-
-export const CAMPAIGN_FIELDS = gql`
-  fragment CampaignFields on marketing_campaigns {
-    id
-    shop_id
-    name
-    type
-    status
-    subject
-    body
-    stats
-    sent_at
-    created_at
-    created_by
-  }
-`;
-
-export const LIST_CAMPAIGNS = gql`
-  query ListCampaigns($shopId: UUID!, $first: Int, $offset: Int) {
-    marketing_campaignsCollection(
-      filter: { shop_id: { eq: $shopId } }
-      first: $first
-      offset: $offset
-      orderBy: [{ created_at: DESC }]
-    ) {
-      edges {
-        node {
-          id
-          shop_id
           name
-          type
+          channel
           status
-          subject
-          body
-          stats
-          sent_at
+          budget
+          start_date
+          end_date
           created_at
-          created_by
+          updated_at
         }
       }
       pageInfo {
@@ -144,22 +56,24 @@ export const LIST_CAMPAIGNS = gql`
 
 export const CREATE_CAMPAIGN = gql`
   mutation CreateCampaign(
-    $shopId: UUID!
+    $orgId: UUID!
+    $locationId: UUID!
     $name: String!
-    $type: String!
+    $channel: String!
     $status: String!
-    $subject: String
-    $body: String
-    $createdBy: UUID
+    $budget: Float
+    $startDate: DateTime
+    $endDate: DateTime
   ) {
-    insertIntomarketing_campaignsCollection(objects: [{
-      shop_id: $shopId
+    insertIntocampaignsCollection(objects: [{
+      org_id: $orgId
+      location_id: $locationId
       name: $name
-      type: $type
+      channel: $channel
       status: $status
-      subject: $subject
-      body: $body
-      created_by: $createdBy
+      budget: $budget
+      start_date: $startDate
+      end_date: $endDate
     }]) {
       returning {
         ...CampaignFields
@@ -173,21 +87,21 @@ export const UPDATE_CAMPAIGN = gql`
   mutation UpdateCampaign(
     $id: UUID!
     $name: String
-    $type: String
+    $channel: String
     $status: String
-    $subject: String
-    $body: String
-    $stats: String
+    $budget: Float
+    $startDate: DateTime
+    $endDate: DateTime
   ) {
     updatemarketing_campaignsCollection(
       filter: { id: { eq: $id } }
       set: {
         name: $name
-        type: $type
+        channel: $channel
         status: $status
-        subject: $subject
-        body: $body
-        stats: $stats
+        budget: $budget
+        start_date: $startDate
+        end_date: $endDate
       }
     ) {
       returning {
@@ -214,19 +128,20 @@ export const DELETE_CAMPAIGN = gql`
 export const GALLERY_IMAGE_FIELDS = gql`
   fragment GalleryImageFields on gallery_images {
     id
-    shop_id
+    org_id
+    location_id
     url
     caption
+    featured
     tags
     created_at
-    created_by
   }
 `;
 
 export const LIST_GALLERY_IMAGES = gql`
-  query ListGalleryImages($shopId: UUID!, $first: Int, $offset: Int) {
+  query ListGalleryImages($orgId: UUID!, $locationId: UUID!, $first: Int, $offset: Int) {
     gallery_imagesCollection(
-      filter: { shop_id: { eq: $shopId } }
+      filter: { org_id: { eq: $orgId }, location_id: { eq: $locationId } }
       first: $first
       offset: $offset
       orderBy: [{ created_at: DESC }]
@@ -234,12 +149,13 @@ export const LIST_GALLERY_IMAGES = gql`
       edges {
         node {
           id
-          shop_id
+          org_id
+          location_id
           url
           caption
+          featured
           tags
           created_at
-          created_by
         }
       }
       pageInfo {
@@ -253,18 +169,20 @@ export const LIST_GALLERY_IMAGES = gql`
 
 export const CREATE_GALLERY_IMAGE = gql`
   mutation CreateGalleryImage(
-    $shopId: UUID!
+    $orgId: UUID!
+    $locationId: UUID!
     $url: String!
     $caption: String
+    $featured: Boolean
     $tags: String
-    $createdBy: UUID
   ) {
     insertIntogallery_imagesCollection(objects: [{
-      shop_id: $shopId
+      org_id: $orgId
+      location_id: $locationId
       url: $url
       caption: $caption
+      featured: $featured
       tags: $tags
-      created_by: $createdBy
     }]) {
       returning {
         ...GalleryImageFields
@@ -290,30 +208,38 @@ export const DELETE_GALLERY_IMAGE = gql`
 export const REFERRAL_FIELDS = gql`
   fragment ReferralFields on referrals {
     id
-    referrer_org_id
-    referred_org_id
-    referral_code
-    credit_applied
-    activated_at
+    org_id
+    location_id
+    customer_id
+    referred_name
+    referred_phone
+    referred_email
+    status
+    converted_to_customer_id
+    created_at
   }
 `;
 
 export const LIST_REFERRALS = gql`
-  query ListReferrals($referrerOrgId: UUID!, $first: Int, $offset: Int) {
+  query ListReferrals($orgId: UUID!, $locationId: UUID!, $first: Int, $offset: Int) {
     referralsCollection(
-      filter: { referrer_org_id: { eq: $referrerOrgId } }
+      filter: { org_id: { eq: $orgId }, location_id: { eq: $locationId } }
       first: $first
       offset: $offset
-      orderBy: [{ activated_at: DESC }]
+      orderBy: [{ created_at: DESC }]
     ) {
       edges {
         node {
           id
-          referrer_org_id
-          referred_org_id
-          referral_code
-          credit_applied
-          activated_at
+          org_id
+          location_id
+          customer_id
+          referred_name
+          referred_phone
+          referred_email
+          status
+          converted_to_customer_id
+          created_at
         }
       }
       pageInfo {
@@ -327,14 +253,22 @@ export const LIST_REFERRALS = gql`
 
 export const CREATE_REFERRAL = gql`
   mutation CreateReferral(
-    $referrerOrgId: UUID!
-    $referredOrgId: UUID!
-    $referralCode: String!
+    $orgId: UUID!
+    $locationId: UUID!
+    $customerId: UUID!
+    $referredName: String!
+    $referredPhone: String
+    $referredEmail: String
+    $status: String
   ) {
     insertIntoreferralsCollection(objects: [{
-      referrer_org_id: $referrerOrgId
-      referred_org_id: $referredOrgId
-      referral_code: $referralCode
+      org_id: $orgId
+      location_id: $locationId
+      customer_id: $customerId
+      referred_name: $referredName
+      referred_phone: $referredPhone
+      referred_email: $referredEmail
+      status: $status
     }]) {
       returning {
         ...ReferralFields
@@ -349,39 +283,20 @@ export const CREATE_REFERRAL = gql`
 // snake_case (DB) → camelCase (app)
 // ════════════════════════════════════════════════════════════════════════════
 
-export function normalizeReviewRequest(row = {}) {
+export function normalizeCampaign(row = {}) {
   if (!row || !row.id) return null;
   return {
     id: row.id,
     orgId: row.org_id,
     locationId: row.location_id,
-    clientId: row.client_id,
-    estimateId: row.estimate_id,
-    rating: row.rating,
-    reviewed: row.reviewed,
-    sentAt: row.sent_at,
-    createdAt: row.created_at,
-    clickedAt: row.clicked_at,
-    openedAt: row.opened_at,
-  };
-}
-
-export function normalizeCampaign(row = {}) {
-  if (!row || !row.id) return null;
-  let stats = row.stats;
-  try { stats = typeof row.stats === 'string' ? JSON.parse(row.stats) : row.stats ?? {}; } catch {}
-  return {
-    id: row.id,
-    shopId: row.shop_id,
     name: row.name,
-    type: row.type,
+    channel: row.channel,
     status: row.status,
-    subject: row.subject,
-    body: row.body,
-    stats,
-    sentAt: row.sent_at,
+    budget: row.budget,
+    startDate: row.start_date,
+    endDate: row.end_date,
     createdAt: row.created_at,
-    createdBy: row.created_by,
+    updatedAt: row.updated_at,
   };
 }
 
@@ -389,12 +304,13 @@ export function normalizeGalleryImage(row = {}) {
   if (!row || !row.id) return null;
   return {
     id: row.id,
-    shopId: row.shop_id,
+    orgId: row.org_id,
+    locationId: row.location_id,
     url: row.url,
     caption: row.caption,
+    featured: row.featured,
     tags: row.tags,
     createdAt: row.created_at,
-    createdBy: row.created_by,
   };
 }
 
@@ -402,11 +318,15 @@ export function normalizeReferral(row = {}) {
   if (!row || !row.id) return null;
   return {
     id: row.id,
-    referrerOrgId: row.referrer_org_id,
-    referredOrgId: row.referred_org_id,
-    referralCode: row.referral_code,
-    creditApplied: row.credit_applied,
-    activatedAt: row.activated_at,
+    orgId: row.org_id,
+    locationId: row.location_id,
+    customerId: row.customer_id,
+    referredName: row.referred_name,
+    referredPhone: row.referred_phone,
+    referredEmail: row.referred_email,
+    status: row.status,
+    convertedToCustomerId: row.converted_to_customer_id,
+    createdAt: row.created_at,
   };
 }
 
@@ -414,77 +334,12 @@ export function normalizeReferral(row = {}) {
 // APOLLO REACT HOOKS
 // ════════════════════════════════════════════════════════════════════════════
 
-// ── Review Requests ──────────────────────────────────────────────────────────
-
-export function USE_REVIEW_REQUESTS({ orgId, first = 100, offset = 0 } = {}) {
-  const { data, loading, error, refetch } = useQuery(LIST_REVIEW_REQUESTS, {
-    variables: { orgId, first, offset },
-    skip: !orgId,
-  });
-  const edges = data?.review_requestsCollection?.edges ?? [];
-  return {
-    reviewRequests: edges.map(e => normalizeReviewRequest(e.node)),
-    loading,
-    error,
-    refetch,
-  };
-}
-
-export function USE_CREATE_REVIEW_REQUEST() {
-  return useMutation(CREATE_REVIEW_REQUEST, {
-    update(cache, { data: { insertIntoreview_requestsCollection } }) {
-      const returning = insertIntoreview_requestsCollection?.returning ?? [];
-      if (!returning[0]) return;
-      const newReq = normalizeReviewRequest(returning[0]);
-      cache.modify({
-        fields: {
-          // eslint-disable-next-line no-unused-vars
-          review_requestsCollection(existing = { edges: [] }, { readField }) {
-            return {
-              ...existing,
-              edges: [
-                { __typename: 'review_requestsEdge', node: newReq },
-                ...existing.edges,
-              ],
-            };
-          },
-        },
-      });
-    },
-  });
-}
-
-export function USE_MARK_REVIEW_CLICKED() {
-  return useMutation(MARK_REVIEW_CLICKED, {
-    update(cache, { data: { updatereview_requestsCollection } }) {
-      const returning = updatereview_requestsCollection?.returning ?? [];
-      if (!returning[0]) return;
-      const updated = normalizeReviewRequest(returning[0]);
-      cache.modify({
-        fields: {
-          // eslint-disable-next-line no-unused-vars
-          review_requestsCollection(existing = { edges: [] }, { readField }) {
-            return {
-              ...existing,
-              edges: existing.edges.map(e =>
-                e.node?.id === updated.id
-                  ? { ...e, node: { ...e.node, clicked_at: updated.clickedAt } }
-                  : e
-              ),
-            };
-          },
-        },
-      });
-    },
-  });
-}
-
 // ── Campaigns ────────────────────────────────────────────────────────────────
 
-export function USE_CAMPAIGNS({ shopId, first = 100, offset = 0 } = {}) {
+export function USE_CAMPAIGNS({ orgId, locationId, first = 100, offset = 0 } = {}) {
   const { data, loading, error, refetch } = useQuery(LIST_CAMPAIGNS, {
-    variables: { shopId, first, offset },
-    skip: !shopId,
+    variables: { orgId, locationId, first, offset },
+    skip: !orgId || !locationId,
   });
   const edges = data?.marketing_campaignsCollection?.edges ?? [];
   return {
@@ -497,8 +352,8 @@ export function USE_CAMPAIGNS({ shopId, first = 100, offset = 0 } = {}) {
 
 export function USE_CREATE_CAMPAIGN() {
   return useMutation(CREATE_CAMPAIGN, {
-    update(cache, { data: { insertIntomarketing_campaignsCollection } }) {
-      const returning = insertIntomarketing_campaignsCollection?.returning ?? [];
+    update(cache, { data: { insertIntocampaignsCollection } }) {
+      const returning = insertIntocampaignsCollection?.returning ?? [];
       if (!returning[0]) return;
       const newCamp = normalizeCampaign(returning[0]);
       cache.modify({
@@ -568,10 +423,10 @@ export function USE_DELETE_CAMPAIGN() {
 
 // ── Gallery ──────────────────────────────────────────────────────────────────
 
-export function USE_GALLERY_IMAGES({ shopId, first = 100, offset = 0 } = {}) {
+export function USE_GALLERY_IMAGES({ orgId, locationId, first = 100, offset = 0 } = {}) {
   const { data, loading, error, refetch } = useQuery(LIST_GALLERY_IMAGES, {
-    variables: { shopId, first, offset },
-    skip: !shopId,
+    variables: { orgId, locationId, first, offset },
+    skip: !orgId || !locationId,
   });
   const edges = data?.gallery_imagesCollection?.edges ?? [];
   return {
@@ -630,10 +485,10 @@ export function USE_DELETE_GALLERY_IMAGE() {
 
 // ── Referrals ────────────────────────────────────────────────────────────────
 
-export function USE_REFERRALS({ referrerOrgId, first = 100, offset = 0 } = {}) {
+export function USE_REFERRALS({ orgId, locationId, first = 100, offset = 0 } = {}) {
   const { data, loading, error, refetch } = useQuery(LIST_REFERRALS, {
-    variables: { referrerOrgId, first, offset },
-    skip: !referrerOrgId,
+    variables: { orgId, locationId, first, offset },
+    skip: !orgId || !locationId,
   });
   const edges = data?.referralsCollection?.edges ?? [];
   return {
