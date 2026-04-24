@@ -4,33 +4,31 @@ import { useQuery, useMutation } from '@apollo/client/react';
 // ─── Fragments ────────────────────────────────────────────────────────────────
 
 export const INVOICE_FIELDS = gql`
-  fragment InvoiceFields on Invoice {
+  fragment InvoiceFields on invoices {
     id
-    orgId
-    locationId
-    invoiceNumber
-    estimateId
-    customerId
-    vehicleId
-    status
-    lineItems
+    org_id
+    location_id
+    invoice_number
+    estimate_id
+    client_id
+    vehicle_json
+    line_items_json
     subtotal
-    taxRate
-    taxAmount
-    discount
+    tax
     total
-    amountPaid
-    amountDue
+    deposit_amount
+    amount_paid
+    amount_due
+    status
     payments
     terms
     notes
-    issuedAt
-    dueAt
-    paidAt
-    voidedAt
-    createdById
-    createdAt
-    updatedAt
+    issued_at
+    due_at
+    paid_at
+    voided_at
+    created_at
+    updated_at
   }
 `;
 
@@ -44,39 +42,37 @@ export const LIST_INVOICES = gql`
   query ListInvoices($orgId: UUID!, $first: Int, $offset: Int) {
     invoicesCollection(
       filter: {
-        orgId: { eq: $orgId }
+        org_id: { eq: $orgId }
       }
       first: $first
       offset: $offset
-      orderBy: [{ createdAt: DESC }]
+      orderBy: [{ created_at: DESC }]
     ) {
       edges {
         node {
           id
-          invoiceNumber
+          invoice_number
           status
-          locationId
-          estimateId
-          customerId
-          vehicleId
-          lineItems
+          location_id
+          estimate_id
+          client_id
+          vehicle_json
+          line_items_json
           subtotal
-          taxRate
-          taxAmount
-          discount
+          tax
           total
-          amountPaid
-          amountDue
+          deposit_amount
+          amount_paid
+          amount_due
           payments
           terms
           notes
-          issuedAt
-          dueAt
-          paidAt
-          voidedAt
-          createdById
-          createdAt
-          updatedAt
+          issued_at
+          due_at
+          paid_at
+          voided_at
+          created_at
+          updated_at
         }
       }
       pageInfo {
@@ -93,8 +89,12 @@ export const LIST_INVOICES = gql`
  */
 export const GET_INVOICE = gql`
   query GetInvoice($id: UUID!) {
-    invoice(id: $id) {
-      ...InvoiceFields
+    invoicesCollection(filter: { id: { eq: $id } }, first: 1) {
+      edges {
+        node {
+          ...InvoiceFields
+        }
+      }
     }
   }
   ${INVOICE_FIELDS}
@@ -104,58 +104,55 @@ export const GET_INVOICE = gql`
 
 /**
  * Create an invoice.
- * lineItems and payments are passed as JSON strings (pg_graphql JSONB input).
+ * pg_graphql uses insertInto<Collection>(objects: []).
+ * line_items_json and payments are passed as JSON strings.
  */
 export const CREATE_INVOICE = gql`
   mutation CreateInvoice(
     $orgId: UUID!
     $locationId: UUID!
     $invoiceNumber: String!
-    $customerId: UUID!
+    $clientId: UUID!
     $estimateId: UUID
-    $vehicleId: UUID
+    $vehicleJson: String
     $status: String!
     $lineItems: String
-    $subtotal: numeric
-    $taxRate: numeric
-    $taxAmount: numeric
-    $discount: numeric
-    $total: numeric!
-    $amountPaid: numeric
-    $amountDue: numeric
+    $subtotal: BigFloat
+    $tax: BigFloat
+    $discount: BigFloat
+    $total: BigFloat!
+    $amountPaid: BigFloat
+    $amountDue: BigFloat
     $payments: String
     $terms: String
     $notes: String
-    $issuedAt: timestamptz
-    $dueAt: timestamptz
-    $createdById: UUID
+    $issuedAt: TIMESTAMPTZ
+    $dueAt: TIMESTAMPTZ
   ) {
-    invoiceInsert(
-      input: {
-        orgId: $orgId
-        locationId: $locationId
-        invoiceNumber: $invoiceNumber
-        customerId: $customerId
-        estimateId: $estimateId
-        vehicleId: $vehicleId
-        status: $status
-        lineItems: $lineItems
-        subtotal: $subtotal
-        taxRate: $taxRate
-        taxAmount: $taxAmount
-        discount: $discount
-        total: $total
-        amountPaid: $amountPaid
-        amountDue: $amountDue
-        payments: $payments
-        terms: $terms
-        notes: $notes
-        issuedAt: $issuedAt
-        dueAt: $dueAt
-        createdById: $createdById
+    insertIntoinvoicesCollection(objects: [{
+      org_id: $orgId
+      location_id: $locationId
+      invoice_number: $invoiceNumber
+      client_id: $clientId
+      estimate_id: $estimateId
+      vehicle_json: $vehicleJson
+      status: $status
+      line_items_json: $lineItems
+      subtotal: $subtotal
+      tax: $tax
+      discount: $discount
+      total: $total
+      amount_paid: $amountPaid
+      amount_due: $amountDue
+      payments: $payments
+      terms: $terms
+      notes: $notes
+      issued_at: $issuedAt
+      due_at: $dueAt
+    }]) {
+      returning {
+        ...InvoiceFields
       }
-    ) {
-      ...InvoiceFields
     }
   }
   ${INVOICE_FIELDS}
@@ -163,51 +160,50 @@ export const CREATE_INVOICE = gql`
 
 /**
  * Update an invoice.
- * Payments array is updated via dedicated INSERT then re-fetch or use JSONB concat.
- * Status changes: paid, voided, partial, sent, draft.
+ * pg_graphql uses update<Collection>(filter: {...}, set: {...}).
  */
 export const UPDATE_INVOICE = gql`
   mutation UpdateInvoice(
     $id: UUID!
     $status: String
     $lineItems: String
-    $subtotal: numeric
-    $taxRate: numeric
-    $taxAmount: numeric
-    $discount: numeric
-    $total: numeric
-    $amountPaid: numeric
-    $amountDue: numeric
+    $subtotal: BigFloat
+    $tax: BigFloat
+    $discount: BigFloat
+    $total: BigFloat
+    $amountPaid: BigFloat
+    $amountDue: BigFloat
     $payments: String
     $terms: String
     $notes: String
-    $issuedAt: timestamptz
-    $dueAt: timestamptz
-    $paidAt: timestamptz
-    $voidedAt: timestamptz
+    $issuedAt: TIMESTAMPTZ
+    $dueAt: TIMESTAMPTZ
+    $paidAt: TIMESTAMPTZ
+    $voidedAt: TIMESTAMPTZ
   ) {
-    invoiceUpdate(
-      id: $id
+    updateinvoicesCollection(
+      filter: { id: { eq: $id } }
       set: {
         status: $status
-        lineItems: $lineItems
+        line_items_json: $lineItems
         subtotal: $subtotal
-        taxRate: $taxRate
-        taxAmount: $taxAmount
+        tax: $tax
         discount: $discount
         total: $total
-        amountPaid: $amountPaid
-        amountDue: $amountDue
+        amount_paid: $amountPaid
+        amount_due: $amountDue
         payments: $payments
         terms: $terms
         notes: $notes
-        issuedAt: $issuedAt
-        dueAt: $dueAt
-        paidAt: $paidAt
-        voidedAt: $voidedAt
+        issued_at: $issuedAt
+        due_at: $dueAt
+        paid_at: $paidAt
+        voided_at: $voidedAt
       }
     ) {
-      ...InvoiceFields
+      returning {
+        ...InvoiceFields
+      }
     }
   }
   ${INVOICE_FIELDS}
@@ -218,13 +214,50 @@ export const UPDATE_INVOICE = gql`
  */
 export const DELETE_INVOICE = gql`
   mutation DeleteInvoice($id: UUID!) {
-    invoiceDelete(id: $id) {
-      id
+    deleteFrominvoicesCollection(filter: { id: { eq: $id } }) {
+      returning {
+        id
+      }
     }
   }
 `;
 
 // ─── Apollo React Hooks ───────────────────────────────────────────────────────
+
+/**
+ * Normalize a DB invoice row (snake_case) → app shape (camelCase).
+ */
+export function normalizeInvoice(row = {}) {
+  if (!row || !row.id) return null;
+  return {
+    id: row.id,
+    orgId: row.org_id,
+    locationId: row.location_id,
+    invoiceNumber: row.invoice_number,
+    estimateId: row.estimate_id,
+    customerId: row.client_id,
+    vehicleId: null,          // vehicle_json is a separate JSONB column
+    vehicleJson: row.vehicle_json,
+    status: row.status,
+    lineItems: row.line_items_json ? (typeof row.line_items_json === 'string' ? JSON.parse(row.line_items_json) : row.line_items_json) : [],
+    subtotal: row.subtotal != null ? Number(row.subtotal) : 0,
+    taxRate: 0.0875,          // Always derive from TAX_RATE constant; not stored
+    taxAmount: row.tax != null ? Number(row.tax) : 0,
+    discount: row.discount != null ? Number(row.discount) : 0,
+    total: row.total != null ? Number(row.total) : 0,
+    amountPaid: row.amount_paid != null ? Number(row.amount_paid) : 0,
+    amountDue: row.amount_due != null ? Number(row.amount_due) : 0,
+    payments: row.payments ? (typeof row.payments === 'string' ? JSON.parse(row.payments) : row.payments) : [],
+    terms: row.terms,
+    notes: row.notes,
+    issuedAt: row.issued_at,
+    dueAt: row.due_at,
+    paidAt: row.paid_at,
+    voidedAt: row.voided_at,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
 
 /**
  * List invoices for an org.
@@ -237,7 +270,7 @@ export function USE_INVOICES({ orgId, first = 300, offset = 0 } = {}) {
   });
 
   const edges = data?.invoicesCollection?.edges ?? [];
-  const invoices = edges.map(e => e.node);
+  const invoices = edges.map(e => normalizeInvoice(e.node));
   const pageInfo = data?.invoicesCollection?.pageInfo ?? {};
 
   return { invoices, loading, error, refetch, ...pageInfo };
@@ -253,7 +286,8 @@ export function USE_INVOICE(id) {
     skip: !id,
   });
 
-  return { invoice: data?.invoice ?? null, loading, error };
+  const edge = data?.invoicesCollection?.edges?.[0];
+  return { invoice: edge ? normalizeInvoice(edge.node) : null, loading, error };
 }
 
 /**
@@ -262,9 +296,10 @@ export function USE_INVOICE(id) {
  */
 export function USE_CREATE_INVOICE() {
   return useMutation(CREATE_INVOICE, {
-    update(cache, { data: { invoiceInsert } }) {
-      if (!invoiceInsert?.edges?.[0]?.node) return;
-      const newInvoice = invoiceInsert.edges[0].node;
+    update(cache, { data: { insertIntoinvoicesCollection } }) {
+      const returning = insertIntoinvoicesCollection?.returning ?? [];
+      if (!returning[0]) return;
+      const newInvoice = normalizeInvoice(returning[0]);
       cache.modify({
         fields: {
           // eslint-disable-next-line no-unused-vars
@@ -272,7 +307,7 @@ export function USE_CREATE_INVOICE() {
             return {
               ...existing,
               edges: [
-                { __typename: 'InvoiceEdge', node: newInvoice },
+                { __typename: 'invoicesEdge', node: newInvoice },
                 ...existing.edges,
               ],
             };
@@ -297,8 +332,9 @@ export function USE_UPDATE_INVOICE() {
  */
 export function USE_DELETE_INVOICE() {
   return useMutation(DELETE_INVOICE, {
-    update(cache, { data: { invoiceDelete } }) {
-      if (!invoiceDelete?.id) return;
+    update(cache, { data: { deleteFrominvoicesCollection } }) {
+      const returning = deleteFrominvoicesCollection?.returning ?? [];
+      if (!returning[0]?.id) return;
       cache.modify({
         fields: {
           // eslint-disable-next-line no-unused-vars
@@ -306,7 +342,7 @@ export function USE_DELETE_INVOICE() {
             return {
               ...existing,
               edges: existing.edges.filter(
-                e => e.node?.id !== invoiceDelete.id
+                e => e.node?.id !== returning[0].id
               ),
             };
           },

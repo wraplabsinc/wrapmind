@@ -55,6 +55,7 @@ import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import { TickerProvider } from './context/TickerContext';
 import { LocationProvider } from './context/LocationContext';
 import { LeadProvider } from './context/LeadContext';
+import { ReportsProvider } from './context/ReportsContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import AuthPage from './components/auth/AuthPage';
 import LocationSwitcher from './components/ui/LocationSwitcher';
@@ -954,7 +955,9 @@ function AppInner() {
         ) : currentView === 'notifications' ? (
           <NotificationsPage onNavigate={handleNavigate} />
         ) : currentView === 'reports' ? (
-          <ReportsPage onNavigate={handleNavigate} />
+          <ReportsProvider>
+            <ReportsPage onNavigate={handleNavigate} />
+          </ReportsProvider>
         ) : currentView === 'client-portal' ? (
           <ClientPortalPage onNavigate={handleNavigate} />
         ) : currentView === 'help' ? (

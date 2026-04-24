@@ -4,45 +4,45 @@ import { useQuery, useMutation } from '@apollo/client/react';
 // ─── Fragment ────────────────────────────────────────────────────────────────
 
 export const NOTIFICATION_FIELDS = gql`
-  fragment NotificationFields on Notification {
+  fragment NotificationFields on notifications {
     id
-    orgId
-    profileId
-    type
+    org_id
+    profile_id
     title
     body
     link
-    recordId
+    type
     read
-    createdAt
+    record_id
+    created_at
   }
 `;
 
 // ─── Queries ─────────────────────────────────────────────────────────────────
 
 /**
- * List notifications for a profile, ordered by createdAt desc.
+ * List notifications for a profile, ordered by created_at desc.
  */
 export const LIST_NOTIFICATIONS = gql`
   query ListNotifications($profileId: UUID!, $first: Int, $offset: Int) {
     notificationsCollection(
-      filter: { profileId: { eq: $profileId } }
+      filter: { profile_id: { eq: $profileId } }
       first: $first
       offset: $offset
-      orderBy: [{ createdAt: DESC }]
+      orderBy: [{ created_at: DESC }]
     ) {
       edges {
         node {
           id
-          orgId
-          profileId
-          type
+          org_id
+          profile_id
           title
           body
           link
-          recordId
+          type
           read
-          createdAt
+          record_id
+          created_at
         }
       }
       pageInfo {
@@ -59,8 +59,12 @@ export const LIST_NOTIFICATIONS = gql`
  */
 export const GET_NOTIFICATION = gql`
   query GetNotification($id: UUID!) {
-    notification(id: $id) {
-      ...NotificationFields
+    notificationsCollection(filter: { id: { eq: $id } }, first: 1) {
+      edges {
+        node {
+          ...NotificationFields
+        }
+      }
     }
   }
   ${NOTIFICATION_FIELDS}
@@ -79,19 +83,19 @@ export const CREATE_NOTIFICATION = gql`
     $recordId: String
     $read: Boolean
   ) {
-    notificationInsert(
-      input: {
-        orgId: $orgId
-        profileId: $profileId
-        type: $type
-        title: $title
-        body: $body
-        link: $link
-        recordId: $recordId
-        read: $read
+    insertintonotificationsCollection(objects: [{
+      org_id: $orgId
+      profile_id: $profileId
+      type: $type
+      title: $title
+      body: $body
+      link: $link
+      record_id: $recordId
+      read: $read
+    }]) {
+      returning {
+        ...NotificationFields
       }
-    ) {
-      ...NotificationFields
     }
   }
   ${NOTIFICATION_FIELDS}
@@ -102,11 +106,13 @@ export const CREATE_NOTIFICATION = gql`
  */
 export const MARK_NOTIFICATION_READ = gql`
   mutation MarkNotificationRead($id: UUID!, $read: Boolean!) {
-    notificationUpdate(
-      id: $id
+    updatenotificationsCollection(
+      filter: { id: { eq: $id } }
       set: { read: $read }
     ) {
-      ...NotificationFields
+      returning {
+        ...NotificationFields
+      }
     }
   }
   ${NOTIFICATION_FIELDS}
@@ -114,13 +120,34 @@ export const MARK_NOTIFICATION_READ = gql`
 
 export const DELETE_NOTIFICATION = gql`
   mutation DeleteNotification($id: UUID!) {
-    notificationDelete(id: $id) {
-      id
+    deleteFromnotificationsCollection(filter: { id: { eq: $id } }) {
+      returning {
+        id
+      }
     }
   }
 `;
 
 // ─── Apollo React Hooks ─────────────────────────────────────────────────────
+
+/**
+ * Normalize a DB notification row (snake_case) → app shape (camelCase).
+ */
+export function normalizeNotification(row = {}) {
+  if (!row || !row.id) return null;
+  return {
+    id: row.id,
+    orgId: row.org_id,
+    profileId: row.profile_id,
+    title: row.title,
+    body: row.body,
+    link: row.link,
+    type: row.type,
+    read: row.read,
+    recordId: row.record_id,
+    createdAt: row.created_at,
+  };
+}
 
 export function USE_NOTIFICATIONS({ profileId, first = 100, offset = 0 } = {}) {
   const { data, loading, error, refetch } = useQuery(LIST_NOTIFICATIONS, {
@@ -128,7 +155,7 @@ export function USE_NOTIFICATIONS({ profileId, first = 100, offset = 0 } = {}) {
     skip: !profileId,
   });
   const edges = data?.notificationsCollection?.edges ?? [];
-  const notifications = edges.map(e => e.node);
+  const notifications = edges.map(e => normalizeNotification(e.node));
   return { notifications, loading, error, refetch };
 }
 
@@ -137,14 +164,16 @@ export function USE_NOTIFICATION(id) {
     variables: { id },
     skip: !id,
   });
-  return { notification: data?.notification ?? null, loading, error };
+  const edge = data?.notificationsCollection?.edges?.[0];
+  return { notification: edge ? normalizeNotification(edge.node) : null, loading, error };
 }
 
 export function USE_CREATE_NOTIFICATION() {
   return useMutation(CREATE_NOTIFICATION, {
-    update(cache, { data: { notificationInsert } }) {
-      if (!notificationInsert?.edges?.[0]?.node) return;
-      const newNotif = notificationInsert.edges[0].node;
+    update(cache, { data: { insertintonotificationsCollection } }) {
+      const returning = insertintonotificationsCollection?.returning ?? [];
+      if (!returning[0]) return;
+      const newNotif = normalizeNotification(returning[0]);
       cache.modify({
         fields: {
           // eslint-disable-next-line no-unused-vars
@@ -152,7 +181,7 @@ export function USE_CREATE_NOTIFICATION() {
             return {
               ...existing,
               edges: [
-                { __typename: 'NotificationEdge', node: newNotif },
+                { __typename: 'notificationsEdge', node: newNotif },
                 ...existing.edges,
               ],
             };
@@ -165,8 +194,10 @@ export function USE_CREATE_NOTIFICATION() {
 
 export function USE_MARK_NOTIFICATION_READ() {
   return useMutation(MARK_NOTIFICATION_READ, {
-    update(cache, { data: { notificationUpdate } }) {
-      if (!notificationUpdate) return;
+    update(cache, { data: { updatenotificationsCollection } }) {
+      const returning = updatenotificationsCollection?.returning ?? [];
+      if (!returning[0]) return;
+      const updated = normalizeNotification(returning[0]);
       cache.modify({
         fields: {
           // eslint-disable-next-line no-unused-vars
@@ -174,8 +205,8 @@ export function USE_MARK_NOTIFICATION_READ() {
             return {
               ...existing,
               edges: existing.edges.map(e =>
-                e.node?.id === notificationUpdate.id
-                  ? { ...e, node: { ...e.node, read: notificationUpdate.read } }
+                e.node?.id === updated.id
+                  ? { ...e, node: { ...e.node, read: updated.read } }
                   : e
               ),
             };
@@ -188,8 +219,9 @@ export function USE_MARK_NOTIFICATION_READ() {
 
 export function USE_DELETE_NOTIFICATION() {
   return useMutation(DELETE_NOTIFICATION, {
-    update(cache, { data: { notificationDelete } }) {
-      if (!notificationDelete?.id) return;
+    update(cache, { data: { deleteFromnotificationsCollection } }) {
+      const returning = deleteFromnotificationsCollection?.returning ?? [];
+      if (!returning[0]?.id) return;
       cache.modify({
         fields: {
           // eslint-disable-next-line no-unused-vars
@@ -197,7 +229,7 @@ export function USE_DELETE_NOTIFICATION() {
             return {
               ...existing,
               edges: existing.edges.filter(
-                e => e.node?.id !== notificationDelete.id
+                e => e.node?.id !== returning[0].id
               ),
             };
           },
