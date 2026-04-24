@@ -4,80 +4,80 @@ import { useQuery, useMutation } from '@apollo/client/react';
 // ─── Fragments ────────────────────────────────────────────────────────────────
 
 export const WRAP_PACKAGE_FIELDS = gql`
-  fragment WrapPackageFields on WrapPackage {
+  fragment WrapPackageFields on wrap_packages {
     id
-    locationId
+    location_id
     name
     description
-    basePrice
-    laborHours
-    laborCost
-    materialCost
-    isActive
-    createdAt
-    updatedAt
+    base_price
+    labor_hours
+    labor_cost
+    material_cost
+    is_active
+    created_at
+    updated_at
   }
 `;
 
 export const MODIFIER_FIELDS = gql`
-  fragment ModifierFields on Modifier {
+  fragment ModifierFields on modifiers {
     id
-    locationId
+    location_id
     name
     description
     price
     unit
-    isActive
-    createdAt
-    updatedAt
+    is_active
+    created_at
+    updated_at
   }
 `;
 
 export const SERVICE_DURATION_FIELDS = gql`
-  fragment ServiceDurationFields on ServiceDuration {
+  fragment ServiceDurationFields on service_durations {
     id
-    locationId
-    serviceType
-    durationMinutes
-    createdAt
-    updatedAt
+    location_id
+    service_type
+    duration_minutes
+    created_at
+    updated_at
   }
 `;
 
 export const PERMISSION_FIELDS = gql`
-  fragment PermissionFields on Permission {
+  fragment PermissionFields on permissions {
     id
-    orgId
+    org_id
     role
     resource
     action
-    createdAt
+    created_at
   }
 `;
 
 export const LOCATION_SETTINGS_FIELDS = gql`
-  fragment LocationSettingsFields on LocationSetting {
+  fragment LocationSettingsFields on location_settings {
     id
-    locationId
-    shopName
-    shopHours
-    defaultTaxRate
-    platformSettings
-    createdAt
-    updatedAt
+    location_id
+    shop_name
+    shop_hours
+    default_tax_rate
+    platform_settings
+    created_at
+    updated_at
   }
 `;
 
 export const ORGANIZATION_SETTINGS_FIELDS = gql`
-  fragment OrganizationSettingsFields on OrganizationSetting {
+  fragment OrganizationSettingsFields on organization_settings {
     id
-    orgId
-    defaultServiceDurations
-    defaultPackages
-    defaultModifiers
+    org_id
+    default_service_durations
+    default_packages
+    default_modifiers
     config
-    createdAt
-    updatedAt
+    created_at
+    updated_at
   }
 `;
 
@@ -86,8 +86,8 @@ export const ORGANIZATION_SETTINGS_FIELDS = gql`
 /** List wrap packages for a location */
 export const LIST_WRAP_PACKAGES = gql`
   query ListWrapPackages($locationId: UUID!, $first: Int, $offset: Int) {
-    wrapPackagesCollection(
-      filter: { locationId: { eq: $locationId } }
+    wrap_packagesCollection(
+      filter: { location_id: { eq: $locationId } }
       first: $first
       offset: $offset
       orderBy: [{ name: ASC }]
@@ -110,7 +110,7 @@ export const LIST_WRAP_PACKAGES = gql`
 export const LIST_MODIFIERS = gql`
   query ListModifiers($locationId: UUID!, $first: Int, $offset: Int) {
     modifiersCollection(
-      filter: { locationId: { eq: $locationId } }
+      filter: { location_id: { eq: $locationId } }
       first: $first
       offset: $offset
       orderBy: [{ name: ASC }]
@@ -132,10 +132,10 @@ export const LIST_MODIFIERS = gql`
 /** List service durations for a location */
 export const LIST_SERVICE_DURATIONS = gql`
   query ListServiceDurations($locationId: UUID!) {
-    serviceDurationsCollection(
-      filter: { locationId: { eq: $locationId } }
+    service_durationsCollection(
+      filter: { location_id: { eq: $locationId } }
       first: 100
-      orderBy: [{ serviceType: ASC }]
+      orderBy: [{ service_type: ASC }]
     ) {
       edges {
         node {
@@ -151,7 +151,7 @@ export const LIST_SERVICE_DURATIONS = gql`
 export const LIST_PERMISSIONS = gql`
   query ListPermissions($orgId: UUID!) {
     permissionsCollection(
-      filter: { orgId: { eq: $orgId } }
+      filter: { org_id: { eq: $orgId } }
       first: 200
     ) {
       edges {
@@ -167,8 +167,12 @@ export const LIST_PERMISSIONS = gql`
 /** Get location settings for a location */
 export const GET_LOCATION_SETTINGS = gql`
   query GetLocationSettings($locationId: UUID!) {
-    locationSetting(locationId: $locationId) {
-      ...LocationSettingsFields
+    location_settingsCollection(filter: { location_id: { eq: $locationId } }, first: 1) {
+      edges {
+        node {
+          ...LocationSettingsFields
+        }
+      }
     }
   }
   ${LOCATION_SETTINGS_FIELDS}
@@ -177,8 +181,12 @@ export const GET_LOCATION_SETTINGS = gql`
 /** Get organization settings for an org */
 export const GET_ORGANIZATION_SETTINGS = gql`
   query GetOrganizationSettings($orgId: UUID!) {
-    organizationSetting(orgId: $orgId) {
-      ...OrganizationSettingsFields
+    organization_settingsCollection(filter: { org_id: { eq: $orgId } }, first: 1) {
+      edges {
+        node {
+          ...OrganizationSettingsFields
+        }
+      }
     }
   }
   ${ORGANIZATION_SETTINGS_FIELDS}
@@ -194,13 +202,13 @@ export const UPSERT_LOCATION_SETTINGS = gql`
     $defaultTaxRate: numeric
     $platformSettings: JSON
   ) {
-    locationSettingsUpsert(
-      locationId: $locationId
+    location_settingsUpsert(
+      location_id: $locationId
       set: {
-        shopName: $shopName
-        shopHours: $shopHours
-        defaultTaxRate: $defaultTaxRate
-        platformSettings: $platformSettings
+        shop_name: $shopName
+        shop_hours: $shopHours
+        default_tax_rate: $defaultTaxRate
+        platform_settings: $platformSettings
       }
     ) {
       ...LocationSettingsFields
@@ -217,12 +225,12 @@ export const UPSERT_ORGANIZATION_SETTINGS = gql`
     $defaultModifiers: JSON
     $config: JSON
   ) {
-    organizationSettingsUpsert(
-      orgId: $orgId
+    organization_settingsUpsert(
+      org_id: $orgId
       set: {
-        defaultServiceDurations: $defaultServiceDurations
-        defaultPackages: $defaultPackages
-        defaultModifiers: $defaultModifiers
+        default_service_durations: $defaultServiceDurations
+        default_packages: $defaultPackages
+        default_modifiers: $defaultModifiers
         config: $config
       }
     ) {
@@ -242,16 +250,16 @@ export const CREATE_WRAP_PACKAGE = gql`
     $laborCost: numeric
     $materialCost: numeric
   ) {
-    wrapPackageInsert(
-      collection: "wrapPackages"
+    wrap_packageInsert(
+      collection: "wrap_packages"
       records: [{
-        locationId: $locationId
+        location_id: $locationId
         name: $name
         description: $description
-        basePrice: $basePrice
-        laborHours: $laborHours
-        laborCost: $laborCost
-        materialCost: $materialCost
+        base_price: $basePrice
+        labor_hours: $laborHours
+        labor_cost: $laborCost
+        material_cost: $materialCost
       }]
     ) {
       edges {
@@ -275,14 +283,14 @@ export const UPDATE_WRAP_PACKAGE = gql`
     $materialCost: numeric
     $isActive: Boolean
   ) {
-    wrapPackageUpdate(id: $id, set: {
+    wrap_packageUpdate(id: $id, set: {
       name: $name
       description: $description
-      basePrice: $basePrice
-      laborHours: $laborHours
-      laborCost: $laborCost
-      materialCost: $materialCost
-      isActive: $isActive
+      base_price: $basePrice
+      labor_hours: $laborHours
+      labor_cost: $laborCost
+      material_cost: $materialCost
+      is_active: $isActive
     }) {
       ...WrapPackageFields
     }
@@ -301,7 +309,7 @@ export const CREATE_MODIFIER = gql`
     modifierInsert(
       collection: "modifiers"
       records: [{
-        locationId: $locationId
+        location_id: $locationId
         name: $name
         description: $description
         price: $price
@@ -332,7 +340,7 @@ export const UPDATE_MODIFIER = gql`
       description: $description
       price: $price
       unit: $unit
-      isActive: $isActive
+      is_active: $isActive
     }) {
       ...ModifierFields
     }
@@ -346,11 +354,11 @@ export const UPSERT_SERVICE_DURATION = gql`
     $serviceType: String!
     $durationMinutes: Int!
   ) {
-    serviceDurationsUpsert(
-      locationId: $locationId
-      serviceType: $serviceType
+    service_durationsUpsert(
+      location_id: $locationId
+      service_type: $serviceType
       set: {
-        durationMinutes: $durationMinutes
+        duration_minutes: $durationMinutes
       }
     ) {
       ...ServiceDurationFields
@@ -367,7 +375,7 @@ export const UPSERT_PERMISSION = gql`
     $action: String!
   ) {
     permissionsUpsert(
-      orgId: $orgId
+      org_id: $orgId
       role: $role
       resource: $resource
       action: $action
@@ -394,7 +402,7 @@ export function USE_WRAP_PACKAGES({ locationId, first = 100, offset = 0 } = {}) 
     variables: { locationId, first, offset },
     skip: !locationId,
   });
-  const packages = data?.wrapPackagesCollection?.edges?.map(e => e.node) ?? [];
+  const packages = data?.wrap_packagesCollection?.edges?.map(e => e.node) ?? [];
   return { packages, loading, error, refetch };
 }
 
@@ -412,7 +420,7 @@ export function USE_SERVICE_DURATIONS({ locationId } = {}) {
     variables: { locationId },
     skip: !locationId,
   });
-  const durations = data?.serviceDurationsCollection?.edges?.map(e => e.node) ?? [];
+  const durations = data?.service_durationsCollection?.edges?.map(e => e.node) ?? [];
   return { durations, loading, error, refetch };
 }
 
@@ -430,7 +438,8 @@ export function USE_LOCATION_SETTINGS(locationId) {
     variables: { locationId },
     skip: !locationId,
   });
-  return { settings: data?.locationSetting ?? null, loading, error };
+  const edge = data?.location_settingsCollection?.edges?.[0];
+  return { settings: edge?.node ?? null, loading, error };
 }
 
 export function USE_ORGANIZATION_SETTINGS(orgId) {
@@ -438,7 +447,8 @@ export function USE_ORGANIZATION_SETTINGS(orgId) {
     variables: { orgId },
     skip: !orgId,
   });
-  return { settings: data?.organizationSetting ?? null, loading, error };
+  const edge = data?.organization_settingsCollection?.edges?.[0];
+  return { settings: edge?.node ?? null, loading, error };
 }
 
 export function USE_UPSERT_LOCATION_SETTINGS() {
@@ -451,17 +461,18 @@ export function USE_UPSERT_ORGANIZATION_SETTINGS() {
 
 export function USE_CREATE_WRAP_PACKAGE() {
   return useMutation(CREATE_WRAP_PACKAGE, {
-    update(cache, { data: { wrapPackageInsert } }) {
-      if (!wrapPackageInsert?.edges?.[0]?.node) return;
-      const newPkg = wrapPackageInsert.edges[0].node;
+    update(cache, { data: { wrap_packageInsert } }) {
+      const edges = wrap_packageInsert?.edges ?? [];
+      if (!edges[0]?.node) return;
+      const newPkg = edges[0].node;
       cache.modify({
         fields: {
           // eslint-disable-next-line no-unused-vars
-          wrapPackagesCollection(existing = { edges: [] }, { readField }) {
+          wrap_packagesCollection(existing = { edges: [] }, { readField }) {
             return {
               ...existing,
               edges: [
-                { __typename: 'WrapPackageEdge', node: newPkg },
+                { __typename: 'wrap_packagesEdge', node: newPkg },
                 ...existing.edges,
               ],
             };
@@ -479,8 +490,9 @@ export function USE_UPDATE_WRAP_PACKAGE() {
 export function USE_CREATE_MODIFIER() {
   return useMutation(CREATE_MODIFIER, {
     update(cache, { data: { modifierInsert } }) {
-      if (!modifierInsert?.edges?.[0]?.node) return;
-      const newMod = modifierInsert.edges[0].node;
+      const edges = modifierInsert?.edges ?? [];
+      if (!edges[0]?.node) return;
+      const newMod = edges[0].node;
       cache.modify({
         fields: {
           // eslint-disable-next-line no-unused-vars
@@ -488,7 +500,7 @@ export function USE_CREATE_MODIFIER() {
             return {
               ...existing,
               edges: [
-                { __typename: 'ModifierEdge', node: newMod },
+                { __typename: 'modifiersEdge', node: newMod },
                 ...existing.edges,
               ],
             };
@@ -518,7 +530,7 @@ export function USE_UPSERT_PERMISSION() {
             return {
               ...existing,
               edges: [
-                { __typename: 'PermissionEdge', node: permissionsUpsert },
+                { __typename: 'permissionsEdge', node: permissionsUpsert },
                 ...existing.edges,
               ],
             };
