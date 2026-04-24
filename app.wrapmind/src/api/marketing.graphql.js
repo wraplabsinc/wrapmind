@@ -279,6 +279,113 @@ export const CREATE_REFERRAL = gql`
 `;
 
 // ════════════════════════════════════════════════════════════════════════════
+// REVIEWS
+// DB: reviews  |  Collection: reviewsCollection
+// ════════════════════════════════════════════════════════════════════════════
+
+export const REVIEW_FIELDS = gql`
+  fragment ReviewFields on reviews {
+    id
+    org_id
+    location_id
+    source
+    rating
+    body
+    customer_name
+    responded
+    created_at
+    deleted_at
+  }
+`;
+
+export const LIST_REVIEWS = gql`
+  query ListReviews($orgId: UUID!, $first: Int, $offset: Int) {
+    reviewsCollection(
+      filter: { org_id: { eq: $orgId } }
+      first: $first
+      offset: $offset
+      orderBy: [{ created_at: DESC }]
+    ) {
+      edges {
+        node {
+          id
+          org_id
+          location_id
+          source
+          rating
+          body
+          customer_name
+          responded
+          created_at
+          deleted_at
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+  ${REVIEW_FIELDS}
+`;
+
+export const CREATE_REVIEW = gql`
+  mutation CreateReview(
+    $orgId: UUID!
+    $locationId: UUID!
+    $source: String!
+    $rating: Int
+    $body: String
+    $customerName: String!
+    $responded: Boolean
+  ) {
+    insertIntoreviewsCollection(objects: [{
+      org_id: $orgId
+      location_id: $locationId
+      source: $source
+      rating: $rating
+      body: $body
+      customer_name: $customerName
+      responded: $responded
+    }]) {
+      returning {
+        ...ReviewFields
+      }
+    }
+  }
+  ${REVIEW_FIELDS}
+`;
+
+export const UPDATE_REVIEW = gql`
+  mutation UpdateReview(
+    $id: UUID!
+    $orgId: UUID!
+    $locationId: UUID!
+    $source: String
+    $rating: Int
+    $body: String
+    $customerName: String
+    $responded: Boolean
+  ) {
+    updatereviewsCollection(
+      filter: { id: { eq: $id }, org_id: { eq: $orgId }, location_id: { eq: $locationId } }
+      set: {
+        source: $source
+        rating: $rating
+        body: $body
+        customer_name: $customerName
+        responded: $responded
+      }
+    ) {
+      returning {
+        ...ReviewFields
+      }
+    }
+  }
+  ${REVIEW_FIELDS}
+`;
+
+// ════════════════════════════════════════════════════════════════════════════
 // NORMALIZE FUNCTIONS
 // snake_case (DB) → camelCase (app)
 // ════════════════════════════════════════════════════════════════════════════
@@ -327,6 +434,23 @@ export function normalizeReferral(row = {}) {
     status: row.status,
     convertedToCustomerId: row.converted_to_customer_id,
     createdAt: row.created_at,
+  };
+}
+
+export function normalizeReview(row = {}) {
+  if (!row || !row.id) return null;
+  return {
+    id: row.id,
+    orgId: row.org_id,
+    locationId: row.location_id,
+    source: row.source,
+    rating: row.rating,
+    body: row.body,
+    customerName: row.customer_name,
+    responded: row.responded,
+    createdAt: row.created_at,
+    deletedAt: row.deleted_at,
+    reviewed: row.rating != null,
   };
 }
 
@@ -515,6 +639,71 @@ export function USE_CREATE_REFERRAL() {
                 { __typename: 'referralsEdge', node: newRef },
                 ...existing.edges,
               ],
+            };
+          },
+        },
+      });
+    },
+  });
+}
+
+// ── Reviews ──────────────────────────────────────────────────────────────────
+
+export function USE_REVIEWS({ orgId, first = 100, offset = 0 } = {}) {
+  const { data, loading, error, refetch } = useQuery(LIST_REVIEWS, {
+    variables: { orgId, first, offset },
+    skip: !orgId,
+  });
+  const edges = data?.reviewsCollection?.edges ?? [];
+  return {
+    reviews: edges.map(e => normalizeReview(e.node)),
+    loading,
+    error,
+    refetch,
+  };
+}
+
+export function USE_CREATE_REVIEW() {
+  return useMutation(CREATE_REVIEW, {
+    update(cache, { data: { insertIntoreviewsCollection } }) {
+      const returning = insertIntoreviewsCollection?.returning ?? [];
+      if (!returning[0]) return;
+      const newReview = normalizeReview(returning[0]);
+      cache.modify({
+        fields: {
+          // eslint-disable-next-line no-unused-vars
+          reviewsCollection(existing = { edges: [] }, { readField }) {
+            return {
+              ...existing,
+              edges: [
+                { __typename: 'reviewsEdge', node: newReview },
+                ...existing.edges,
+              ],
+            };
+          },
+        },
+      });
+    },
+  });
+}
+
+export function USE_UPDATE_REVIEW() {
+  return useMutation(UPDATE_REVIEW, {
+    update(cache, { data: { updatereviewsCollection } }) {
+      const returning = updatereviewsCollection?.returning ?? [];
+      if (!returning[0]) return;
+      const updated = normalizeReview(returning[0]);
+      cache.modify({
+        fields: {
+          // eslint-disable-next-line no-unused-vars
+          reviewsCollection(existing = { edges: [] }, { readField }) {
+            return {
+              ...existing,
+              edges: existing.edges.map(e =>
+                e.node?.id === updated.id
+                  ? { ...e, node: { ...e.node, ...updated } }
+                  : e
+              ),
             };
           },
         },
