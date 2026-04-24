@@ -19,7 +19,7 @@ function analyzePersonalityHeuristic(customer: any, interactions: any[] | null, 
     (customer.communication_style as string) || 'friendly'
 
   const responseRate = interactionData?.responseRate ?? 0.7
-  const totalInteractions = interactionData?.totalInteractions ?? interactions?.length || 0
+  const totalInteractions = (interactionData?.totalInteractions ?? interactions?.length) ?? 0
 
   let engagementLevel: string = 'medium'
   if (totalInteractions >= 10) engagementLevel = 'high'
