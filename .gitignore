@@ -1,0 +1,32 @@
+# Environment secrets — never commit
+.env
+.supabase.env
+
+# Supabase local dev
+.supabase/
+
+# Node modules (should be in app.wrapmind but covering root too)
+node_modules/
+
+# OS / editor
+.DS_Store
+.idea
+.vscode
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Build artifacts
+dist
+build
+.cache
+
+# Temporary files
+.tmp/
+tmp/
+temp/
