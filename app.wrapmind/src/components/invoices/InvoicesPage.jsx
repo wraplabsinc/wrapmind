@@ -7,6 +7,7 @@ import { celebrate } from '../../lib/celebrate';
 import Button from '../ui/Button';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import InvoiceArchiveDrawer from './InvoiceArchiveDrawer';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -312,7 +313,7 @@ function MenuItem({ label, onClick, danger }) {
 
 // ─── Invoice Detail Panel ─────────────────────────────────────────────────────
 
-function InvoiceDetailPanel({ invoice, onClose, onRecordPayment, activityLog }) {
+function InvoiceDetailPanel({ invoice, onClose, onRecordPayment, activityLog, onViewArchive }) {
   const [tab, setTab] = useState('invoice');
   const [showPayForm, setShowPayForm] = useState(false);
   const [payForm, setPayForm] = useState({ amount: '', method: 'Card', note: '', date: new Date().toISOString().slice(0, 10) });
@@ -360,6 +361,18 @@ function InvoiceDetailPanel({ invoice, onClose, onRecordPayment, activityLog }) 
             </svg>
             PDF
           </button>
+          {onViewArchive && (
+            <button
+              onClick={onViewArchive}
+              className="ml-2 text-[#64748B] dark:text-[#7D93AE] hover:text-[#2E8BF0] dark:hover:text-[#2E8BF0] flex items-center gap-1 text-xs font-medium"
+              title="View Archive History"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+              </svg>
+              Archive
+            </button>
+          )}
           <button onClick={onClose} className="ml-3 text-[#64748B] dark:text-[#7D93AE] hover:text-[#0F1923] dark:hover:text-[#F8FAFE]">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -849,6 +862,7 @@ export default function InvoicesPage({ onNavigate, initialInvoiceId }) {
   const [dateFilter, setDateFilter] = useState('all');
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [panelMode, setPanelMode] = useState(null); // 'view' | 'pay'
+  const [archiveDrawer, setArchiveDrawer] = useState(null); // invoiceId with drawer open
   const [showCreate, setShowCreate] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(null); // invoiceId
 
@@ -1264,6 +1278,16 @@ export default function InvoicesPage({ onNavigate, initialInvoiceId }) {
           onClose={() => setSelectedInvoice(null)}
           onRecordPayment={recordPayment}
           activityLog={invoiceActivity}
+          onViewArchive={() => setArchiveDrawer(selectedInvoice.id)}
+        />
+      )}
+
+      {/* Archive Drawer */}
+      {archiveDrawer && (
+        <InvoiceArchiveDrawer
+          invoiceId={archiveDrawer}
+          invoiceDocNumber={selectedInvoice?.invoiceNumber}
+          onClose={() => setArchiveDrawer(null)}
         />
       )}
 
