@@ -14,6 +14,7 @@ import { TextInput, SelectInput, TextArea } from './ui/Input';
 import Tooltip from './ui/Tooltip';
 import IntegrationsPage from './settings/IntegrationsPage';
 import LocationsPage from './settings/LocationsPage';
+import DocumentArchivePage from './settings/DocumentArchivePage';
 import { getRateLimitStats, getRateLimitConfig, setRateLimitConfig } from '../lib/aiRateLimiter';
 
 const labelCls = 'block text-xs font-medium text-[#0F1923] dark:text-[#F8FAFE] mb-1';
@@ -3443,6 +3444,7 @@ const NAV_GROUPS = [
     label: 'Organization', tk: 'settings.group.organization',
     items: [
       { id: 'locations', label: 'Locations' },
+      { id: 'documents', label: 'Documents' },
     ],
   },
   {
@@ -4925,6 +4927,7 @@ function renderPage(active, can, multiLocationEnabled) {
     case 'payments':         return guard('settings.general', <PaymentsPage />, 'Payments');
     case 'carfax':           return guard('settings.integrations', <CarfaxPage />, 'Carfax');
     case 'locations':        return multiLocationEnabled ? <LocationsPage /> : <LocationsUpgradePage />;
+    case 'documents':        return <DocumentArchivePage />;
     case 'integrations':     return <IntegrationsPage />;
     case 'api-keys':         return guard('settings.integrations', <APIKeysPage />, 'API Keys');
     case 'webhooks':         return guard('settings.integrations', <WebhooksPage />, 'Webhooks');
