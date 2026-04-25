@@ -228,6 +228,7 @@ export default function LeadKanban({
                           lead,
                           fromLabel: fromSt?.label || lead.status,
                           toLabel: toSt?.label || newStatus,
+                          newStatus,
                         });
                       }}
                       onDelete={onDelete}
