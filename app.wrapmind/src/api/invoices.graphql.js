@@ -11,10 +11,10 @@ export const INVOICE_FIELDS = gql`
     invoice_number
     estimate_id
     customer_id
-    vehicle_id
-    line_items
+    vehicle_json
+    line_items_json
     subtotal
-    tax_amount
+    tax
     discount
     total
     amount_paid
@@ -56,10 +56,10 @@ export const LIST_INVOICES = gql`
           location_id
           estimate_id
           customer_id
-          vehicle_id
-          line_items
+          vehicle_json
+          line_items_json
           subtotal
-          tax_amount
+          tax
           discount
           total
           amount_paid
@@ -135,11 +135,11 @@ export const CREATE_INVOICE = gql`
       invoice_number: $invoiceNumber
       customer_id: $customerId
       estimate_id: $estimateId
-      vehicle_id: $vehicleId
+      vehicle_json: $vehicleId
       status: $status
-      line_items: $lineItems
+      line_items_json: $lineItems
       subtotal: $subtotal
-      tax_amount: $taxAmount
+      tax: $taxAmount
       discount: $discount
       total: $total
       amount_paid: $amountPaid
@@ -185,9 +185,9 @@ export const UPDATE_INVOICE = gql`
       filter: { id: { eq: $id } }
       set: {
         status: $status
-        line_items: $lineItems
+        line_items_json: $lineItems
         subtotal: $subtotal
-        tax_amount: $taxAmount
+        tax: $taxAmount
         discount: $discount
         total: $total
         amount_paid: $amountPaid
@@ -236,12 +236,12 @@ export function normalizeInvoice(row = {}) {
     invoiceNumber: row.invoice_number,
     estimateId: row.estimate_id,
     customerId: row.customer_id,
-    vehicleId: row.vehicle_id,
+    vehicleId: row.vehicle_json,
     status: row.status,
-    lineItems: row.line_items ? (typeof row.line_items === 'string' ? JSON.parse(row.line_items) : row.line_items) : [],
+    lineItems: row.line_items_json ? (typeof row.line_items_json === 'string' ? JSON.parse(row.line_items_json) : row.line_items_json) : [],
     subtotal: row.subtotal != null ? Number(row.subtotal) : 0,
     taxRate: 0.0875,          // Always derive from TAX_RATE constant; not stored
-    taxAmount: row.tax_amount != null ? Number(row.tax_amount) : 0,
+    taxAmount: row.tax != null ? Number(row.tax) : 0,
     discount: row.discount != null ? Number(row.discount) : 0,
     total: row.total != null ? Number(row.total) : 0,
     amountPaid: row.amount_paid != null ? Number(row.amount_paid) : 0,

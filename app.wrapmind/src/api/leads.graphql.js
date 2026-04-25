@@ -96,6 +96,7 @@ export const CREATE_LEAD = gql`
     $budget: BigFloat
     $priority: String
     $status: String
+    $assigneeId: UUID
     $notes: String
   ) {
     insertIntoleadsCollection(objects: [{
@@ -109,6 +110,7 @@ export const CREATE_LEAD = gql`
       budget: $budget
       priority: $priority
       status: $status
+      assignee_id: $assigneeId
       notes: $notes
     }]) {
       returning {

@@ -7,12 +7,15 @@ export const AUDIT_LOG_FIELDS = gql`
   fragment AuditLogFields on audit_log {
     id
     org_id
-    user_id
+    location_id
+    actor_id
+    actor_role
+    actor_label
     action
-    entity_type
-    entity_id
-    before_json
-    after_json
+    severity
+    target
+    target_id
+    details
     created_at
   }
 `;
@@ -93,21 +96,27 @@ export const GET_AUDIT_LOG_ENTRY = gql`
 export const INSERT_AUDIT_LOG = gql`
   mutation InsertAuditLog(
     $orgId: UUID!
-    $userId: UUID!
+    $locationId: UUID
+    $actorId: UUID!
+    $actorRole: String
+    $actorLabel: String
     $action: String!
-    $entityType: String!
-    $entityId: UUID!
-    $beforeJson: String
-    $afterJson: String
+    $severity: String
+    $target: String
+    $targetId: UUID
+    $details: String
   ) {
     insertIntoaudit_logCollection(objects: [{
       org_id: $orgId
-      user_id: $userId
+      location_id: $locationId
+      actor_id: $actorId
+      actor_role: $actorRole
+      actor_label: $actorLabel
       action: $action
-      entity_type: $entityType
-      entity_id: $entityId
-      before_json: $beforeJson
-      after_json: $afterJson
+      severity: $severity
+      target: $target
+      target_id: $targetId
+      details: $details
     }]) {
       returning {
         ...AuditLogFields
@@ -124,15 +133,20 @@ export const INSERT_AUDIT_LOG = gql`
  */
 export function normalizeAuditLog(row = {}) {
   if (!row || !row.id) return null;
+  let details = row.details;
+  try { details = typeof row.details === 'string' ? JSON.parse(row.details) : row.details ?? null; } catch {}
   return {
     id: row.id,
     orgId: row.org_id,
-    userId: row.user_id,
+    locationId: row.location_id,
+    actorId: row.actor_id,
+    actorRole: row.actor_role,
+    actorLabel: row.actor_label,
     action: row.action,
-    entityType: row.entity_type,
-    entityId: row.entity_id,
-    beforeJson: row.before_json,
-    afterJson: row.after_json,
+    severity: row.severity,
+    target: row.target,
+    targetId: row.target_id,
+    details: details,
     createdAt: row.created_at,
   };
 }

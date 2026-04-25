@@ -3,7 +3,7 @@ import { useAuditLog } from '../../context/AuditLogContext';
 import { useRoles } from '../../context/RolesContext';
 import { useCustomers } from '../../context/CustomerContext.jsx';
 import {
-  VEHICLES, CUSTOMER_TAGS, TEAM_MEMBERS, SOURCES,
+  CUSTOMER_TAGS, TEAM_MEMBERS, SOURCES,
   tagStyle, initialsOf, daysSince, fmtCurrency, vehiclesForCustomer,
 } from './listsData';
 import CustomerDetailPanel from './CustomerDetailPanel';

@@ -45,7 +45,7 @@ export function EstimateProvider({ children }) {
   const [estimates, setEstimates] = useState(() => {
     if (isDevAuth) return [];
     if (hasApolloData) return apolloEstimates;
-    return loadFromStorage();
+    return [];
   });
 
   // Sync Apollo data into state once available
@@ -63,7 +63,9 @@ export function EstimateProvider({ children }) {
 
   // Write-through: persist local state changes to localStorage
   useEffect(() => {
-    if (!isDevAuth) saveToStorage(estimates);
+    if (!isDevAuth && estimates.length > 0) {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(estimates)); } catch {}
+    }
   }, [estimates, isDevAuth]);
 
   // Learning agent: record terminal-state outcomes
