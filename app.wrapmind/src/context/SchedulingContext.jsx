@@ -8,6 +8,12 @@ import {
   USE_UPDATE_APPOINTMENT,
   USE_DELETE_APPOINTMENT,
 } from '../api/appointments.graphql.js';
+import {
+  USE_EMPLOYEES,
+  USE_CREATE_EMPLOYEE,
+  USE_UPDATE_EMPLOYEE,
+  USE_DELETE_EMPLOYEE,
+} from '../api/gamification.graphql.js';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -102,14 +108,39 @@ export function SchedulingProvider({ children }) {
     if (!isDevAuth) saveToStorage(STORAGE_KEY, appointments);
   }, [appointments, isDevAuth]);
 
-  // ── Technicians (local only — no backend table) ─────────────────────────────
-  const [technicians, setTechnicians] = useState(() =>
-    loadFromStorage(TECHS_KEY, [])
-  );
+  // ── Technicians (from employees table via Apollo) ──────────────────────────
+  const { employees: dbEmployees } = USE_EMPLOYEES({ orgId, first: 100 });
+  const [createEmployeeMutation] = USE_CREATE_EMPLOYEE();
+  const [updateEmployeeMutation] = USE_UPDATE_EMPLOYEE();
+  const [deleteEmployeeMutation] = USE_DELETE_EMPLOYEE();
 
-  useEffect(() => {
-    saveToStorage(TECHS_KEY, technicians);
-  }, [technicians]);
+  // Map DB employees → scheduling technician shape
+  const employeesFromDb = dbEmployees ?? [];
+
+  const technicians = employeesFromDb.map(e => ({
+    id: e.id,
+    name: e.name,
+    active: e.isActive,
+    color: e.color ?? '#6B7280',
+  }));
+
+  const addTechnician = useCallback((data = {}) => {
+    createEmployeeMutation({ variables: { orgId, name: data.name ?? 'New Tech', role: 'technician', isActive: true, color: data.color ?? '#6B7280' } });
+  }, [createEmployeeMutation, orgId]);
+
+  const updateTechnician = useCallback((id, patch) => {
+    updateEmployeeMutation({
+      variables: {
+        id,
+        isActive: patch.active !== undefined ? patch.active : undefined,
+        color: patch.color,
+      },
+    });
+  }, [updateEmployeeMutation]);
+
+  const deleteTechnician = useCallback((id) => {
+    deleteEmployeeMutation({ variables: { id } });
+  }, [deleteEmployeeMutation]);
 
   // ── Blocked times (local only — no backend table) ──────────────────────────
   const [blockedTimes, setBlockedTimes] = useState(() =>
@@ -211,23 +242,7 @@ export function SchedulingProvider({ children }) {
     );
   }, []);
 
-  // ── Technicians (local only) ───────────────────────────────────────────────
-
-  const addTechnician = useCallback((data = {}) => {
-    const tech = { id: uuid(), active: true, color: '#6B7280', ...data };
-    setTechnicians(prev => [...prev, tech]);
-    return tech;
-  }, []);
-
-  const updateTechnician = useCallback((id, patch) => {
-    setTechnicians(prev => prev.map(t => t.id === id ? { ...t, ...patch } : t));
-  }, []);
-
-  const deleteTechnician = useCallback((id) => {
-    setTechnicians(prev => prev.filter(t => t.id !== id));
-  }, []);
-
-  // ── Blocked times (local only) ───────────────────────────────────────────
+  // ── Blocked times (local only — no backend table) ──────────────────────────
 
   const addBlockedTime = useCallback((data = {}) => {
     const block = {
