@@ -414,7 +414,7 @@ export function normalizeIntakeLead(row = {}) {
     photosJson: photos,
     status: row.status,
     notes: row.notes,
-    assignedTo: row.assigned_to,
+    assignedTo: row.assignee_id,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     callRecordingUrl: row.call_recording_url,

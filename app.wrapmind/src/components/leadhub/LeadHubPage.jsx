@@ -291,7 +291,11 @@ export default function LeadHubPage({ onNavigate }) {
   };
 
   const handleKanbanLog = (_action, payload) => {
-    const { lead, fromLabel, toLabel } = payload;
+    const { lead, fromLabel, toLabel, newStatus } = payload;
+    // Persist status change to DB
+    if (newStatus) {
+      updateLead(lead.id, { status: newStatus });
+    }
     addLog('DATA', 'LEAD_STATUS_CHANGED', {
       severity: 'info',
       actor,
