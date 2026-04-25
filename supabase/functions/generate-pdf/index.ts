@@ -14,6 +14,7 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { chromium } from 'https://esm.sh/@sparticuz/chromium@132'
 import { upsertPdfArchive } from './archive-client.ts'
 import type { UpsertArchiveInput } from './archive-types.ts'
 
@@ -647,56 +648,30 @@ function renderDocumentHTML(doc: DocData): string {
 // -----------------------------------------------------------------------------
 
 /**
- * Converts an HTML document string to a PDF binary.
+ * Converts an HTML document string to a PDF binary using headless Chromium.
  *
- * CURRENTLY A STUB: Returns a minimal valid PDF with the HTML content embedded
- * as text. Replace this function's body with real @sparticuz/chromium integration:
- *
- *   import { chromium } from 'https://esm.sh/@sparticuz/chromium@120'
- *   const browser = await chromium.launch({ headless: true })
- *   const page = await browser.newPage()
- *   await page.setContent(htmlContent, { waitUntil: 'networkidle0' })
- *   const pdf = await page.pdf({ format: 'A4', printBackground: true, margin: { top: '20mm', bottom: '20mm', left: '20mm', right: '20mm' } })
- *   await browser.close()
- *   return new Uint8Array(pdf)
- *
+ * Uses @sparticuz/chromium (via esm.sh) for pixel-perfect A4 PDF rendering.
  * PRD §8 Open Question #2: Cold-start latency (5–15s) — mitigate with LRU cache.
  */
 async function htmlToPdf(htmlContent: string): Promise<Uint8Array> {
-  // STUB: Return a minimal valid PDF that displays the document number in text.
-  // Real implementation will use @sparticuz/chromium for pixel-perfect rendering.
-  const encoder = new TextEncoder()
-  const content = `Document HTML (${htmlContent.length} chars) — see generate-pdf edge function for actual PDF rendering.`
-  const pdf = [
-    '%PDF-1.4',
-    '1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj',
-    '2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj',
-    '3 0 obj<</Type/Page/MediaBox[0 0 595 842]/Parent 2 0 R/Resources<</Font<</F1 4 0 R>>>>/Contents 5 0 R>>endobj',
-    '4 0 obj<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>endobj',
-    '5 0 obj<</Length ${44 + content.length}>>',
-    'stream',
-    'BT',
-    '/F1 14 Tf',
-    '50 770 Td',
-    `(${content}) Tj',
-    'ET',
-    'endstream',
-    'endobj',
-    'xref',
-    '0 6',
-    '0000000000 65535 f ',
-    '0000000009 00000 n ',
-    '0000000058 00000 n ',
-    '0000000115 00000 n ',
-    '0000000266 00000 n ',
-    '0000000359 00000 n ',
-    'trailer<</Size 6/Root 1 0 R>>',
-    'startxref',
-    `${440 + content.length}`,
-    '%%EOF',
-  ].join('\n')
-
-  return encoder.encode(pdf)
+  const browser = await chromium.launch({ headless: true })
+  try {
+    const page = await browser.newPage()
+    await page.setContent(htmlContent, { waitUntil: 'networkidle0' })
+    const pdfData = await page.pdf({
+      format: 'A4',
+      printBackground: true,
+      margin: {
+        top: '20mm',
+        bottom: '20mm',
+        left: '20mm',
+        right: '20mm',
+      },
+    })
+    return new Uint8Array(pdfData)
+  } finally {
+    await browser.close()
+  }
 }
 
 // -----------------------------------------------------------------------------
