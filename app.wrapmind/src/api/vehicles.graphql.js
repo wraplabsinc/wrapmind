@@ -56,6 +56,7 @@ export const LIST_VEHICLES = gql`
           color
           wrap_status
           wrap_color
+          tags
           created_at
         }
       }

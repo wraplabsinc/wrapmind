@@ -107,7 +107,6 @@ export const GET_CUSTOMER_WITH_VEHICLES = gql`
                 id
                 org_id
                 customer_id
-                car_id
                 sm_vehicle_id
                 year
                 make
@@ -257,24 +256,20 @@ export function normalizeVehicle(row = {}) {
     id: row.id,
     orgId: row.org_id,
     customerId: row.customer_id,
-    carId: row.car_id,
-    smVehicleId: row.sm_vehicle_id,
     year: row.year,
     make: row.make,
     model: row.model,
     trim: row.trim,
     vin: row.vin,
     color: row.color,
-    licensePlate: row.license_plate,
     vehicleType: row.vehicle_type,
     wrapStatus: row.wrap_status,
     wrapColor: row.wrap_color,
+    tags: row.tags || [],
     notes: row.notes,
     lastServiceAt: row.last_service_at,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
-    locationId: row.location_id,
-    leadId: row.lead_id,
   };
 }
 
