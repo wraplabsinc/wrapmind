@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import WMIcon from '../ui/WMIcon';
 import { useAuth } from '../../context/AuthContext';
+import { useScheduling } from '../../context/SchedulingContext.jsx';
 import { config as supabaseConfig } from '../../lib/supabase';
 import { pushTestLead } from '../../lib/leadsDb';
 import Button from '../ui/Button';
@@ -103,6 +104,7 @@ export default function ImportModal({
   onToast,
 }) {
   const { orgId } = useAuth();
+  const { realtimeConnected } = useScheduling();
   const [tab, setTab] = useState('csv');
   const [headers, setHeaders] = useState([]);
   const [rows, setRows] = useState([]);
@@ -396,9 +398,13 @@ export default function ImportModal({
                 icon="bolt"
               >
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-red-500">
-                    <span className="w-2 h-2 rounded-full bg-red-500" />
-                    Disconnected
+                  <span className={`inline-flex items-center gap-1 text-[10px] font-semibold ${
+                    realtimeConnected
+                      ? 'text-emerald-600 dark:text-emerald-400'
+                      : 'text-red-500'
+                  }`}>
+                    <span className={`w-2 h-2 rounded-full ${realtimeConnected ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                    {realtimeConnected ? 'Connected • Live Push Active' : 'Disconnected'}
                   </span>
                 </div>
                 <p className="text-[11px] text-[#64748B] dark:text-[#7D93AE] mb-2">

@@ -57,19 +57,15 @@ export default function LeadHubPage({ onNavigate }) {
   const { addNotification } = useNotifications();
   const { appointments, addAppointment, technicians, SERVICE_DURATIONS } = useScheduling();
   const { customers, addCustomer } = useCustomers();
-  const { leads: ctxLeads, addLead, updateLead, deleteLead, convertLeadToWon } = useLeads();
+  const { leads: ctxLeads, addLead, updateLead, deleteLead, convertLeadToWon, realtimeConnected } = useLeads();
 
   const actor = { role: currentRole, label: ROLES[currentRole]?.label || currentRole };
   const [scheduleLeadFor, setScheduleLeadFor] = useState(null);
 
-  // Local leads state — sourced from LeadContext (seed or Apollo), synced once
+  // Local leads state — sourced from LeadContext. Sync on every context change to stay realtime.
   const [leads, setLeads] = useState(ctxLeads);
-  const leadsInitRef = useRef(false);
   useEffect(() => {
-    if (!leadsInitRef.current && ctxLeads.length > 0) {
-      leadsInitRef.current = true;
-      setLeads(ctxLeads);
-    }
+    setLeads(ctxLeads);
   }, [ctxLeads]);
 
   const [view, setView] = useState('kanban'); // 'kanban' | 'list'
@@ -367,13 +363,17 @@ export default function LeadHubPage({ onNavigate }) {
           <div className="flex items-center gap-2 mr-2">
             <h1 className="text-sm font-semibold text-[#0F1923] dark:text-[#F8FAFE]">Lead Hub</h1>
             <span className="text-[10px] text-[#64748B] dark:text-[#7D93AE] hidden sm:inline">Lead Pipeline</span>
-            {/* Live indicator — realtime subs not yet implemented, shown as offline */}
+            {/* Live indicator — realtime status */}
             <span
-              className="inline-flex items-center gap-1 text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-gray-500/10 text-gray-500"
-              title="Realtime: not yet implemented"
+              className={`inline-flex items-center gap-1 text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${
+                realtimeConnected
+                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                  : 'bg-gray-500/10 text-gray-500'
+              }`}
+              title={realtimeConnected ? 'Realtime connection active' : 'Realtime connection inactive'}
             >
-              <span className="w-1.5 h-1.5 rounded-full bg-gray-500" />
-              Offline
+              <span className={`w-1.5 h-1.5 rounded-full ${realtimeConnected ? 'bg-emerald-500' : 'bg-gray-500'}`} />
+              {realtimeConnected ? 'Live' : 'Offline'}
             </span>
           </div>
 

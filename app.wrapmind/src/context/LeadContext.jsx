@@ -75,18 +75,15 @@ export function LeadProvider({ children }) {
   }, [leads, isDevAuth]);
 
   // ── Realtime subscriptions (patch layer — Apollo remains primary source) ────
+  const [realtimeConnected, setRealtimeConnected] = useState(false);
+
   useEffect(() => {
     if (!orgId || isDevAuth) return;
 
     const channel = supabase.channel('leads-realtime');
 
     channel
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'leads',
-        filter: `org_id=eq.${orgId}`,
-      }, (payload) => {
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'leads', filter: `org_id=eq.${orgId}` }, (payload) => {
         const newLead = {
           id: payload.new.id,
           name: payload.new.name,
@@ -109,12 +106,7 @@ export function LeadProvider({ children }) {
           return [newLead, ...prev];
         });
       })
-      .on('postgres_changes', {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'leads',
-        filter: `org_id=eq.${orgId}`,
-      }, (payload) => {
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'leads', filter: `org_id=eq.${orgId}` }, (payload) => {
         setLeads(prev =>
           prev.map(l => l.id === payload.new.id
             ? {
@@ -138,15 +130,13 @@ export function LeadProvider({ children }) {
           )
         );
       })
-      .on('postgres_changes', {
-        event: 'DELETE',
-        schema: 'public',
-        table: 'leads',
-        filter: `org_id=eq.${orgId}`,
-      }, (payload) => {
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'leads', filter: `org_id=eq.${orgId}` }, (payload) => {
         setLeads(prev => prev.filter(l => l.id !== payload.old.id));
       })
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') setRealtimeConnected(true);
+        else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') setRealtimeConnected(false);
+      });
 
     return () => {
       supabase.removeChannel(channel);
@@ -260,6 +250,7 @@ export function LeadProvider({ children }) {
     statuses:  LEAD_STATUSES,
     sources:   LEAD_SOURCES,
     priorities: PRIORITIES,
+    realtimeConnected,
   };
 
   return (
