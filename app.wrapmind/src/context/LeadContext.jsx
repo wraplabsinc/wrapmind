@@ -80,6 +80,9 @@ export function LeadProvider({ children }) {
   useEffect(() => {
     if (!orgId || isDevAuth) return;
 
+    // Reset connection status when (re)connecting
+    setRealtimeConnected(false);
+
     const channel = supabase.channel('leads-realtime');
 
     channel
