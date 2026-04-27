@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback, useRef } f
 import { useLocations } from './LocationContext';
 import { useAuth } from './AuthContext.jsx';
 import { uuid } from '../lib/uuid.js';
+import { supabase } from '../lib/supabase.js';
 import {
   USE_APPOINTMENTS,
   USE_CREATE_APPOINTMENT,
@@ -107,6 +108,94 @@ export function SchedulingProvider({ children }) {
   useEffect(() => {
     if (!isDevAuth) saveToStorage(STORAGE_KEY, appointments);
   }, [appointments, isDevAuth]);
+  // ── Realtime subscriptions (patch layer — Apollo remains primary source) ────
+  const [realtimeConnected, setRealtimeConnected] = useState(false);
+
+  useEffect(() => {
+    if (!orgId || isDevAuth) return;
+
+    const channel = supabase.channel('appointments-realtime');
+
+    channel
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'appointments',
+        filter: `org_id=eq.${orgId}`,
+      }, (payload) => {
+        const newAppt = {
+          id: payload.new.id,
+          orgId: payload.new.org_id,
+          locationId: payload.new.location_id,
+          customerId: payload.new.customer_id,
+          vehicleId: payload.new.vehicle_id,
+          technicianId: payload.new.technician_id,
+          estimateId: payload.new.estimate_id,
+          service: payload.new.service,
+          date: payload.new.date,
+          startTime: payload.new.start_time,
+          endTime: payload.new.end_time,
+          status: payload.new.status,
+          notes: payload.new.notes,
+          reminderAt: payload.new.reminder_at,
+          reminderSent: payload.new.reminder_sent,
+          reminderQueued: payload.new.reminder_queued,
+          createdAt: payload.new.created_at,
+          updatedAt: payload.new.updated_at,
+        };
+        setAppointments(prev => {
+          if (prev.some(a => a.id === newAppt.id)) return prev;
+          return [newAppt, ...prev];
+        });
+      })
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'appointments',
+        filter: `org_id=eq.${orgId}`,
+      }, (payload) => {
+        setAppointments(prev =>
+          prev.map(a => a.id === payload.new.id
+            ? {
+                ...a,
+                orgId: payload.new.org_id,
+                locationId: payload.new.location_id,
+                customerId: payload.new.customer_id,
+                vehicleId: payload.new.vehicle_id,
+                technicianId: payload.new.technician_id,
+                estimateId: payload.new.estimate_id,
+                service: payload.new.service,
+                date: payload.new.date,
+                startTime: payload.new.start_time,
+                endTime: payload.new.end_time,
+                status: payload.new.status,
+                notes: payload.new.notes,
+                reminderAt: payload.new.reminder_at,
+                reminderSent: payload.new.reminder_sent,
+                reminderQueued: payload.new.reminder_queued,
+                updatedAt: payload.new.updated_at,
+              }
+            : a
+          )
+        );
+      })
+      .on('postgres_changes', {
+        event: 'DELETE',
+        schema: 'public',
+        table: 'appointments',
+        filter: `org_id=eq.${orgId}`,
+      }, (payload) => {
+        setAppointments(prev => prev.filter(a => a.id !== payload.old.id));
+      })
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') setRealtimeConnected(true);
+        else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') setRealtimeConnected(false);
+      });
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [orgId, isDevAuth]);
 
   // ── Technicians (from employees table via Apollo) ──────────────────────────
   const { employees: dbEmployees } = USE_EMPLOYEES({ orgId, first: 100 });
@@ -302,6 +391,7 @@ export function SchedulingProvider({ children }) {
     getBookingToken,
     calcEndTime,
     SERVICE_DURATIONS,
+    realtimeConnected,
   };
 
   return (
