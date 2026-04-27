@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { supabase, config } from '../../lib/supabase';
 
 // ─── localStorage helpers ─────────────────────────────────────────────────────
 
@@ -80,7 +81,7 @@ const INSTRUCTIONS = {
 
 // ─── IntegrationSlideOver ────────────────────────────────────────────────────
 
-export default function IntegrationSlideOver({ integration, stored, onClose }) {
+export default function IntegrationSlideOver({ integration, stored, onClose, onSave, onDisconnect }) {
   const existingData   = stored[integration.id] || {};
   const isActive       = !!existingData.connectedAt;
   const isCarfax       = integration.id === 'carfax';
@@ -99,27 +100,54 @@ export default function IntegrationSlideOver({ integration, stored, onClose }) {
   const setField = (key, val) => setFields((prev) => ({ ...prev, [key]: val }));
 
   const handleSave = () => {
-    saveIntegration(integration.id, fields);
+    if (onSave) {
+      onSave(integration.id, fields);
+    } else {
+      saveIntegration(integration.id, fields);
+    }
     onClose();
   };
 
   const handleDisconnect = () => {
-    disconnectIntegration(integration.id);
+    if (onDisconnect) {
+      onDisconnect(integration.id);
+    } else {
+      disconnectIntegration(integration.id);
+    }
     onClose();
   };
 
-  const handleTest = () => {
-    let cancelled = false;
+  const handleTest = async () => {
     setTesting(true);
     setTestMsg('');
-    // Stub — real implementation deferred to backend work
-    setTimeout(() => {
-      if (!cancelled) {
-        setTestMsg('Connection stub — no live endpoint wired yet.');
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        setTestMsg('You must be logged in to test integrations.');
         setTesting(false);
+        return;
       }
-    }, 800);
-    return () => { cancelled = true; };
+
+      const resp = await fetch(`${config.projectUrl}/functions/v1/integration-test`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ integration: integration.id, credentials: fields }),
+      });
+
+      const result = await resp.json();
+      if (result.success) {
+        setTestMsg(`✓ ${result.message}`);
+      } else {
+        setTestMsg(`✗ ${result.message || 'Test failed'}`);
+      }
+    } catch (err: any) {
+      setTestMsg(`Error: ${err.message}`);
+    } finally {
+      setTesting(false);
+    }
   };
 
   // Close on Escape key

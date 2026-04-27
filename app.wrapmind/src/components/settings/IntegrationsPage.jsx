@@ -1,5 +1,7 @@
 import { useState, useRef } from 'react';
 import IntegrationSlideOver from './IntegrationSlideOver';
+import { useAuth } from '../context/AuthContext';
+import { USE_ORGANIZATION_SETTINGS, USE_UPSERT_ORGANIZATION_SETTINGS } from '../api/settings.graphql';
 
 // ─── Integration registry ────────────────────────────────────────────────────
 const INTEGRATIONS = [
@@ -163,30 +165,107 @@ const FILTERS = [
 ];
 
 export default function IntegrationsPage() {
-  const [filter,   setFilter]   = useState('all');
+  const [filter, setFilter] = useState('all');
   const [selected, setSelected] = useState(null);
-  const [stored,   setStored]   = useState(loadStoredConnections);
   const prevFocusRef = useRef(null);
 
-  // Re-read localStorage whenever slide-over closes so status pills update
+  // Detect dev mode
+  const isDevMode = import.meta.env.VITE_LOCAL_DEV === '1';
+
+  // Auth context
+  const { orgId } = useAuth();
+
+  // Local storage fallback for dev
+  const [localStored, setLocalStored] = useState(() => loadStoredConnections());
+
+  // Production DB state
+  const { settings: orgSettings, refetch: refetchOrgSettings } = USE_ORGANIZATION_SETTINGS(isDevMode ? null : orgId);
+  const [upsertOrgSettings] = USE_UPSERT_ORGANIZATION_SETTINGS();
+  const [dbConnections, setDbConnections] = useState({});
+
+  // Sync DB connections on load
+  useEffect(() => {
+    if (!isDevMode && orgSettings?.config?.integrations) {
+      setDbConnections(orgSettings.config.integrations);
+    }
+  }, [orgSettings, isDevMode]);
+
+  // Effective connections (dev uses localStorage, prod uses DB)
+  const connections = isDevMode ? localStored : dbConnections;
+
+  // Save handler
+  const handleSaveConfig = async (integrationId, fields) => {
+    const updated = { ...connections, [integrationId]: { ...fields, connectedAt: new Date().toISOString() } };
+
+    if (isDevMode) {
+      saveIntegration(integrationId, fields);
+      setLocalStored(updated);
+    } else {
+      // Optimistic update
+      setDbConnections(updated);
+      try {
+        const newConfig = { ...(orgSettings?.config || {}), integrations: updated };
+        await upsertOrgSettings({
+          variables: {
+            orgId,
+            defaultServiceDurations: orgSettings?.default_service_durations,
+            defaultPackages: orgSettings?.default_packages,
+            defaultModifiers: orgSettings?.default_modifiers,
+            config: newConfig,
+          },
+        });
+      } catch (err) {
+        console.error('Failed to save integration:', err);
+      }
+    }
+  };
+
+  // Disconnect handler
+  const handleDisconnectConfig = (integrationId) => {
+    const updated = { ...connections };
+    delete updated[integrationId];
+
+    if (isDevMode) {
+      disconnectIntegration(integrationId);
+      setLocalStored(updated);
+    } else {
+      setDbConnections(updated);
+      const newConfig = { ...(orgSettings?.config || {}), integrations: updated };
+      upsertOrgSettings({
+        variables: {
+          orgId,
+          defaultServiceDurations: orgSettings?.default_service_durations,
+          defaultPackages: orgSettings?.default_packages,
+          defaultModifiers: orgSettings?.default_modifiers,
+          config: newConfig,
+        },
+      }).catch(console.error);
+    }
+  };
+
+  // Close handler
   const handleSlideOverClose = () => {
     setSelected(null);
-    setStored(loadStoredConnections());
+    if (isDevMode) {
+      setLocalStored(loadStoredConnections());
+    } else {
+      // Refresh from DB to catch任何外部更新 (e.g., from another tab)
+      refetchOrgSettings();
+    }
     prevFocusRef.current?.focus();
     prevFocusRef.current = null;
   };
 
+  // Build integration status list
   const withStatus = INTEGRATIONS.map((i) => ({
     ...i,
-    effectiveStatus: resolveStatus(i, stored),
+    effectiveStatus: resolveStatus(i, connections),
+    connectedAt: connections[i.id]?.connectedAt,
   }));
 
-  const filtered = filter === 'all'
-    ? withStatus
-    : withStatus.filter((i) => i.effectiveStatus === filter);
-
-  const activeCount     = withStatus.filter((i) => i.effectiveStatus === 'active').length;
-  const availableCount  = withStatus.filter((i) => i.effectiveStatus === 'available').length;
+  const filtered = filter === 'all' ? withStatus : withStatus.filter((i) => i.effectiveStatus === filter);
+  const activeCount = withStatus.filter((i) => i.effectiveStatus === 'active').length;
+  const availableCount = withStatus.filter((i) => i.effectiveStatus === 'available').length;
   const comingSoonCount = withStatus.filter((i) => i.effectiveStatus === 'coming_soon').length;
 
   return (
@@ -256,8 +335,10 @@ export default function IntegrationsPage() {
       {selected && (
         <IntegrationSlideOver
           integration={selected}
-          stored={stored}
+          stored={connections}
           onClose={handleSlideOverClose}
+          onSave={handleSaveConfig}
+          onDisconnect={handleDisconnectConfig}
         />
       )}
     </div>

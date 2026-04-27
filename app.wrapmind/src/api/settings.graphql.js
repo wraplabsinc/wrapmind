@@ -443,12 +443,12 @@ export function USE_LOCATION_SETTINGS(locationId) {
 }
 
 export function USE_ORGANIZATION_SETTINGS(orgId) {
-  const { data, loading, error } = useQuery(GET_ORGANIZATION_SETTINGS, {
+  const { data, loading, error, refetch } = useQuery(GET_ORGANIZATION_SETTINGS, {
     variables: { orgId },
     skip: !orgId,
   });
   const edge = data?.organization_settingsCollection?.edges?.[0];
-  return { settings: edge?.node ?? null, loading, error };
+  return { settings: edge?.node ?? null, loading, error, refetch };
 }
 
 export function USE_UPSERT_LOCATION_SETTINGS() {
