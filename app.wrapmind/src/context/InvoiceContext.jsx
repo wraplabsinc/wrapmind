@@ -282,6 +282,52 @@ export function InvoiceProvider({ children }) {
     }
   }, [orgId, isDevAuth, deleteInvoiceMutation]);
 
+  const voidInvoice = useCallback((id) => {
+    const now = new Date().toISOString();
+    setInvoices(prev =>
+      prev.map(inv => (inv.id === id ? { ...inv, status: 'voided', voidedAt: now, updatedAt: now } : inv))
+    );
+
+    if (orgId && !isDevAuth) {
+      updateInvoiceMutation({
+        variables: { id, status: 'voided', voidedAt: now },
+      }).catch(err => console.error('[InvoiceContext] GraphQL void failed:', err));
+    }
+  }, [orgId, isDevAuth, updateInvoiceMutation]);
+
+  const duplicateInvoice = useCallback((id) => {
+    const source = invoices.find(inv => inv.id === id);
+    if (!source) return null;
+
+    // Build deep copy of lineItems to avoid ID collisions
+    const copiedLineItems = (source.lineItems || []).map(li => ({
+      ...li,
+      id: uuid(),
+    }));
+
+    const dup = addInvoice({
+      estimateId: source.estimateId ?? null,
+      lineItems: copiedLineItems,
+      subtotal: source.subtotal,
+      taxAmount: source.taxAmount,
+      discount: source.discount,
+      total: source.total,
+      terms: source.terms,
+      notes: source.notes,
+      customerId: source.customerId,
+      customerName: source.customerName,
+      customerEmail: source.customerEmail,
+      customerPhone: source.customerPhone,
+      vehicleId: source.vehicleId,
+      vehicleLabel: source.vehicleLabel,
+    });
+
+    // Make the duplicate draft explicitly independent of payments/history
+    return dup
+      ? { ...dup, status: 'draft', payments: [], amountPaid: 0, amountDue: dup.total }
+      : null;
+  }, [invoices, addInvoice]);
+
   const getInvoiceById = useCallback(
     (id) => invoices.find(inv => inv.id === id),
     [invoices]
@@ -459,6 +505,8 @@ export function InvoiceProvider({ children }) {
     addInvoice,
     updateInvoice,
     deleteInvoice,
+    voidInvoice,
+    duplicateInvoice,
     recordPayment,
     getInvoiceById,
     getNextInvoiceNumber,

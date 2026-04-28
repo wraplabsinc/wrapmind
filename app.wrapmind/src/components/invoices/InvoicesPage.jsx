@@ -732,6 +732,8 @@ export default function InvoicesPage({ onNavigate, initialInvoiceId }) {
     addInvoice,
     updateInvoice,
     deleteInvoice: ctxDeleteInvoice,
+    voidInvoice: ctxVoidInvoice,
+    duplicateInvoice: ctxDuplicateInvoice,
     recordPayment: ctxRecordPayment,
     getNextInvoiceNumber,
   } = useInvoices();
@@ -799,7 +801,7 @@ export default function InvoicesPage({ onNavigate, initialInvoiceId }) {
 
   const markVoid = useCallback((invoiceId) => {
     const inv = invoices.find(i => i.id === invoiceId);
-    updateInvoice(invoiceId, { status: 'voided', voidedAt: new Date().toISOString() });
+    ctxVoidInvoice(invoiceId);
     addLog('INVOICE', 'INVOICE_VOIDED', {
       severity: 'warning',
       actor: { role: actor, label: actor },
@@ -813,7 +815,7 @@ export default function InvoicesPage({ onNavigate, initialInvoiceId }) {
       icon: 'alert',
     });
     if (selectedInvoice?.id === invoiceId) setSelectedInvoice(null);
-  }, [invoices, actor, addLog, updateInvoice, addNotification, selectedInvoice]);
+  }, [invoices, actor, addLog, ctxVoidInvoice, addNotification, selectedInvoice]);
 
   const markSent = useCallback(async (invoiceId) => {
     if (!orgId) { alert('Organization not loaded yet. Please wait.'); return; }
@@ -869,24 +871,14 @@ export default function InvoicesPage({ onNavigate, initialInvoiceId }) {
   const duplicateInvoice = useCallback((invoiceId) => {
     const source = invoices.find(i => i.id === invoiceId);
     if (!source) return;
-    const newInv = addInvoice({
-      ...source,
-      invoiceNumber: getNextInvoiceNumber(),
-      status: 'draft',
-      payments: [],
-      amountPaid: 0,
-      amountDue: source.total,
-      paidAt: null,
-      voidedAt: null,
-      issuedAt: new Date().toISOString(),
-      createdBy: actor,
-    });
+    const dup = ctxDuplicateInvoice(invoiceId);
+    if (!dup) return;
     addLog('INVOICE', 'INVOICE_CREATED', {
       severity: 'info',
       actor: { role: actor, label: actor },
-      target: newInv.invoiceNumber,
+      target: dup.invoiceNumber,
     });
-  }, [invoices, actor, addLog, addInvoice, getNextInvoiceNumber]);
+  }, [invoices, actor, addLog, ctxDuplicateInvoice]);
 
   const deleteInvoice = useCallback((invoiceId) => {
     ctxDeleteInvoice(invoiceId);
