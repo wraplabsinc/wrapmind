@@ -1,5 +1,5 @@
 // =============================================================================
-// EstimateArchiveDrawer — Archive history drawer for InvoiceDetailPanel
+// EstimateArchiveDrawer — Archive history drawer for EstimateDetailPanel
 // PRD: docs/PRD-pdf-archive.md §11
 // Decision: Drawer (not separate page)
 // =============================================================================
@@ -68,9 +68,9 @@ export default function EstimateArchiveDrawer({ estimateId, estimateDocNumber, o
         },
         body: JSON.stringify({
           to: archive.emailedTo || '',
-          subject: `Invoice ${estimateDocNumber}`,
-          body: `Please find your invoice at the following link:\n\n${archive.storageUrl}\n\nDocument: ${estimateDocNumber}`,
-          documentType: 'invoice',
+          subject: `Estimate ${estimateDocNumber}`,
+          body: `Please find your estimate at the following link:\n\n${archive.storageUrl}\n\nDocument: ${estimateDocNumber}`,
+          documentType: 'estimate',
           documentId: estimateId,
         }),
       });
