@@ -72,7 +72,7 @@ function SortChevron({ col, sortCol, sortDir }) {
 }
 
 // ─── RowDotMenu ───────────────────────────────────────────────────────────────
-function RowDotMenu({ est, onView, onDuplicate, onSend, onConvert, onArchive, onDelete, onAIFollowUp, onSchedule, canDelete }) {
+function RowDotMenu({ est, onView, onDuplicate, onSend, onConvert, onArchive, onDelete, onAIFollowUp, onSchedule, onExpire, canDelete }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -90,6 +90,7 @@ function RowDotMenu({ est, onView, onDuplicate, onSend, onConvert, onArchive, on
     { label: 'Convert to Invoice', action: onConvert, show: est.status === 'approved' },
     { label: 'AI Follow-up', action: onAIFollowUp, show: ['sent', 'declined', 'expired'].includes(est.status) },
     { label: 'Schedule Job', action: onSchedule, show: ['approved', 'converted', 'draft', 'sent'].includes(est.status) },
+    { label: 'Expire', action: onExpire, show: ['draft','sent','approved'].includes(est.status) },
     { label: 'Archive', action: onArchive, always: true, divider: true },
     { label: 'Delete', action: onDelete, always: true, danger: true, gated: !canDelete },
   ].filter(i => i.always || i.show);
@@ -671,6 +672,7 @@ export default function EstimatesPage({ onNavigate, initialEstimateId }) {
     if (newStatus === 'sent')     patch.sentAt = now;
     if (newStatus === 'approved') patch.approvedAt = now;
     if (newStatus === 'declined') patch.declinedAt = now;
+    if (newStatus === 'expired')  patch.expiresAt = now;
 
     // 'converted' goes through handleConvertToInvoice instead
     if (newStatus !== 'converted') {
@@ -753,7 +755,12 @@ export default function EstimatesPage({ onNavigate, initialEstimateId }) {
 
   const handleDeleteEstimate = useCallback((id) => {
     const est = estimates.find(e => e.id === id);
-    if (est) addLog('ESTIMATE', 'ESTIMATE_STATUS_CHANGED', { severity: 'warning', actor, target: est.estimateNumber, details: { action: 'deleted' } });
+    if (!est) return;
+    if (est.convertedToInvoiceId) {
+      alert('Cannot delete an estimate that has been converted to an invoice.');
+      return;
+    }
+    addLog('ESTIMATE', 'ESTIMATE_STATUS_CHANGED', { severity: 'warning', actor, target: est.estimateNumber, details: { action: 'deleted' } });
     deleteEstimate(id);
     setSelectedEst(prev => prev?.id === id ? null : prev);
     setDeleteConfirm(null);
@@ -1127,6 +1134,7 @@ export default function EstimatesPage({ onNavigate, initialEstimateId }) {
                               onSend={() => handleSend(est.id)}
                               onConvert={() => handleConvertToInvoice(est)}
                               onArchive={() => archiveEstimate(est.id)}
+                              onExpire={() => updateStatus(est.id, 'expired')}
                               onDelete={() => {
                                 if (can('estimates.delete')) setDeleteConfirm(est.id);
                               }}
