@@ -57,6 +57,7 @@ import { LocationProvider } from './context/LocationContext';
 import { LeadProvider } from './context/LeadContext';
 import { ReportsProvider } from './context/ReportsContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { PresenceProvider } from './context/PresenceContext';
 import AuthPage from './components/auth/AuthPage';
 import LocationSwitcher from './components/ui/LocationSwitcher';
 import { logEvent, EVENT_TYPES, resetSession } from './lib/analytics';
@@ -1444,23 +1445,25 @@ function FeatureProviders({ children }) {
  *  because it reads from the other four via useContext hooks */
 function DataProviders({ children }) {
   return (
-    <LocationProvider>
-      <LeadProvider>
-        <EstimateProvider>
-          <InvoiceProvider>
-            <SchedulingProvider>
-              <MarketingProvider>
-                <CustomerProvider>
-                  <VehicleProvider>
-                    {children}
-                  </VehicleProvider>
-                </CustomerProvider>
-              </MarketingProvider>
-            </SchedulingProvider>
-          </InvoiceProvider>
-        </EstimateProvider>
-      </LeadProvider>
-    </LocationProvider>
+    <PresenceProvider>
+      <LocationProvider>
+        <LeadProvider>
+          <EstimateProvider>
+            <InvoiceProvider>
+              <SchedulingProvider>
+                <MarketingProvider>
+                  <CustomerProvider>
+                    <VehicleProvider>
+                      {children}
+                    </VehicleProvider>
+                  </CustomerProvider>
+                </MarketingProvider>
+              </SchedulingProvider>
+            </InvoiceProvider>
+          </EstimateProvider>
+        </LeadProvider>
+      </LocationProvider>
+    </PresenceProvider>
   );
 }
 
