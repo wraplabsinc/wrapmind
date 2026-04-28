@@ -6,6 +6,7 @@ import { useNotifications } from '../../context/NotificationsContext.jsx';
 import { useScheduling } from '../../context/SchedulingContext.jsx';
 import { useCustomers } from '../../context/CustomerContext.jsx';
 import { useLeads } from '../../context/LeadContext.jsx';
+import { usePresence } from '../../context/PresenceContext.jsx';
 import { analyzeCustomerPersonality } from '../../lib/personalityEngine';
 import LeadKanban from './LeadKanban';
 import LeadList from './LeadList';
@@ -57,9 +58,10 @@ export default function LeadHubPage({ onNavigate }) {
   const { addNotification } = useNotifications();
   const { appointments, addAppointment, technicians, SERVICE_DURATIONS } = useScheduling();
   const { customers, addCustomer } = useCustomers();
-  const { leads: ctxLeads, addLead, updateLead, deleteLead, convertLeadToWon, realtimeConnected } = useLeads();
+   const { leads: ctxLeads, addLead, updateLead, deleteLead, convertLeadToWon, realtimeConnected } = useLeads();
+   const { onlineCount, isConnected: presenceConnected } = usePresence();
 
-  const actor = { role: currentRole, label: ROLES[currentRole]?.label || currentRole };
+   const actor = { role: currentRole, label: ROLES[currentRole]?.label || currentRole };
   const [scheduleLeadFor, setScheduleLeadFor] = useState(null);
 
   // Local leads state — sourced from LeadContext. Sync on every context change to stay realtime.
@@ -374,8 +376,20 @@ export default function LeadHubPage({ onNavigate }) {
             >
               <span className={`w-1.5 h-1.5 rounded-full ${realtimeConnected ? 'bg-emerald-500' : 'bg-gray-500'}`} />
               {realtimeConnected ? 'Live' : 'Offline'}
-            </span>
-          </div>
+             </span>
+              {/* Presence indicator — online users */}
+              <span
+                className={`inline-flex items-center gap-1 text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${
+                  presenceConnected
+                    ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
+                    : 'bg-gray-500/10 text-gray-500'
+                }`}
+                title={`${onlineCount} user${onlineCount !== 1 ? 's' : ''} online in this org`}
+              >
+                <span className={`w-1.5 h-1.5 rounded-full ${presenceConnected ? 'bg-blue-500' : 'bg-gray-500'}`} />
+                {onlineCount} online
+              </span>
+           </div>
 
           {/* View toggle */}
           <div className="flex items-center bg-gray-100 dark:bg-[#0F1923] rounded p-0.5">
