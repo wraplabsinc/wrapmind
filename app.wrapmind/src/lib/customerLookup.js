@@ -16,7 +16,7 @@ export const STATUS_GROUPS = {
   /** All terminal estimate states */
   TERMINAL:        ['declined', 'expired', 'archived'],
   /** Invoice states that require no further payment action */
-  INVOICE_CLOSED:  ['paid', 'void'],
+  INVOICE_CLOSED:  ['paid', 'voided'],
 };
 
 // ─── Estimate filters ──────────────────────────────────────────────────────────

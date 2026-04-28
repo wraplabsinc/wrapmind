@@ -3,15 +3,16 @@ import { useAuditLog } from '../../context/AuditLogContext';
 import { useRoles } from '../../context/RolesContext';
 import { useInvoices } from '../../context/InvoiceContext';
 import { useNotifications } from '../../context/NotificationsContext';
+import { useAuth } from '../../context/AuthContext';
+import { useCustomers } from '../../context/CustomerContext';
 import { celebrate } from '../../lib/celebrate';
 import Button from '../ui/Button';
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import InvoiceArchiveDrawer from './InvoiceArchiveDrawer';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const TAX_RATE = 0.0875;
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
 const STATUS_CONFIG = {
   draft:   { label: 'Draft',   bg: 'bg-gray-100 dark:bg-gray-800',    text: 'text-gray-600 dark:text-gray-400' },
@@ -20,7 +21,7 @@ const STATUS_CONFIG = {
   partial: { label: 'Partial', bg: 'bg-amber-100 dark:bg-amber-900/30',text: 'text-amber-700 dark:text-amber-400' },
   paid:    { label: 'Paid',    bg: 'bg-green-100 dark:bg-green-900/30',text: 'text-green-700 dark:text-green-400' },
   overdue: { label: 'Overdue', bg: 'bg-red-100 dark:bg-red-900/30',   text: 'text-red-700 dark:text-red-400' },
-  void:    { label: 'Void',    bg: 'bg-gray-100 dark:bg-gray-800',    text: 'text-gray-400 dark:text-gray-500' },
+  voided:  { label: 'Void',    bg: 'bg-gray-100 dark:bg-gray-800',    text: 'text-gray-400 dark:text-gray-500' },
 };
 
 const PAYMENT_METHODS = ['Card', 'Cash', 'Check', 'Zelle', 'ACH'];
@@ -38,12 +39,12 @@ function fmtDate(iso) {
 }
 
 function isOverdue(inv) {
-  if (inv.status === 'paid' || inv.status === 'void') return false;
+  if (inv.status === 'paid' || inv.status === 'voided') return false;
   return new Date(inv.dueAt) < new Date();
 }
 
 function isDueSoon(inv) {
-  if (inv.status === 'paid' || inv.status === 'void') return false;
+  if (inv.status === 'paid' || inv.status === 'voided') return false;
   const diff = new Date(inv.dueAt) - new Date();
   return diff > 0 && diff < 7 * 24 * 60 * 60 * 1000;
 }
@@ -55,165 +56,31 @@ function calcLineItems(lineItems) {
   return { subtotal, taxAmount, total };
 }
 
-function generateInvoicePDF(invoice) {
-  const doc = new jsPDF({ unit: 'pt', format: 'letter' });
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const pageHeight = doc.internal.pageSize.getHeight();
-  const margin = 40;
-  let y = margin;
-
-  const primary = [46, 139, 240];
-  const dark = [15, 25, 35];
-  const gray = [100, 121, 139];
-  const green = [16, 185, 129];
-  const red = [239, 68, 68];
-
-  // White background
-  doc.setFillColor(255, 255, 255);
-  doc.rect(0, 0, pageWidth, pageHeight, 'F');
-
-  // Shop header
-  doc.setFontSize(24);
-  doc.setTextColor(...primary);
-  doc.setFont('helvetica', 'bold');
-  doc.text('WrapMind', margin, y);
-
-  doc.setFontSize(9);
-  doc.setTextColor(...gray);
-  doc.setFont('helvetica', 'normal');
-  doc.text('1234 Vinyl Ave, Los Angeles CA 90001', margin, y + 14);
-  doc.text('(310) 555-0100', margin, y + 26);
-
-  // Invoice title & meta (right aligned)
-  doc.setFontSize(18);
-  doc.setTextColor(...dark);
-  doc.setFont('helvetica', 'bold');
-  doc.text('INVOICE', pageWidth - margin, y, { align: 'right' });
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(...gray);
-  doc.text(invoice.invoiceNumber, pageWidth - margin, y + 16, { align: 'right' });
-  doc.text(`Issued: ${fmtDate(invoice.issuedAt)}`, pageWidth - margin, y + 30, { align: 'right' });
-  doc.text(`Due: ${fmtDate(invoice.dueAt)}`, pageWidth - margin, y + 44, { align: 'right' });
-
-  y += 70;
-
-  // Bill To
-  doc.setFontSize(10);
-  doc.setTextColor(...gray);
-  doc.setFont('helvetica', 'bold');
-  doc.text('BILL TO', margin, y);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(...dark);
-  doc.text(invoice.customerName, margin, y + 14);
-  doc.setFontSize(9);
-  doc.setTextColor(...gray);
-  if (invoice.customerEmail) doc.text(invoice.customerEmail, margin, y + 26);
-  if (invoice.customerPhone) doc.text(invoice.customerPhone, margin, y + 38);
-  if (invoice.vehicleLabel) doc.text(invoice.vehicleLabel, margin, y + 50);
-
-  y += 80;
-
-  // Line items table
-  const tableBody = invoice.lineItems.map(li => [
-    li.description,
-    String(li.qty),
-    fmt(li.total),
-  ]);
-
-  autoTable(doc, {
-    startY: y,
-    margin: { left: margin, right: margin },
-    head: [['Description', 'Qty', 'Total']],
-    body: tableBody,
-    theme: 'grid',
-    headStyles: { fillColor: primary, textColor: 255, fontStyle: 'bold' },
-    bodyStyles: { textColor: dark },
-    columnStyles: {
-      0: { cellWidth: 'auto' },
-      1: { cellWidth: 60, halign: 'center' },
-      2: { cellWidth: 80, halign: 'right' },
-    },
-    styles: { fontSize: 9, cellPadding: 6 },
-  });
-
-  let finalY = doc.lastAutoTable.finalY + 20;
-
-  // Pricing breakdown
-  const totalsX = pageWidth - margin - 160;
-  const valueX = pageWidth - margin;
-
-  doc.setFontSize(9);
-  doc.setTextColor(...gray);
-  doc.setFont('helvetica', 'normal');
-  doc.text('Subtotal', totalsX, finalY);
-  doc.setTextColor(...dark);
-  doc.text(fmt(invoice.subtotal), valueX, finalY, { align: 'right' });
-  finalY += 14;
-
-  if (invoice.discount > 0) {
-    doc.setTextColor(...gray);
-    doc.text('Discount', totalsX, finalY);
-    doc.setTextColor(...dark);
-    doc.text(`-${fmt(invoice.discount)}`, valueX, finalY, { align: 'right' });
-    finalY += 14;
+async function generateInvoicePDF(invoice) {
+  if (!orgId || !session?.access_token) {
+    alert('Not authenticated');
+    return;
   }
-
-  doc.setTextColor(...gray);
-  doc.text(`Tax (${(TAX_RATE * 100).toFixed(2)}%)`, totalsX, finalY);
-  doc.setTextColor(...dark);
-  doc.text(fmt(invoice.taxAmount), valueX, finalY, { align: 'right' });
-  finalY += 14;
-
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(...dark);
-  doc.text('Total', totalsX, finalY);
-  doc.text(fmt(invoice.total), valueX, finalY, { align: 'right' });
-  doc.setFont('helvetica', 'normal');
-  finalY += 14;
-
-  doc.setTextColor(...gray);
-  doc.text('Amount Paid', totalsX, finalY);
-  doc.setTextColor(...green);
-  doc.text(fmt(invoice.amountPaid), valueX, finalY, { align: 'right' });
-  doc.setTextColor(...dark);
-  finalY += 14;
-
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(...dark);
-  doc.text('Balance Due', totalsX, finalY);
-  doc.setTextColor(invoice.amountDue <= 0 ? green : red);
-  doc.text(fmt(invoice.amountDue), valueX, finalY, { align: 'right' });
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(...dark);
-  finalY += 24;
-
-  // Notes / Terms
-  if (invoice.terms || invoice.notes) {
-    doc.setFontSize(9);
-    doc.setTextColor(...gray);
-    if (invoice.terms) {
-      doc.setFont('helvetica', 'bold');
-      doc.text('Terms:', margin, finalY);
-      doc.setFont('helvetica', 'normal');
-      doc.text(invoice.terms, margin + 35, finalY);
-      finalY += 14;
-    }
-    if (invoice.notes) {
-      const splitNotes = doc.splitTextToSize(invoice.notes, pageWidth - margin * 2);
-      doc.text(splitNotes, margin, finalY);
-      finalY += splitNotes.length * 12 + 6;
-    }
-    finalY += 10;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/generate-pdf`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${session.access_token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ type: 'invoice', id: invoice.id, orgId }),
+    });
+    if (!res.ok) throw new Error('PDF generation failed');
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${invoice.invoiceNumber}.pdf`;
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    alert(`Failed to generate PDF: ${err.message}`);
   }
-
-  // Footer
-  doc.setFontSize(8);
-  doc.setTextColor(...gray);
-  doc.text('Thank you for your business!', margin, pageHeight - margin);
-  doc.text('Page 1 of 1', pageWidth - margin, pageHeight - margin, { align: 'right' });
-
-  doc.save(`${invoice.invoiceNumber}.pdf`);
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -222,7 +89,7 @@ function StatusBadge({ status, void: isVoid }) {
   const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.draft;
   return (
     <span
-      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${cfg.bg} ${cfg.text} ${status === 'void' ? 'line-through opacity-70' : ''}`}
+      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${cfg.bg} ${cfg.text} ${status === 'voided' ? 'line-through opacity-70' : ''}`}
     >
       {cfg.label}
     </span>
@@ -279,13 +146,13 @@ function ActionsMenu({ invoice, onView, onRecordPayment, onSend, onVoid, onDupli
       {open && (
         <div className="absolute right-0 z-50 mt-1 w-44 bg-white dark:bg-[#1B2A3E] border border-gray-200 dark:border-[#243348] rounded-xl shadow-xl overflow-hidden">
           <MenuItem label="View Details" onClick={() => act(onView)} />
-          {invoice.status !== 'void' && invoice.status !== 'paid' && (
+          {invoice.status !== 'voided' && invoice.status !== 'paid' && (
             <MenuItem label="Record Payment" onClick={() => act(onRecordPayment)} />
           )}
           {(invoice.status === 'draft' || invoice.status === 'sent') && (
             <MenuItem label="Mark as Sent" onClick={() => act(onSend)} />
           )}
-          {invoice.status !== 'void' && (
+          {invoice.status !== 'voided' && (
             <MenuItem label="Mark Void" onClick={() => act(onVoid)} danger />
           )}
           <MenuItem label="Duplicate" onClick={() => act(onDuplicate)} />
@@ -503,7 +370,7 @@ function InvoiceDetailPanel({ invoice, onClose, onRecordPayment, activityLog, on
                     {fmt(invoice.amountDue)}
                   </p>
                 </div>
-                {invoice.status !== 'void' && invoice.status !== 'paid' && (
+                {invoice.status !== 'voided' && invoice.status !== 'paid' && (
                   <Button variant="primary" size="sm" onClick={() => setShowPayForm(v => !v)}>
                     + Record Payment
                   </Button>
@@ -856,6 +723,9 @@ export default function InvoicesPage({ onNavigate, initialInvoiceId }) {
     getNextInvoiceNumber,
   } = useInvoices();
   const { addNotification } = useNotifications();
+  // Auth + customer lookup
+  const { orgId, session } = useAuth();
+  const { customers } = useCustomers();
 
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -916,7 +786,7 @@ export default function InvoicesPage({ onNavigate, initialInvoiceId }) {
 
   const markVoid = useCallback((invoiceId) => {
     const inv = invoices.find(i => i.id === invoiceId);
-    updateInvoice(invoiceId, { status: 'void', voidedAt: new Date().toISOString() });
+    updateInvoice(invoiceId, { status: 'voided', voidedAt: new Date().toISOString() });
     addLog('INVOICE', 'INVOICE_VOIDED', {
       severity: 'warning',
       actor: { role: actor, label: actor },
@@ -932,16 +802,55 @@ export default function InvoicesPage({ onNavigate, initialInvoiceId }) {
     if (selectedInvoice?.id === invoiceId) setSelectedInvoice(null);
   }, [invoices, actor, addLog, updateInvoice, addNotification, selectedInvoice]);
 
-  const markSent = useCallback((invoiceId) => {
+  const markSent = useCallback(async (invoiceId) => {
     const inv = invoices.find(i => i.id === invoiceId);
-    const issuedAt = inv?.status === 'draft' ? new Date().toISOString() : inv?.issuedAt;
-    updateInvoice(invoiceId, { status: 'sent', issuedAt });
-    addLog('INVOICE', 'INVOICE_SENT', {
-      severity: 'info',
-      actor: { role: actor, label: actor },
-      target: inv?.invoiceNumber ?? invoiceId,
-    });
-  }, [invoices, actor, addLog, updateInvoice]);
+    if (!inv) return;
+
+    const customer = customers.find(c => c.id === inv.customerId);
+    const email = customer?.email;
+    if (!email) {
+      alert('Customer has no email address.');
+      return;
+    }
+
+    try {
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session?.access_token}`,
+          'apikey': session?.access_token,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          type: 'invoice',
+          id: inv.id,
+          orgId,
+          emailedTo: email,
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.text();
+        throw new Error(err);
+      }
+
+      const issuedAt = inv.status === 'draft' ? new Date().toISOString() : inv.issuedAt;
+      updateInvoice(invoiceId, { status: 'sent', issuedAt });
+      addLog('INVOICE', 'INVOICE_SENT', {
+        severity: 'info',
+        actor: { role: actor, label: actor },
+        target: inv.invoiceNumber,
+      });
+      addNotification({
+        type: 'invoice',
+        title: 'Invoice Sent',
+        body: `${inv.invoiceNumber} sent to ${email}`,
+        link: 'invoices',
+        icon: 'document',
+      });
+    } catch (err) {
+      alert(`Failed to send email: ${err.message}`);
+    }
+  }, [invoices, customers, orgId, session, updateInvoice, addLog, addNotification, actor]);
 
   const duplicateInvoice = useCallback((invoiceId) => {
     const source = invoices.find(i => i.id === invoiceId);
@@ -1048,7 +957,7 @@ export default function InvoicesPage({ onNavigate, initialInvoiceId }) {
   // ── Stats ──
 
   const stats = useMemo(() => {
-    const nonVoid = invoices.filter(i => i.status !== 'void');
+    const nonVoid = invoices.filter(i => i.status !== 'voided');
     const totalInvoiced = nonVoid.reduce((s, i) => s + i.total, 0);
 
     const outstandingStatuses = new Set(['sent', 'viewed', 'partial', 'overdue']);
@@ -1142,7 +1051,7 @@ export default function InvoicesPage({ onNavigate, initialInvoiceId }) {
 
       {/* ── Stats strip ── */}
       <div className="flex-shrink-0 px-4 pt-4 pb-3 grid grid-cols-5 gap-3">
-        <StatTile label="Total Invoiced" value={fmt(stats.totalInvoiced)} sub={`${invoices.filter(i => i.status !== 'void').length} invoices`} />
+        <StatTile label="Total Invoiced" value={fmt(stats.totalInvoiced)} sub={`${invoices.filter(i => i.status !== 'voided').length} invoices`} />
         <StatTile label="Outstanding" value={fmt(stats.outstanding)} sub="sent + partial + overdue" accent="#F59E0B" />
         <StatTile label="Overdue" value={fmt(stats.overdueSum)} sub={`${stats.overdueCount} invoice${stats.overdueCount !== 1 ? 's' : ''}`} accent="#EF4444" />
         <StatTile label="Paid This Month" value={fmt(stats.paidThisMonth)} sub={new Date().toLocaleString('default', { month: 'long' })} accent="#10B981" />

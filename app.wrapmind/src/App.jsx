@@ -672,7 +672,7 @@ function AppInner() {
     const now = Date.now();
     invoices.forEach(inv => {
       if (notifiedOverdueRef.current.has(inv.id)) return;
-      if (['paid', 'void'].includes(inv.status)) return;
+      if (['paid', 'voided'].includes(inv.status)) return;
       if (!inv.dueAt) return;
       if (new Date(inv.dueAt).getTime() < now && (inv.amountDue || 0) > 0) {
         notifiedOverdueRef.current.add(inv.id);
