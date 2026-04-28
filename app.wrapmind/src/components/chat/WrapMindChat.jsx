@@ -745,7 +745,7 @@ export default function WrapMindChat() {
                   <span className="absolute inset-0 rounded-full bg-green-500" />
                   <span className="absolute inset-0 rounded-full bg-green-500 animate-ping opacity-60" />
                 </div>
-                <span className="text-[10px] text-[var(--text-muted)]">Online · Powered by Claude</span>
+                <span className="text-[10px] text-[var(--text-muted)]">Image Analysis Ready</span>
                 {/* Mic status badge */}
                 {listening && (
                   <span className="ml-auto flex items-center gap-1 text-[10px] font-medium text-red-500 animate-pulse">

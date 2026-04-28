@@ -81,6 +81,112 @@ export function EstimateProvider({ children }) {
     });
   }, [estimates]);
 
+  // ── Realtime subscriptions (patch layer — Apollo remains primary source) ────
+  const [realtimeConnected, setRealtimeConnected] = useState(false);
+
+  useEffect(() => {
+    if (!orgId || isDevAuth) return;
+
+    setRealtimeConnected(false);
+    const channel = supabase.channel('estimates-realtime');
+
+    channel
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'estimates',
+        filter: `org_id=eq.${orgId}`,
+      }, (payload) => {
+        const newEst = {
+          id: payload.new.id,
+          orgId: payload.new.org_id,
+          locationId: payload.new.location_id,
+          estimateNumber: payload.new.estimate_number,
+          status: payload.new.status,
+          customerId: payload.new.customer_id,
+          vehicleId: payload.new.vehicle_id,
+          package: payload.new.package,
+          material: payload.new.material,
+          materialColor: payload.new.material_color,
+          laborHours: payload.new.labor_hours,
+          basePrice: payload.new.base_price,
+          laborCost: payload.new.labor_cost,
+          materialCost: payload.new.material_cost,
+          discount: payload.new.discount,
+          total: payload.new.total,
+          notes: payload.new.notes,
+          createdById: payload.new.created_by_id,
+          assignedToId: payload.new.assigned_to_id,
+          sentAt: payload.new.sent_at,
+          expiresAt: payload.new.expires_at,
+          approvedAt: payload.new.approved_at,
+          declinedAt: payload.new.declined_at,
+          convertedToInvoiceId: payload.new.converted_to_invoice_id,
+          createdAt: payload.new.created_at,
+          updatedAt: payload.new.updated_at,
+        };
+        setEstimates(prev => {
+          if (prev.some(e => e.id === newEst.id)) return prev;
+          return [newEst, ...prev];
+        });
+      })
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'estimates',
+        filter: `org_id=eq.${orgId}`,
+      }, (payload) => {
+        setEstimates(prev =>
+          prev.map(e => e.id === payload.new.id
+            ? {
+                ...e,
+                orgId: payload.new.org_id,
+                locationId: payload.new.location_id,
+                estimateNumber: payload.new.estimate_number,
+                status: payload.new.status,
+                customerId: payload.new.customer_id,
+                vehicleId: payload.new.vehicle_id,
+                package: payload.new.package,
+                material: payload.new.material,
+                materialColor: payload.new.material_color,
+                laborHours: payload.new.labor_hours,
+                basePrice: payload.new.base_price,
+                laborCost: payload.new.labor_cost,
+                materialCost: payload.new.material_cost,
+                discount: payload.new.discount,
+                total: payload.new.total,
+                notes: payload.new.notes,
+                createdById: payload.new.created_by_id,
+                assignedToId: payload.new.assigned_to_id,
+                sentAt: payload.new.sent_at,
+                expiresAt: payload.new.expires_at,
+                approvedAt: payload.new.approved_at,
+                declinedAt: payload.new.declined_at,
+                convertedToInvoiceId: payload.new.converted_to_invoice_id,
+                updatedAt: payload.new.updated_at,
+              }
+            : e
+          )
+        );
+      })
+      .on('postgres_changes', {
+        event: 'DELETE',
+        schema: 'public',
+        table: 'estimates',
+        filter: `org_id=eq.${orgId}`,
+      }, (payload) => {
+        setEstimates(prev => prev.filter(e => e.id !== payload.old.id));
+      })
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') setRealtimeConnected(true);
+        else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') setRealtimeConnected(false);
+      });
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [orgId, isDevAuth]);
+
   // ─── Filtered view ─────────────────────────────────────────────────────────
   const filteredEstimates = activeLocationId === 'all' || !activeLocationId
     ? estimates
@@ -132,7 +238,7 @@ export function EstimateProvider({ children }) {
         variables: {
           orgId,
           locationId:  newEst.locationId,
-          clientId:   newEst.customerId,
+          customerId: newEst.customerId,
           estimateId: newEst.estimateNumber,
           status:      newEst.status,
           package:     newEst.package     ?? null,
@@ -196,6 +302,7 @@ export function EstimateProvider({ children }) {
     getEstimateById,
     getNextEstimateNumber,
     estimateCount:     filteredEstimates.length,
+    realtimeConnected,
   };
 
   return (

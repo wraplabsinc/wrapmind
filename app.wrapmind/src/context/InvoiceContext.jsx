@@ -79,6 +79,108 @@ export function InvoiceProvider({ children }) {
     if (!isDevAuth) saveToStorage(invoices);
   }, [invoices, isDevAuth]);
 
+  // ── Realtime subscriptions (patch layer — Apollo remains primary source) ────
+  const [realtimeConnected, setRealtimeConnected] = useState(false);
+
+  useEffect(() => {
+    if (!orgId || isDevAuth) return;
+
+    setRealtimeConnected(false);
+    const channel = supabase.channel('invoices-realtime');
+
+    channel
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'invoices',
+        filter: `org_id=eq.${orgId}`,
+      }, (payload) => {
+        const newInv = {
+          id: payload.new.id,
+          orgId: payload.new.org_id,
+          locationId: payload.new.location_id,
+          invoiceNumber: payload.new.invoice_number,
+          estimateId: payload.new.estimate_id,
+          customerId: payload.new.customer_id,
+          vehicleId: payload.new.vehicle_id,
+          lineItems: payload.new.line_items_json ? JSON.parse(payload.new.line_items_json) : [],
+          subtotal: payload.new.subtotal,
+          tax: payload.new.tax,
+          discount: payload.new.discount,
+          total: payload.new.total,
+          amountPaid: payload.new.amount_paid,
+          amountDue: payload.new.amount_due,
+          status: payload.new.status,
+          payments: payload.new.payments ? JSON.parse(payload.new.payments) : [],
+          terms: payload.new.terms,
+          notes: payload.new.notes,
+          issuedAt: payload.new.issued_at,
+          dueAt: payload.new.due_at,
+          paidAt: payload.new.paid_at,
+          voidedAt: payload.new.voided_at,
+          createdAt: payload.new.created_at,
+          updatedAt: payload.new.updated_at,
+        };
+        setInvoices(prev => {
+          if (prev.some(i => i.id === newInv.id)) return prev;
+          return [newInv, ...prev];
+        });
+      })
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'invoices',
+        filter: `org_id=eq.${orgId}`,
+      }, (payload) => {
+        setInvoices(prev =>
+          prev.map(inv => inv.id === payload.new.id
+            ? {
+                ...inv,
+                orgId: payload.new.org_id,
+                locationId: payload.new.location_id,
+                invoiceNumber: payload.new.invoice_number,
+                estimateId: payload.new.estimate_id,
+                customerId: payload.new.customer_id,
+                vehicleId: payload.new.vehicle_id,
+                lineItems: payload.new.line_items_json ? JSON.parse(payload.new.line_items_json) : inv.lineItems,
+                subtotal: payload.new.subtotal,
+                tax: payload.new.tax,
+                discount: payload.new.discount,
+                total: payload.new.total,
+                amountPaid: payload.new.amount_paid,
+                amountDue: payload.new.amount_due,
+                status: payload.new.status,
+                payments: payload.new.payments ? JSON.parse(payload.new.payments) : inv.payments,
+                terms: payload.new.terms,
+                notes: payload.new.notes,
+                issuedAt: payload.new.issued_at,
+                dueAt: payload.new.due_at,
+                paidAt: payload.new.paid_at,
+                voidedAt: payload.new.voided_at,
+                updatedAt: payload.new.updated_at,
+              }
+            : inv
+          )
+        );
+      })
+      .on('postgres_changes', {
+        event: 'DELETE',
+        schema: 'public',
+        table: 'invoices',
+        filter: `org_id=eq.${orgId}`,
+      }, (payload) => {
+        setInvoices(prev => prev.filter(inv => inv.id !== payload.old.id));
+      })
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') setRealtimeConnected(true);
+        else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') setRealtimeConnected(false);
+      });
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [orgId, isDevAuth]);
+
   // ── Filtered view ──────────────────────────────────────────────────────────
 
   const filteredInvoices = activeLocationId === 'all' || !activeLocationId
@@ -110,6 +212,7 @@ export function InvoiceProvider({ children }) {
       locationId: activeLocationId === 'all' ? 'loc-001' : activeLocationId,
       invoiceNumber: invoiceData.invoiceNumber,
       status: 'draft',
+      vehicleId: invoiceData.vehicleId ?? null,
       payments: [],
       amountPaid: 0,
       amountDue: invoiceData.total ?? 0,
@@ -129,13 +232,13 @@ export function InvoiceProvider({ children }) {
           orgId,
           locationId:    newInvoice.locationId,
           invoiceNumber: newInvoice.invoiceNumber,
-          clientId:     newInvoice.customerId,
+          customerId:  newInvoice.customerId,
           estimateId:   newInvoice.estimateId    ?? null,
-          vehicleJson:   null,
+          vehicleId:   newInvoice.vehicleId,
           status:       newInvoice.status,
           lineItems:     JSON.stringify(newInvoice.lineItems ?? []),
           subtotal:     newInvoice.subtotal      ?? null,
-          tax:          newInvoice.taxAmount     ?? null,
+          taxAmount:    newInvoice.taxAmount     ?? null,
           discount:     newInvoice.discount      ?? 0,
           total:        newInvoice.total,
           amountPaid:   0,
@@ -268,6 +371,7 @@ export function InvoiceProvider({ children }) {
       customerEmail: estimate.customerEmail || '',
       customerPhone: estimate.customerPhone || '',
       vehicleLabel: estimate.vehicleLabel || '',
+      vehicleId: estimate.vehicleId,
       lineItems: [
         {
           id: uuid(),
@@ -360,6 +464,7 @@ export function InvoiceProvider({ children }) {
     getNextInvoiceNumber,
     convertEstimateToInvoice,
     invoiceCount:  filteredInvoices.length,
+    realtimeConnected,
   };
 
   return (

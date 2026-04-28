@@ -3,6 +3,7 @@ import { useAuditLog } from '../../context/AuditLogContext';
 import { useRoles } from '../../context/RolesContext';
 import { useEstimates } from '../../context/EstimateContext';
 import { useInvoices } from '../../context/InvoiceContext';
+import { useAuth } from '../../context/AuthContext';
 import { celebrate } from '../../lib/celebrate';
 import { useNotifications } from '../../context/NotificationsContext';
 import { useCustomers } from '../../context/CustomerContext';
@@ -84,7 +85,7 @@ function RowDotMenu({ est, onView, onDuplicate, onSend, onConvert, onArchive, on
   const items = [
     { label: 'View', action: onView, always: true },
     { label: 'Duplicate', action: onDuplicate, always: true },
-    { label: 'Send', action: onSend, show: est.status === 'draft' },
+    { label: 'Email', action: onSend, show: est.status === 'draft' },
     { label: 'Convert to Invoice', action: onConvert, show: est.status === 'approved' },
     { label: 'AI Follow-up', action: onAIFollowUp, show: ['sent', 'declined', 'expired'].includes(est.status) },
     { label: 'Schedule Job', action: onSchedule, show: ['approved', 'converted', 'draft', 'sent'].includes(est.status) },
@@ -136,7 +137,7 @@ function RowDotMenu({ est, onView, onDuplicate, onSend, onConvert, onArchive, on
 }
 
 // ─── EstimateDetailPanel ──────────────────────────────────────────────────────
-function EstimateDetailPanel({ est, onClose, onUpdateStatus, onConvert, onDuplicate, onNavigate, onScheduleEst, actor, personality = null }) {
+function EstimateDetailPanel({ est, onClose, onUpdateStatus, onConvert, onDuplicate, onNavigate, onScheduleEst, onEmail, actor, personality = null }) {
   const [tab, setTab] = useState('summary');
   const [confirmDecline, setConfirmDecline] = useState(false);
 
@@ -178,9 +179,21 @@ function EstimateDetailPanel({ est, onClose, onUpdateStatus, onConvert, onDuplic
             <div className="flex items-center gap-2">
               <span className="text-sm font-semibold text-[#0F1923] dark:text-[#F8FAFE]">{est.estimateNumber}</span>
               <StatusBadge status={est.status} />
-            </div>
+          <div>
             <div className="text-xs text-[#64748B] dark:text-[#7D93AE] mt-0.5">{est.customerName} · {est.vehicleLabel}</div>
           </div>
+          {onEmail && (
+            <button
+              onClick={onEmail}
+              className="ml-3 text-[#64748B] dark:text-[#7D93AE] hover:text-[#0F1923] dark:hover:text-[#F8FAFE] flex items-center gap-1 text-xs font-medium"
+              title="Email PDF"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+              Email
+            </button>
+          )}
           <button
             onClick={onClose}
             className="w-7 h-7 flex items-center justify-center rounded-md text-[#64748B] dark:text-[#7D93AE]
@@ -513,6 +526,9 @@ export default function EstimatesPage({ onNavigate, initialEstimateId }) {
   const { addNotification } = useNotifications();
   const { appointments, addAppointment, technicians, SERVICE_DURATIONS } = useScheduling();
   const { customers: enrichedCustomers } = useCustomers();
+  // Auth + API
+  const { orgId, session } = useAuth();
+  const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
   // ── State ────────────────────────────────────────────────────────────────────
   const [search, setSearch] = useState('');
@@ -680,7 +696,7 @@ export default function EstimatesPage({ onNavigate, initialEstimateId }) {
 
   const handleConvertToInvoice = useCallback((est) => {
     const newInvoice = convertEstimateToInvoice(est);
-    updateEstimate(est.id, { convertedToInvoice: true, invoiceId: newInvoice.id, status: 'converted' });
+    updateEstimate(est.id, { convertedToInvoiceId: newInvoice.id, status: 'converted' });
     addNotification({
       type: 'invoice',
       title: 'Invoice Created',
@@ -734,20 +750,53 @@ export default function EstimatesPage({ onNavigate, initialEstimateId }) {
     addLog('ESTIMATE', 'ESTIMATE_VIEWED', { severity: 'info', actor, target: est.estimateNumber });
   }, [addLog, actor]);
 
-  const handleSend = useCallback((id) => {
+  const handleSend = useCallback(async (id) => {
     const est = estimates.find(e => e.id === id);
     if (!est) return;
-    const now = new Date().toISOString();
-    updateEstimate(id, { status: 'sent', sentAt: now });
-    addLog('ESTIMATE', 'ESTIMATE_SENT', { severity: 'info', actor, target: est.estimateNumber });
-    addNotification({
-      type: 'estimate',
-      title: 'Estimate Sent',
-      body: `${est.estimateNumber} sent to ${est.customerName}`,
-      link: 'estimates',
-      icon: 'document',
-    });
-  }, [estimates, updateEstimate, addLog, addNotification, actor]);
+
+    // Resolve customer email from enrichedCustomers
+    const customer = enrichedCustomers.find(c => c.id === est.customerId);
+    const email = customer?.email;
+    if (!email) {
+      alert('Customer has no email address.');
+      return;
+    }
+
+    try {
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session?.access_token}`,
+          'apikey': session?.access_token,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          type: 'estimate',
+          id: est.id,
+          orgId,
+          emailedTo: email,
+        }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+
+      const now = new Date().toISOString();
+      updateEstimate(est.id, { status: 'sent', sentAt: now });
+      addLog('ESTIMATE', 'ESTIMATE_SENT', {
+        severity: 'info',
+        actor,
+        target: est.estimateNumber,
+      });
+      addNotification({
+        type: 'estimate',
+        title: 'Estimate Sent',
+        body: `${est.estimateNumber} sent to ${email}`,
+        link: 'estimates',
+        icon: 'document',
+      });
+    } catch (err) {
+      alert(`Failed to send email: ${err.message}`);
+    }
+  }, [estimates, enrichedCustomers, orgId, session, updateEstimate, addLog, addNotification, actor]);
 
   // ── Column definitions ───────────────────────────────────────────────────────
   const columns = [
@@ -1092,6 +1141,7 @@ export default function EstimatesPage({ onNavigate, initialEstimateId }) {
           onDuplicate={duplicateEstimate}
           onNavigate={onNavigate}
           onScheduleEst={setScheduleEst}
+          onEmail={handleSend ? () => handleSend(selectedEst.id) : undefined}
           actor={actor}
           personality={selectedPersonality}
         />

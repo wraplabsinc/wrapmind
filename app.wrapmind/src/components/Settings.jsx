@@ -4688,12 +4688,12 @@ function SecurityPage() {
                 {
                   label: 'API Key — Client-Side Exposure',
                   status: 'warning',
-                  detail: 'VITE_ANTHROPIC_API_KEY is bundled into the client for direct-API mode. For SaaS/multi-user deployments, proxy all AI calls through a server-side endpoint and remove the key from the browser bundle.',
+                  detail: 'OPENROUTER_API_KEY is stored server-side in Supabase Secrets and never exposed to the client.',
                 },
                 {
                   label: 'Data in Transit',
                   status: 'active',
-                  detail: 'All Supabase and Anthropic API traffic is TLS-encrypted (HTTPS / WSS).',
+                  detail: 'All Supabase and external API traffic is TLS-encrypted (HTTPS / WSS).',
                 },
                 {
                   label: 'Local Storage Data',

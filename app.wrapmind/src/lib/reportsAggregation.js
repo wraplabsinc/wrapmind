@@ -121,7 +121,7 @@ const ESTIMATE_STATUS = {
   CONVERTED: 'converted',
   DECLINED: 'declined',
   EXPIRED: 'expired',
-  VOID: 'void',
+  VOID: 'voided',
 };
 
 const ESTIMATE_CLOSED_WON = [ESTIMATE_STATUS.APPROVED, ESTIMATE_STATUS.CONVERTED];
