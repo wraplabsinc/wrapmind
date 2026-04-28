@@ -114,7 +114,7 @@ function StatTile({ label, value, sub, accent }) {
 
 // ─── Dropdown Menu ────────────────────────────────────────────────────────────
 
-function ActionsMenu({ invoice, onView, onRecordPayment, onSend, onVoid, onDuplicate, onDelete }) {
+function ActionsMenu({ invoice, onView, onRecordPayment, onSend, onVoid, onDuplicate, onArchive }) {
   const [open, setOpen] = useState(false);
   const { orgId, loading } = useAuth();
   const ref = useRef(null);
@@ -158,7 +158,7 @@ function ActionsMenu({ invoice, onView, onRecordPayment, onSend, onVoid, onDupli
             <MenuItem label="Mark Void" onClick={() => act(onVoid)} danger />
           )}
           <MenuItem label="Duplicate" onClick={() => act(onDuplicate)} />
-          <MenuItem label="Delete" onClick={() => act(onDelete)} danger />
+          <MenuItem label="Archive" onClick={() => act(onArchive)} />
         </div>
       )}
     </div>
@@ -736,7 +736,7 @@ export default function InvoicesPage({ onNavigate, initialInvoiceId }) {
     invoices,
     addInvoice,
     updateInvoice,
-    deleteInvoice: ctxDeleteInvoice,
+    archiveInvoice: ctxArchiveInvoice,
     voidInvoice: ctxVoidInvoice,
     duplicateInvoice: ctxDuplicateInvoice,
     recordPayment: ctxRecordPayment,
@@ -754,7 +754,7 @@ export default function InvoicesPage({ onNavigate, initialInvoiceId }) {
   const [panelMode, setPanelMode] = useState(null); // 'view' | 'pay'
   const [archiveDrawer, setArchiveDrawer] = useState(null); // invoiceId with drawer open
   const [showCreate, setShowCreate] = useState(false);
-  const [deleteConfirm, setDeleteConfirm] = useState(null); // invoiceId
+  const [archiveConfirm, setArchiveConfirm] = useState(null); // invoiceId
 
   // Update selected invoice reference when invoices change
   useEffect(() => {
@@ -885,11 +885,11 @@ export default function InvoicesPage({ onNavigate, initialInvoiceId }) {
     });
   }, [invoices, actor, addLog, ctxDuplicateInvoice]);
 
-  const deleteInvoice = useCallback((invoiceId) => {
-    ctxDeleteInvoice(invoiceId);
+  const archiveInvoice = useCallback((invoiceId) => {
+    ctxArchiveInvoice(invoiceId);
     if (selectedInvoice?.id === invoiceId) setSelectedInvoice(null);
-    setDeleteConfirm(null);
-  }, [ctxDeleteInvoice, selectedInvoice]);
+    setArchiveConfirm(null);
+  }, [ctxArchiveInvoice, selectedInvoice]);
 
   const createInvoice = useCallback((formData) => {
     const newInv = addInvoice({
@@ -1155,16 +1155,16 @@ export default function InvoicesPage({ onNavigate, initialInvoiceId }) {
 
                       {/* Actions */}
                       <td className="px-4 py-3 whitespace-nowrap" onClick={e => e.stopPropagation()}>
-                        {deleteConfirm === inv.id ? (
+{archiveConfirm === inv.id ? (
                           <div className="flex items-center gap-1">
                             <button
-                              onClick={() => deleteInvoice(inv.id)}
-                              className="text-xs px-2 py-1 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                              onClick={() => archiveInvoice(inv.id)}
+                              className="text-xs px-2 py-1 bg-[#2E8BF0] text-white rounded-lg hover:bg-[#2563EB] transition-colors"
                             >
                               Confirm
                             </button>
                             <button
-                              onClick={() => setDeleteConfirm(null)}
+                              onClick={() => setArchiveConfirm(null)}
                               className="text-xs px-2 py-1 border border-gray-200 dark:border-[#243348] text-[#64748B] dark:text-[#7D93AE] rounded-lg hover:bg-gray-50 dark:hover:bg-[#243348] transition-colors"
                             >
                               Cancel
@@ -1178,7 +1178,7 @@ export default function InvoicesPage({ onNavigate, initialInvoiceId }) {
                             onSend={() => markSent(inv.id)}
                             onVoid={() => markVoid(inv.id)}
                             onDuplicate={() => duplicateInvoice(inv.id)}
-                            onDelete={() => setDeleteConfirm(inv.id)}
+onArchive={() => setArchiveConfirm(inv.id)}
                           />
                         )}
                       </td>

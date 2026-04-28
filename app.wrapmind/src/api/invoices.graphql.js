@@ -27,6 +27,7 @@ export const INVOICE_FIELDS = gql`
     due_at
     paid_at
     voided_at
+    deleted_at
     created_at
     updated_at
   }
@@ -43,6 +44,7 @@ export const LIST_INVOICES = gql`
     invoicesCollection(
       filter: {
         org_id: { eq: $orgId }
+        deleted_at: { is: null }
       }
       first: $first
       offset: $offset
@@ -71,6 +73,7 @@ export const LIST_INVOICES = gql`
           due_at
           paid_at
           voided_at
+          deleted_at
           created_at
           updated_at
         }
@@ -180,6 +183,7 @@ export const UPDATE_INVOICE = gql`
     $dueAt: TIMESTAMPTZ
     $paidAt: TIMESTAMPTZ
     $voidedAt: TIMESTAMPTZ
+    $deletedAt: TIMESTAMPTZ
   ) {
     updateinvoicesCollection(
       filter: { id: { eq: $id } }
@@ -199,6 +203,7 @@ export const UPDATE_INVOICE = gql`
         due_at: $dueAt
         paid_at: $paidAt
         voided_at: $voidedAt
+        deleted_at: $deletedAt
       }
     ) {
       returning {
@@ -253,6 +258,7 @@ export function normalizeInvoice(row = {}) {
     dueAt: row.due_at,
     paidAt: row.paid_at,
     voidedAt: row.voided_at,
+    deletedAt: row.deleted_at,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
