@@ -7,7 +7,6 @@ import {
   USE_INVOICE,
   USE_CREATE_INVOICE,
   USE_UPDATE_INVOICE,
-  USE_DELETE_INVOICE,
   normalizeInvoice,
 } from '../api/invoices.graphql.js';
 
@@ -118,6 +117,7 @@ export function InvoiceProvider({ children }) {
           dueAt: payload.new.due_at,
           paidAt: payload.new.paid_at,
           voidedAt: payload.new.voided_at,
+          deletedAt: payload.new.deleted_at,
           createdAt: payload.new.created_at,
           updatedAt: payload.new.updated_at,
         };
@@ -157,11 +157,16 @@ export function InvoiceProvider({ children }) {
                 dueAt: payload.new.due_at,
                 paidAt: payload.new.paid_at,
                 voidedAt: payload.new.voided_at,
+                deletedAt: payload.new.deleted_at,
                 updatedAt: payload.new.updated_at,
               }
             : inv
           )
         );
+        // If this update soft-deletes the invoice, remove from visible state
+        if (payload.new.deleted_at) {
+          setInvoices(prev => prev.filter(inv => inv.id !== payload.new.id));
+        }
       })
       .on('postgres_changes', {
         event: 'DELETE',
@@ -183,15 +188,15 @@ export function InvoiceProvider({ children }) {
 
   // ── Filtered view ──────────────────────────────────────────────────────────
 
-  const filteredInvoices = activeLocationId === 'all' || !activeLocationId
+  const filteredInvoices = (activeLocationId === 'all' || !activeLocationId
     ? invoices
-    : invoices.filter(i => !i.locationId || i.locationId === activeLocationId);
+    : invoices.filter(i => !i.locationId || i.locationId === activeLocationId)
+  ).filter(inv => !inv.deletedAt);
 
   // ── Apollo mutations ──────────────────────────────────────────────────────
 
   const [createInvoiceMutation] = USE_CREATE_INVOICE();
   const [updateInvoiceMutation] = USE_UPDATE_INVOICE();
-  const [deleteInvoiceMutation] = USE_DELETE_INVOICE();
 
   // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -273,14 +278,17 @@ export function InvoiceProvider({ children }) {
     }
   }, [orgId, isDevAuth, updateInvoiceMutation]);
 
-  const deleteInvoice = useCallback((id) => {
+  const archiveInvoice = useCallback((id) => {
+    const now = new Date().toISOString();
+    // Optimistic UI: remove from local state immediately
     setInvoices(prev => prev.filter(inv => inv.id !== id));
 
     if (orgId && !isDevAuth) {
-      deleteInvoiceMutation({ variables: { id } })
-        .catch(err => console.error('[InvoiceContext] GraphQL delete failed:', err));
+      updateInvoiceMutation({
+        variables: { id, deletedAt: now },
+      }).catch(err => console.error('[InvoiceContext] GraphQL archive failed:', err));
     }
-  }, [orgId, isDevAuth, deleteInvoiceMutation]);
+  }, [orgId, isDevAuth, updateInvoiceMutation]);
 
   const voidInvoice = useCallback((id) => {
     const now = new Date().toISOString();
@@ -504,7 +512,7 @@ export function InvoiceProvider({ children }) {
     refetch,
     addInvoice,
     updateInvoice,
-    deleteInvoice,
+    archiveInvoice,
     voidInvoice,
     duplicateInvoice,
     recordPayment,
