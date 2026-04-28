@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { useEstimates } from '../../context/EstimateContext';
 import { useInvoices } from '../../context/InvoiceContext';
+import { useAuth } from '../../context/AuthContext.jsx';
+import supabase from '../../lib/supabase.js';
 import Button from '../ui/Button';
 
 const SPARKLINE_DATA = [
@@ -188,8 +190,10 @@ function KpiTile({ kpi }) {
 }
 
 export default function KpiStrip() {
+  const { orgId } = useAuth();
   const { estimates } = useEstimates();
   const { invoices } = useInvoices();
+  const [kpiSnapshot, setKpiSnapshot] = useState(null);
 
   // Estimates Written (total non-archived)
   const totalEstimates = estimates.filter(e => e.status !== 'archived').length;
@@ -230,87 +234,204 @@ export default function KpiStrip() {
     ? `$${(n / 1000).toFixed(n >= 100000 ? 0 : 1)}k`
     : `$${Math.round(n).toLocaleString()}`;
 
-  const KPIS = [
-    {
-      label: 'Estimates Written',
-      value: String(totalEstimates),
-      delta: '+12%',
-      positive: true,
-      sparkIdx: 0,
-      sparkColor: 'bg-blue-400',
-      icon: (
-        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125" />
-        </svg>
-      ),
-    },
-    {
-      label: 'Approval Rate',
-      value: `${approvalRate}%`,
-      delta: approvalRate >= 60 ? '+4%' : '-3%',
-      positive: approvalRate >= 60,
-      sparkIdx: 1,
-      sparkColor: 'bg-green-400',
-      icon: (
-        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      ),
-    },
-    {
-      label: 'Avg Ticket',
-      value: fmt$(avgTicket),
-      delta: '+8%',
-      positive: true,
-      sparkIdx: 2,
-      sparkColor: 'bg-blue-400',
-      icon: (
-        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75" />
-        </svg>
-      ),
-    },
-    {
-      label: 'Pipeline Value',
-      value: fmt$(pipelineValue),
-      delta: pipelineValue > 100000 ? '+5%' : '0%',
-      positive: pipelineValue > 100000 ? true : null,
-      sparkIdx: 3,
-      sparkColor: 'bg-gray-300',
-      icon: (
-        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
-        </svg>
-      ),
-    },
-    {
-      label: 'Avg Time-to-Approval',
-      value: avgApprovalDays === '—' ? '—' : `${avgApprovalDays}d`,
-      delta: '-22%',
-      positive: true,
-      lowerBetter: true,
-      sparkIdx: 4,
-      sparkColor: 'bg-green-400',
-      icon: (
-        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      ),
-    },
-    {
-      label: 'Revenue Booked',
-      value: fmt$(revenueBooked),
-      delta: '+17%',
-      positive: true,
-      sparkIdx: 5,
-      sparkColor: 'bg-blue-400',
-      icon: (
-        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      ),
-    },
-  ];
+    // ── Realtime: shop_kpi_snapshots ───────────────────────────────────────
+  useEffect(() => {
+    if (!orgId) return;
+    const today = new Date().toISOString().slice(0, 10);
+    const channel = supabase.channel(`kpi-snapshots-${orgId}`);
+
+    channel.on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'shop_kpi_snapshots',
+        filter: `org_id=eq.${orgId}&snapshot_date=eq.${today}`,
+      },
+      (payload) => {
+        if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+          const snap = payload.new;
+          if (snap.snapshot_date === today) {
+            setKpiSnapshot(snap);
+          }
+        }
+      }
+    );
+
+    channel.subscribe();
+
+    return () => {
+      channel.unsubscribe();
+    };
+  }, [orgId]);
+
+  let KPIS;
+  if (kpiSnapshot) {
+    const snap = kpiSnapshot;
+    KPIS = [
+      {
+        label: 'Close Rate',
+        value: `${Math.round(snap.close_rate)}%`,
+        delta: '—',
+        positive: null,
+        sparkIdx: 0,
+        sparkColor: 'bg-blue-400',
+        icon: (
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        ),
+      },
+      {
+        label: 'Avg Ticket',
+        value: fmt$(snap.avg_ticket),
+        delta: '—',
+        positive: null,
+        sparkIdx: 1,
+        sparkColor: 'bg-green-400',
+        icon: (
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75" />
+          </svg>
+        ),
+      },
+      {
+        label: 'Upsell Rate',
+        value: `${Math.round(snap.upsell_rate)}%`,
+        delta: '—',
+        positive: null,
+        sparkIdx: 2,
+        sparkColor: 'bg-purple-400',
+        icon: (
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18 9 11.25l4.306 4.306a11.95 11.95 0 0 1 5.814-5.518l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
+          </svg>
+        ),
+      },
+      {
+        label: 'On-Time Rate',
+        value: `${Math.round(snap.on_time_rate)}%`,
+        delta: '—',
+        positive: null,
+        sparkIdx: 3,
+        sparkColor: 'bg-orange-400',
+        icon: (
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        ),
+      },
+      {
+        label: 'Review Score',
+        value: snap.review_score?.toFixed(1) || '0.0',
+        delta: '—',
+        positive: null,
+        sparkIdx: 4,
+        sparkColor: 'bg-yellow-400',
+        icon: (
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.997a.563.563 0 00.277.458l5.25.781a.563.563 0 01.285.028l2.689-.456a.562.562 0 00.277-.458l1.46-4.14a.75.75 0 00-.894-1.182l-4.485 1.223a.75.75 0 01-.86-.286l-.914-3.09a.562.562 0 00-.285-.027l-5.833.869a.562.562 0 01-.579.028z" />
+          </svg>
+        ),
+      },
+      {
+        label: 'Composite Score',
+        value: Math.round(snap.composite_score),
+        delta: '—',
+        positive: null,
+        sparkIdx: 5,
+        sparkColor: 'bg-indigo-400',
+        icon: (
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
+          </svg>
+        ),
+      },
+    ];
+  } else {
+    KPIS = [
+      {
+        label: 'Estimates Written',
+        value: String(totalEstimates),
+        delta: '+12%',
+        positive: true,
+        sparkIdx: 0,
+        sparkColor: 'bg-blue-400',
+        icon: (
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125" />
+          </svg>
+        ),
+      },
+      {
+        label: 'Approval Rate',
+        value: `${approvalRate}%`,
+        delta: approvalRate >= 60 ? '+4%' : '-3%',
+        positive: approvalRate >= 60,
+        sparkIdx: 1,
+        sparkColor: 'bg-green-400',
+        icon: (
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        ),
+      },
+      {
+        label: 'Avg Ticket',
+        value: fmt$(avgTicket),
+        delta: '+8%',
+        positive: true,
+        sparkIdx: 2,
+        sparkColor: 'bg-blue-400',
+        icon: (
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75" />
+          </svg>
+        ),
+      },
+      {
+        label: 'Pipeline Value',
+        value: fmt$(pipelineValue),
+        delta: pipelineValue > 100000 ? '+5%' : '0%',
+        positive: pipelineValue > 100000 ? true : null,
+        sparkIdx: 3,
+        sparkColor: 'bg-gray-300',
+        icon: (
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+          </svg>
+        ),
+      },
+      {
+        label: 'Avg Time-to-Approval',
+        value: avgApprovalDays === '—' ? '—' : `${avgApprovalDays}d`,
+        delta: '-22%',
+        positive: true,
+        lowerBetter: true,
+        sparkIdx: 4,
+        sparkColor: 'bg-green-400',
+        icon: (
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        ),
+      },
+      {
+        label: 'Revenue Booked',
+        value: fmt$(revenueBooked),
+        delta: '+17%',
+        positive: true,
+        sparkIdx: 5,
+        sparkColor: 'bg-blue-400',
+        icon: (
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        ),
+      },
+    ];
+  }
+
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
