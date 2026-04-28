@@ -71,18 +71,24 @@ serve(async (req: Request) => {
       .single();
     const orgName = org?.name || 'Your Shop';
 
-    // --- Determine recipient --------------------------------------------------
+    // --- Determine recipient & fetch customer (for personalization) ----------
     let recipientEmail = emailedTo;
-    if (!recipientEmail) {
-      const customerId = docRecord.customer_id;
-      if (!customerId) throw new Error('No customer on record and no emailedTo provided');
-      const { data: customer } = await supabaseAdmin
+    let customerRecord: any = null;
+
+    // Always fetch customer record if available (for first name personalization)
+    if (docRecord.customer_id) {
+      const { data: cust } = await supabaseAdmin
         .from('customers')
-        .select('email, first_name, last_name')
-        .eq('id', customerId)
+        .select('email, first_name, last_name, name')
+        .eq('id', docRecord.customer_id)
         .single();
-      recipientEmail = customer?.email;
+      customerRecord = cust;
+      // If emailedTo wasn't explicitly provided, use customer's email
+      if (!recipientEmail) {
+        recipientEmail = cust?.email;
+      }
     }
+
     if (!recipientEmail) throw new Error('No recipient email available');
 
     // --- Call generate-pdf Edge Function --------------------------------------
@@ -107,10 +113,21 @@ serve(async (req: Request) => {
       .map(b => b.toString(16).padStart(2, '0'))
       .join('');
 
-    // --- Upload to Supabase Storage -------------------------------------------
+    // --- Document number & storage path ---------------------------------------
     const docNumber = type === 'estimate' ? docRecord.estimate_number : docRecord.invoice_number;
     const storagePath = `pdfs/${orgId}/${type}/${docNumber}.pdf`;
 
+    // --- Ensure bucket exists (idempotent) -----------------------------------
+    const { data: bucketList } = await supabaseAdmin.storage.listBuckets();
+    const pdfsBucket = bucketList?.find((b: any) => b.name === 'pdfs');
+    if (!pdfsBucket) {
+      await supabaseAdmin.storage.createBucket('pdfs', {
+        public: true,
+        fileSizeLimit: 10 * 1024 * 1024, // 10MB
+      });
+    }
+
+    // --- Upload to Supabase Storage -------------------------------------------
     const { error: uploadError } = await supabaseAdmin.storage
       .from('pdfs')
       .upload(storagePath, pdfBuffer, {
@@ -167,8 +184,11 @@ serve(async (req: Request) => {
       ? `Your Estimate from ${orgName} – ${docNumber}`
       : `Invoice ${docNumber} from ${orgName}`;
 
+    // Personalize greeting using customer record (if available)
+    const firstName = customerRecord?.first_name;
+    const greeting = firstName ? `Hello ${firstName},` : 'Hello,';
     const htmlBody = `
-      <p>Hello,</p>
+      <p>${greeting}</p>
       <p>Please find your ${type} attached.</p>
       <p>Thank you,<br/>${orgName}</p>
     `;

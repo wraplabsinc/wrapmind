@@ -57,7 +57,8 @@ function calcLineItems(lineItems) {
 }
 
 async function generateInvoicePDF(invoice) {
-  if (!orgId || !session?.access_token) {
+  if (!orgId) { alert('Organization not loaded. Please wait.'); return; }
+  if (!session?.access_token) {
     alert('Not authenticated');
     return;
   }
@@ -180,7 +181,7 @@ function MenuItem({ label, onClick, danger }) {
 
 // ─── Invoice Detail Panel ─────────────────────────────────────────────────────
 
-function InvoiceDetailPanel({ invoice, onClose, onRecordPayment, activityLog, onViewArchive }) {
+function InvoiceDetailPanel({ invoice, onClose, onRecordPayment, activityLog, onViewArchive, onEmail }) {
   const [tab, setTab] = useState('invoice');
   const [showPayForm, setShowPayForm] = useState(false);
   const [payForm, setPayForm] = useState({ amount: '', method: 'Card', note: '', date: new Date().toISOString().slice(0, 10) });
@@ -238,6 +239,18 @@ function InvoiceDetailPanel({ invoice, onClose, onRecordPayment, activityLog, on
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
               </svg>
               Archive
+            </button>
+          )}
+          {onEmail && (
+            <button
+              onClick={onEmail}
+              className="ml-3 text-[#64748B] dark:text-[#7D93AE] hover:text-[#0F1923] dark:hover:text-[#F8FAFE] flex items-center gap-1 text-xs font-medium"
+              title="Email PDF"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+              Email
             </button>
           )}
           <button onClick={onClose} className="ml-3 text-[#64748B] dark:text-[#7D93AE] hover:text-[#0F1923] dark:hover:text-[#F8FAFE]">
@@ -803,6 +816,7 @@ export default function InvoicesPage({ onNavigate, initialInvoiceId }) {
   }, [invoices, actor, addLog, updateInvoice, addNotification, selectedInvoice]);
 
   const markSent = useCallback(async (invoiceId) => {
+    if (!orgId) { alert('Organization not loaded yet. Please wait.'); return; }
     const inv = invoices.find(i => i.id === invoiceId);
     if (!inv) return;
 
@@ -1188,6 +1202,7 @@ export default function InvoicesPage({ onNavigate, initialInvoiceId }) {
           onRecordPayment={recordPayment}
           activityLog={invoiceActivity}
           onViewArchive={() => setArchiveDrawer(selectedInvoice.id)}
+          onEmail={() => markSent(selectedInvoice.id)}
         />
       )}
 

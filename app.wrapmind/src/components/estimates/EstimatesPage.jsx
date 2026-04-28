@@ -12,6 +12,7 @@ import DiscPersonalityCard from '../ui/DiscPersonalityCard';
 import AIFollowUpModal from '../estimate/AIFollowUpModal';
 import { useScheduling } from '../../context/SchedulingContext';
 import QuickScheduleModal from '../scheduling/QuickScheduleModal';
+import EstimateArchiveDrawer from './EstimateArchiveDrawer';
 
 
 function fmtCurrency(n) {
@@ -137,7 +138,7 @@ function RowDotMenu({ est, onView, onDuplicate, onSend, onConvert, onArchive, on
 }
 
 // ─── EstimateDetailPanel ──────────────────────────────────────────────────────
-function EstimateDetailPanel({ est, onClose, onUpdateStatus, onConvert, onDuplicate, onNavigate, onScheduleEst, onEmail, actor, personality = null }) {
+function EstimateDetailPanel({ est, onClose, onUpdateStatus, onConvert, onDuplicate, onNavigate, onScheduleEst, onEmail, onViewArchive, actor, personality = null }) {
   const [tab, setTab] = useState('summary');
   const [confirmDecline, setConfirmDecline] = useState(false);
 
@@ -193,6 +194,18 @@ function EstimateDetailPanel({ est, onClose, onUpdateStatus, onConvert, onDuplic
               </svg>
               Email
             </button>
+          {onViewArchive && (
+            <button
+              onClick={onViewArchive}
+              className="ml-2 text-[#64748B] dark:text-[#7D93AE] hover:text-[#2E8BF0] dark:hover:text-[#2E8BF0] flex items-center gap-1 text-xs font-medium"
+              title="View Archive History"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+              </svg>
+              Archive
+            </button>
+          )}
           )}
           <button
             onClick={onClose}
@@ -541,6 +554,7 @@ export default function EstimatesPage({ onNavigate, initialEstimateId }) {
   const [showArchived, setShowArchived] = useState(false);
   const [statsOpen, setStatsOpen] = useState(true);
   const [deleteConfirm, setDeleteConfirm] = useState(null); // id to confirm delete
+  const [estimateArchiveDrawer, setEstimateArchiveDrawer] = useState(null); // estimateId with drawer open
   const [statusDropOpen, setStatusDropOpen] = useState(false);
   const [aiFollowUpEst, setAiFollowUpEst] = useState(null);
   const [scheduleEst, setScheduleEst] = useState(null);
@@ -751,6 +765,7 @@ export default function EstimatesPage({ onNavigate, initialEstimateId }) {
   }, [addLog, actor]);
 
   const handleSend = useCallback(async (id) => {
+    if (!orgId) { alert('Organization not loaded yet. Please wait.'); return; }
     const est = estimates.find(e => e.id === id);
     if (!est) return;
 
@@ -1142,10 +1157,19 @@ export default function EstimatesPage({ onNavigate, initialEstimateId }) {
           onNavigate={onNavigate}
           onScheduleEst={setScheduleEst}
           onEmail={handleSend ? () => handleSend(selectedEst.id) : undefined}
+          onViewArchive={() => setEstimateArchiveDrawer(selectedEst.id)}
           actor={actor}
           personality={selectedPersonality}
         />
-      )}
+      )
+      {/* Archive Drawer */}
+      {estimateArchiveDrawer && (
+        <EstimateArchiveDrawer
+          estimateId={estimateArchiveDrawer}
+          estimateDocNumber={selectedEst?.estimateNumber}
+          onClose={() => setEstimateArchiveDrawer(null)}
+        />
+      )}}
 
       {aiFollowUpEst && (
         <AIFollowUpModal
