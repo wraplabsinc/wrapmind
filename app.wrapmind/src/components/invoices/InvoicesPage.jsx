@@ -116,6 +116,7 @@ function StatTile({ label, value, sub, accent }) {
 
 function ActionsMenu({ invoice, onView, onRecordPayment, onSend, onVoid, onDuplicate, onDelete }) {
   const [open, setOpen] = useState(false);
+  const { orgId, loading } = useAuth();
   const ref = useRef(null);
 
   useEffect(() => {
@@ -151,7 +152,7 @@ function ActionsMenu({ invoice, onView, onRecordPayment, onSend, onVoid, onDupli
             <MenuItem label="Record Payment" onClick={() => act(onRecordPayment)} />
           )}
           {(invoice.status === 'draft' || invoice.status === 'sent') && (
-            <MenuItem label="Mark as Sent" onClick={() => act(onSend)} />
+            <MenuItem label="Mark as Sent" onClick={() => act(onSend)} disabled={!orgId || loading} />
           )}
           {invoice.status !== 'voided' && (
             <MenuItem label="Mark Void" onClick={() => act(onVoid)} danger />
@@ -164,15 +165,16 @@ function ActionsMenu({ invoice, onView, onRecordPayment, onSend, onVoid, onDupli
   );
 }
 
-function MenuItem({ label, onClick, danger }) {
+function MenuItem({ label, onClick, danger, disabled }) {
   return (
     <button
       onClick={onClick}
+      disabled={disabled}
       className={`w-full text-left px-4 py-2 text-sm transition-colors ${
         danger
           ? 'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20'
           : 'text-[#0F1923] dark:text-[#F8FAFE] hover:bg-gray-50 dark:hover:bg-[#243348]'
-      }`}
+      }${disabled ? ' opacity-50 cursor-not-allowed' : ''}`}
     >
       {label}
     </button>
@@ -182,11 +184,12 @@ function MenuItem({ label, onClick, danger }) {
 // ─── Invoice Detail Panel ─────────────────────────────────────────────────────
 
 function InvoiceDetailPanel({ invoice, onClose, onRecordPayment, activityLog, onViewArchive, onEmail }) {
-  const [tab, setTab] = useState('invoice');
-  const [showPayForm, setShowPayForm] = useState(false);
-  const [payForm, setPayForm] = useState({ amount: '', method: 'Card', note: '', date: new Date().toISOString().slice(0, 10) });
+   const [tab, setTab] = useState('invoice');
+   const [showPayForm, setShowPayForm] = useState(false);
+   const [payForm, setPayForm] = useState({ amount: '', method: 'Card', note: '', date: new Date().toISOString().slice(0, 10) });
+   const { orgId, loading } = useAuth();
 
-  useEffect(() => {
+   useEffect(() => {
     if (invoice) {
       setPayForm({ amount: String(invoice.amountDue), method: 'Card', note: '', date: new Date().toISOString().slice(0, 10) });
       setShowPayForm(false);
@@ -221,7 +224,8 @@ function InvoiceDetailPanel({ invoice, onClose, onRecordPayment, activityLog, on
           <StatusBadge status={invoice.status} />
           <button
             onClick={() => generateInvoicePDF(invoice)}
-            className="ml-3 text-[#64748B] dark:text-[#7D93AE] hover:text-[#0F1923] dark:hover:text-[#F8FAFE] flex items-center gap-1 text-xs font-medium"
+            disabled={!orgId || loading}
+            className={`ml-3 text-[#64748B] dark:text-[#7D93AE] hover:text-[#0F1923] dark:hover:text-[#F8FAFE] flex items-center gap-1 text-xs font-medium ${!orgId || loading ? 'opacity-50 cursor-not-allowed' : ''}`}
             title="Download PDF"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -244,7 +248,8 @@ function InvoiceDetailPanel({ invoice, onClose, onRecordPayment, activityLog, on
           {onEmail && (
             <button
               onClick={onEmail}
-              className="ml-3 text-[#64748B] dark:text-[#7D93AE] hover:text-[#0F1923] dark:hover:text-[#F8FAFE] flex items-center gap-1 text-xs font-medium"
+              disabled={!orgId || loading}
+              className={`ml-3 text-[#64748B] dark:text-[#7D93AE] hover:text-[#0F1923] dark:hover:text-[#F8FAFE] flex items-center gap-1 text-xs font-medium ${!orgId || loading ? 'opacity-50 cursor-not-allowed' : ''}`}
               title="Email PDF"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
@@ -739,7 +744,7 @@ export default function InvoicesPage({ onNavigate, initialInvoiceId }) {
   } = useInvoices();
   const { addNotification } = useNotifications();
   // Auth + customer lookup
-  const { orgId, session } = useAuth();
+  const { orgId, session, loading } = useAuth();
   const { customers } = useCustomers();
 
   const [search, setSearch] = useState('');

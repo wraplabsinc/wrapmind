@@ -72,7 +72,7 @@ function SortChevron({ col, sortCol, sortDir }) {
 }
 
 // ─── RowDotMenu ───────────────────────────────────────────────────────────────
-function RowDotMenu({ est, onView, onDuplicate, onSend, onConvert, onArchive, onDelete, onAIFollowUp, onSchedule, onExpire, canDelete }) {
+function RowDotMenu({ est, onView, onDuplicate, onSend, onConvert, onArchive, onDelete, onAIFollowUp, onSchedule, onExpire, canDelete, orgId, loading }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -86,7 +86,7 @@ function RowDotMenu({ est, onView, onDuplicate, onSend, onConvert, onArchive, on
   const items = [
     { label: 'View', action: onView, always: true },
     { label: 'Duplicate', action: onDuplicate, always: true },
-    { label: 'Email', action: onSend, show: est.status === 'draft' },
+    { label: 'Email', action: onSend, show: est.status === 'draft', disabled: !orgId || loading },
     { label: 'Convert to Invoice', action: onConvert, show: est.status === 'approved' },
     { label: 'AI Follow-up', action: onAIFollowUp, show: ['sent', 'declined', 'expired'].includes(est.status) },
     { label: 'Schedule Job', action: onSchedule, show: ['approved', 'converted', 'draft', 'sent'].includes(est.status) },
@@ -114,20 +114,20 @@ function RowDotMenu({ est, onView, onDuplicate, onSend, onConvert, onArchive, on
           {items.map((item, i) => (
             <div key={i}>
               {item.divider && <div className="my-1 border-t border-gray-100 dark:border-[#243348]" />}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setOpen(false);
-                  if (!item.gated) item.action();
-                }}
-                disabled={item.gated}
-                className={`w-full text-left px-3 py-1.5 text-sm transition-colors
-                  ${item.danger
-                    ? 'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20'
-                    : 'text-[#0F1923] dark:text-[#F8FAFE] hover:bg-gray-50 dark:hover:bg-[#243348]'}
-                  ${item.gated ? 'opacity-40 cursor-not-allowed' : ''}
-                `}
-              >
+               <button
+                 onClick={(e) => {
+                   e.stopPropagation();
+                   setOpen(false);
+                   if (!item.gated && !item.disabled) item.action();
+                 }}
+                 disabled={item.gated || item.disabled}
+                 className={`w-full text-left px-3 py-1.5 text-sm transition-colors
+                   ${item.danger
+                     ? 'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20'
+                     : 'text-[#0F1923] dark:text-[#F8FAFE] hover:bg-gray-50 dark:hover:bg-[#243348]'}
+                   ${item.gated || item.disabled ? 'opacity-50 cursor-not-allowed' : ''}
+                 `}
+               >
                 {item.label}
               </button>
             </div>
@@ -142,6 +142,7 @@ function RowDotMenu({ est, onView, onDuplicate, onSend, onConvert, onArchive, on
 function EstimateDetailPanel({ est, onClose, onUpdateStatus, onConvert, onDuplicate, onNavigate, onScheduleEst, onEmail, onViewArchive, actor, personality = null }) {
   const [tab, setTab] = useState('summary');
   const [confirmDecline, setConfirmDecline] = useState(false);
+  const { orgId, loading } = useAuth();
 
   if (!est) return null;
 
@@ -184,12 +185,13 @@ function EstimateDetailPanel({ est, onClose, onUpdateStatus, onConvert, onDuplic
           <div>
             <div className="text-xs text-[#64748B] dark:text-[#7D93AE] mt-0.5">{est.customerName} · {est.vehicleLabel}</div>
           </div>
-          {onEmail && (
-            <button
-              onClick={onEmail}
-              className="ml-3 text-[#64748B] dark:text-[#7D93AE] hover:text-[#0F1923] dark:hover:text-[#F8FAFE] flex items-center gap-1 text-xs font-medium"
-              title="Email PDF"
-            >
+           {onEmail && (
+             <button
+               onClick={onEmail}
+               disabled={!orgId || loading}
+               className={`ml-3 text-[#64748B] dark:text-[#7D93AE] hover:text-[#0F1923] dark:hover:text-[#F8FAFE] flex items-center gap-1 text-xs font-medium ${!orgId || loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+               title="Email PDF"
+             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
               </svg>
@@ -541,7 +543,7 @@ export default function EstimatesPage({ onNavigate, initialEstimateId }) {
   const { appointments, addAppointment, technicians, SERVICE_DURATIONS } = useScheduling();
   const { customers: enrichedCustomers } = useCustomers();
   // Auth + API
-  const { orgId, session } = useAuth();
+  const { orgId, session, loading } = useAuth();
   const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
   // ── State ────────────────────────────────────────────────────────────────────
@@ -1140,7 +1142,9 @@ export default function EstimatesPage({ onNavigate, initialEstimateId }) {
                               }}
                               onAIFollowUp={() => setAiFollowUpEst(est)}
                               onSchedule={() => setScheduleEst(est)}
-                              canDelete={can('estimates.delete')}
+                               canDelete={can('estimates.delete')}
+                               orgId={orgId}
+                               loading={loading}
                             />
                           )}
                         </td>
