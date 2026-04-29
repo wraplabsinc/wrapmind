@@ -21,36 +21,25 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'pwa-192x192.svg'],
       manifest: {
-        name: 'WrapMind Estimator',
-        short_name: 'Estimator',
-        description: 'Vehicle wrap package pricing calculator',
-        theme_color: '#1a1a2e',
-        background_color: '#ffffff',
+        name: 'Wrapmind',
+        short_name: 'Wrapmind',
+        description: 'Automotive shop management',
+        theme_color: '#1B2A3E',
+        background_color: '#0F1923',
         display: 'standalone',
-        orientation: 'portrait',
         icons: [
-          {
-            src: 'pwa-192x192.svg',
-            sizes: '192x192',
-            type: 'image/svg+xml'
-          },
-          {
-            src: 'pwa-192x192.svg',
-            sizes: '512x512',
-            type: 'image/svg+xml',
-            purpose: 'maskable'
-          }
+          { src: 'pwa-192x192.svg', sizes: '192x192', type: 'image/svg+xml' }
         ]
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
-        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,
         skipWaiting: true,
         clientsClaim: true,
       },
       devOptions: {
-        enabled: false,   // keep SW off during `npm run dev` so dev-server JS is never shadowed by a cached bundle
-      }
+        enabled: false,
+      },
     }),
     sentryVitePlugin({
       org: process.env.SENTRY_ORG,

@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import IntegrationSlideOver from './IntegrationSlideOver';
-import { useAuth } from '../context/AuthContext';
-import { USE_ORGANIZATION_SETTINGS, USE_UPSERT_ORGANIZATION_SETTINGS } from '../api/settings.graphql.js';
+import { useAuth } from '../../context/AuthContext';
+import { USE_ORGANIZATION_SETTINGS, USE_UPSERT_ORGANIZATION_SETTINGS } from '../../api/settings.graphql.js';
 
 // ─── Integration registry ────────────────────────────────────────────────────
 const INTEGRATIONS = [
