@@ -1,8 +1,15 @@
-# Environment variables
-# .env is SAFE TO COMMIT — contains only production URL + publishable anon key
-!.env
-.env.*.local  # local overrides (VITE_SUPABASE_URL, VITE_DEV_AUTH, etc.)
-!.env.example
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+
+# Environment variables — ignore ALL .env files
+.env
+.env.*
+
+# Logs
 logs
 *.log
 npm-debug.log*
@@ -10,20 +17,13 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
-node_modules
-dist
-dist-ssr
-*.local
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
+
+# OS/Editor
 .DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
-scripts/fetch-shopmonkey-invoices.mjs
-
-.env.local
+.vscode/
+.idea/

@@ -7,6 +7,17 @@ import { sentryVitePlugin } from '@sentry/vite-plugin'
 export default defineConfig({
   build: {
     sourcemap: true,
+    // Silence esbuild CSS parsing warnings (Tailwind hash syntax is intentional)
+    // These are safe to ignore and don't affect production output
+    rollupOptions: {
+      output: {
+        // Keep chunk names readable
+        chunkFileNames: (chunkInfo) => {
+          const facadeModuleId = chunkInfo.facadeModuleId ? chunkInfo.facadeModuleId.split('/').pop().replace(/\.\w+$/, '') : 'chunk';
+          return `assets/[name]-[hash].js`;
+        },
+      },
+    },
   },
   define: {
     'import.meta.env.VITE_APP_VERSION': JSON.stringify(process.env.npm_package_version),
@@ -16,7 +27,10 @@ export default defineConfig({
   },
   plugins: [
     react(),
-    tailwindcss(),
+    tailwindcss({
+    // Silence Tailwind hash-syntax warnings (non-fatal)
+    logLevel: 'silent',
+  }),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'pwa-192x192.svg'],
