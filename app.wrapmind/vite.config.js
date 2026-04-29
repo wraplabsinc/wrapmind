@@ -7,8 +7,9 @@ import { sentryVitePlugin } from '@sentry/vite-plugin'
 export default defineConfig({
   build: {
     sourcemap: true,
+    // Output to repo root `dist/` so Firebase (running from root) can find it
+    outDir: '../dist',
     // Silence esbuild CSS parsing warnings (Tailwind hash syntax is intentional)
-    // These are safe to ignore and don't affect production output
     rollupOptions: {
       output: {
         // Keep chunk names readable
