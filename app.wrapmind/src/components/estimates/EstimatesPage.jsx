@@ -210,7 +210,6 @@ function EstimateDetailPanel({ est, onClose, onUpdateStatus, onConvert, onDuplic
               Archive
             </button>
           )}
-          )}
           <button
             onClick={onClose}
             className="w-7 h-7 flex items-center justify-center rounded-md text-[#64748B] dark:text-[#7D93AE]

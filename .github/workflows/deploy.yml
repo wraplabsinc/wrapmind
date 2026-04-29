@@ -1,0 +1,47 @@
+name: Deploy to Firebase Hosting
+
+on:
+  push:
+    branches:
+      - release
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: app.wrapmind/package-lock.json
+
+      - name: Install dependencies
+        working-directory: app.wrapmind
+        run: npm ci
+
+      - name: Build
+        working-directory: app.wrapmind
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN }}
+          VITE_WRAPMIND_API_URL: ${{ secrets.VITE_WRAPMIND_API_URL }}
+          VITE_WRAPMIND_API_KEY: ${{ secrets.VITE_WRAPMIND_API_KEY }}
+          VITE_APP_VERSION: ${{ github.sha }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+        run: npm run build
+
+      - name: Deploy to Firebase
+        uses: w9jds/firebase-action@v0.1.1
+        with:
+          args: deploy --only hosting --project ${{ secrets.FIREBASE_PROJECT_ID }}
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}

@@ -1,7 +1,7 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import IntegrationSlideOver from './IntegrationSlideOver';
 import { useAuth } from '../context/AuthContext';
-import { USE_ORGANIZATION_SETTINGS, USE_UPSERT_ORGANIZATION_SETTINGS } from '../api/settings.graphql';
+import { USE_ORGANIZATION_SETTINGS, USE_UPSERT_ORGANIZATION_SETTINGS } from '../api/settings.graphql.js';
 
 // ─── Integration registry ────────────────────────────────────────────────────
 const INTEGRATIONS = [
@@ -84,6 +84,18 @@ function loadStoredConnections() {
   } catch {
     return {};
   }
+}
+
+function saveIntegration(integrationId, fields) {
+  const stored = loadStoredConnections();
+  stored[integrationId] = { ...fields, connectedAt: new Date().toISOString() };
+  localStorage.setItem('wm-integrations', JSON.stringify(stored));
+}
+
+function disconnectIntegration(integrationId) {
+  const stored = loadStoredConnections();
+  delete stored[integrationId];
+  localStorage.setItem('wm-integrations', JSON.stringify(stored));
 }
 
 function resolveStatus(integration, stored) {
@@ -318,8 +330,8 @@ export default function IntegrationsPage() {
                 key={integration.id}
                 integration={integration}
                 effectiveStatus={integration.effectiveStatus}
-                lastSync={stored[integration.id]?.connectedAt
-                  ? `Connected ${new Date(stored[integration.id].connectedAt).toLocaleDateString()}`
+                lastSync={connections[integration.id]?.connectedAt
+                  ? `Connected ${new Date(connections[integration.id].connectedAt).toLocaleDateString()}`
                   : integration.lastSync}
                 onSelect={(item) => {
                   prevFocusRef.current = document.activeElement;

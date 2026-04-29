@@ -143,7 +143,7 @@ export default function IntegrationSlideOver({ integration, stored, onClose, onS
       } else {
         setTestMsg(`✗ ${result.message || 'Test failed'}`);
       }
-    } catch (err: any) {
+    } catch (err) {
       setTestMsg(`Error: ${err.message}`);
     } finally {
       setTesting(false);
