@@ -59,6 +59,7 @@ import { ReportsProvider } from './context/ReportsContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { PresenceProvider } from './context/PresenceContext';
 import AuthPage from './components/auth/AuthPage';
+import ForgotPasswordPage from './components/auth/ForgotPasswordPage';
 import LocationSwitcher from './components/ui/LocationSwitcher';
 import { logEvent, EVENT_TYPES, resetSession } from './lib/analytics';
 
@@ -928,9 +929,10 @@ function AppInner() {
         <TopBar onNavigate={handleNavigate} onLogout={() => { resetSession(); signOut(); }} />
         {!focusMode && <Ticker />}
 
-        <div key={currentView} className="wm-fade-in-up flex-1 flex flex-col min-w-0 overflow-hidden">
         {currentView === 'dashboard' ? (
           <Dashboard />
+        ) : currentView === 'forgot-password' ? (
+          <ForgotPasswordPage />
         ) : currentView === 'settings' ? (
           <Settings initialTab={navData?.settingsTab || 'profile'} />
         ) : currentView === 'performance' && xpEnabled ? (

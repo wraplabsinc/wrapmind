@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
-import { useTheme, ACCENT_PALETTES, NAV_THEMES, FONT_SIZE_STEPS, FONT_SIZE_MAP, FONT_SIZE_LABELS, FONT_FAMILY_MAP, DENSITY_OPTIONS, RADIUS_OPTIONS, CARD_STYLE_OPTIONS, MODULE_GAP_OPTIONS } from '../context/ThemeContext';
+import { useTheme } from '../context/ThemeContext';
 import { useRoles, ROLES, ACCESS_MATRIX } from '../context/RolesContext';
 import { useUnits } from '../context/UnitsContext';
 import { useFeatureFlags } from '../context/FeatureFlagsContext';
 import { useAuditLog } from '../context/AuditLogContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useTicker, TICKER_SPEEDS } from '../context/TickerContext';
+import { useAuth } from '../context/AuthContext';
 import Button from './ui/Button';
 import WMIcon from './ui/WMIcon';
 import Toggle from './ui/Toggle';
@@ -4623,6 +4624,14 @@ function SecurityPage() {
   const [saved,      setSaved]      = useState(false);
   const [clearDone,  setClearDone]  = useState(false);
   const [confirmClear, setConfirmClear] = useState(false);
+  const { updatePassword } = useAuth();
+
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [pwdSubmitting, setPwdSubmitting] = useState(false);
+  const [pwdError, setPwdError] = useState(null);
+  const [pwdSuccess, setPwdSuccess] = useState(false);
 
   // Load config and initial stats on mount
   useEffect(() => {
@@ -4655,6 +4664,27 @@ function SecurityPage() {
     setConfirmClear(false);
     setTimeout(() => window.location.reload(), 1200);
   };
+
+  async function handlePasswordChange(e) {
+    e.preventDefault();
+    if (newPassword !== confirmPassword) {
+      setPwdError("Passwords do not match");
+      return;
+    }
+    setPwdSubmitting(true);
+    setPwdError(null);
+    const { error } = await updatePassword(newPassword);
+    setPwdSubmitting(false);
+    if (error) {
+      setPwdError(error.message || "Failed to update password");
+    } else {
+      setPwdSuccess(true);
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      setTimeout(() => setPwdSuccess(false), 5000);
+    }
+  }
 
   const usedPct = stats ? Math.round((stats.used / stats.maxCalls) * 100) : 0;
 
@@ -4832,6 +4862,61 @@ function SecurityPage() {
             )}
           </CardBody>
         </Card>
+
+        {/* ── Account Security ───────────────────────────────────────────── */}
+        <Card>
+          <CardHeader title="Account Security" />
+          <CardBody>
+            <form onSubmit={handlePasswordChange} className="space-y-4">
+              <div>
+                <label className="block text-xs font-medium text-[#0F1923] dark:text-[#F8FAFE] mb-1">Current password</label>
+                <input
+                  type="password"
+                  value={currentPassword}
+                  onChange={e => setCurrentPassword(e.target.value)}
+                  required
+                  className="w-full px-3 py-2 bg-[#0F1923] border border-[#243348] rounded-lg text-white placeholder-[#4A5E75] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-[#0F1923] dark:text-[#F8FAFE] mb-1">New password</label>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={e => setNewPassword(e.target.value)}
+                  required
+                  minLength={8}
+                  className="w-full px-3 py-2 bg-[#0F1923] border border-[#243348] rounded-lg text-white placeholder-[#4A5E75] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                <p className="text-[10px] text-gray-500 mt-1">Minimum 8 characters</p>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-[#0F1923] dark:text-[#F8FAFE] mb-1">Confirm new password</label>
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={e => setConfirmPassword(e.target.value)}
+                  required
+                  minLength={8}
+                  className="w-full px-3 py-2 bg-[#0F1923] border border-[#243348] rounded-lg text-white placeholder-[#4A5E75] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              {pwdError && (
+                <p className="text-xs text-red-500">{pwdError}</p>
+              )}
+
+              <Button variant="primary" disabled={pwdSubmitting || !currentPassword || !newPassword || !confirmPassword || newPassword !== confirmPassword}>
+                {pwdSubmitting ? 'Updating…' : 'Update password'}
+              </Button>
+
+              {pwdSuccess && (
+                <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-2">✓ Password updated successfully</p>
+              )}
+            </form>
+          </CardBody>
+        </Card>
+
 
       </div>
     </div>

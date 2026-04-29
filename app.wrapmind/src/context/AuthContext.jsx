@@ -33,11 +33,13 @@ export function AuthProvider({ children }) {
       else setLoading(false);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, s) => {
       setSession(s);
       setUser(s?.user ?? null);
-      if (s?.user) fetchProfileAndOrg(s.user.id);
-      else {
+      if (s?.user) {
+        await fetchProfileAndOrg(s.user.id);
+        ensureProfile(s.user.id, s.user.email).catch(() => {});
+      } else {
         setProfile(null);
         setOrg(null);
         setLoading(false);
@@ -124,6 +126,33 @@ export function AuthProvider({ children }) {
     return { error };
   }, []);
 
+  // ── Extended auth methods (Phase 1) ──────────────────────────────────────
+  const signInWithMagicLink = useCallback(async (email) => {
+    if (DEV_AUTH) return { data: null, error: null };
+    const { data, error } = await supabase.auth.signInWithOtp({ email });
+    return { data, error };
+  }, []);
+
+  const signInWithOAuth = useCallback(async (provider) => {
+    if (DEV_AUTH) return { data: null, error: null };
+    const { data, error } = await supabase.auth.signInWithOAuth({ provider });
+    return { data, error };
+  }, []);
+
+  const resetPassword = useCallback(async (email) => {
+    if (DEV_AUTH) return { error: null };
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: 'https://app.wrapmind.ai/update-password',
+    });
+    return { error };
+  }, []);
+
+  const updatePassword = useCallback(async (newPassword) => {
+    if (DEV_AUTH) return { error: null };
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    return { error };
+  }, []);
+
   const value = {
     session,
     user,
@@ -135,6 +164,10 @@ export function AuthProvider({ children }) {
     signUp,
     signIn,
     signOut,
+    signInWithMagicLink,
+    signInWithOAuth,
+    resetPassword,
+    updatePassword,
     isAuthenticated: DEV_AUTH ? true : !!session,
     role: profile?.role ?? null,
   };
