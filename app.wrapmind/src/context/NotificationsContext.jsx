@@ -76,6 +76,8 @@ export function NotificationsProvider({ children }) {
   }, [notifications, isDevAuth]);
 
   // ── Realtime subscriptions (patch layer — Apollo remains primary source) ────
+  const [realtimeConnected, setRealtimeConnected] = useState(false);
+
   useEffect(() => {
     if (!profileId || isDevAuth) return;
 
@@ -133,7 +135,10 @@ export function NotificationsProvider({ children }) {
       }, (payload) => {
         setNotifications(prev => prev.filter(n => n.id !== payload.old.id));
       })
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') setRealtimeConnected(true);
+        else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') setRealtimeConnected(false);
+      });
 
     return () => {
       supabase.removeChannel(channel);
@@ -221,6 +226,7 @@ export function NotificationsProvider({ children }) {
     unreadCount,
     loading:  !isDevAuth && apolloLoading,
     error:    apolloError,
+    realtimeConnected,
     addNotification,
     markRead,
     markAllRead,

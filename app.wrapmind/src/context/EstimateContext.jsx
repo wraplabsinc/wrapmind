@@ -124,6 +124,7 @@ export function EstimateProvider({ children }) {
           convertedToInvoiceId: payload.new.converted_to_invoice_id,
           createdAt: payload.new.created_at,
           updatedAt: payload.new.updated_at,
+          deletedAt: payload.new.deleted_at,
         };
         setEstimates(prev => {
           if (prev.some(e => e.id === newEst.id)) return prev;
@@ -163,6 +164,7 @@ export function EstimateProvider({ children }) {
                 approvedAt: payload.new.approved_at,
                 declinedAt: payload.new.declined_at,
                 convertedToInvoiceId: payload.new.converted_to_invoice_id,
+                deletedAt: payload.new.deleted_at,
                 updatedAt: payload.new.updated_at,
               }
             : e
@@ -186,12 +188,10 @@ export function EstimateProvider({ children }) {
       supabase.removeChannel(channel);
     };
   }, [orgId, isDevAuth]);
-
-  // ─── Filtered view ─────────────────────────────────────────────────────────
-  const filteredEstimates = activeLocationId === 'all' || !activeLocationId
+const filteredEstimates = (activeLocationId === 'all' || !activeLocationId
     ? estimates
-    : estimates.filter(e => !e.locationId || e.locationId === activeLocationId);
-
+    : estimates.filter(e => !e.locationId || e.locationId === activeLocationId)
+  ).filter(e => !e.deletedAt);
   // ─── getNextEstimateNumber ───────────────────────────────────────────────────
   const getNextEstimateNumber = useCallback(() => {
     const prefix = deriveEstimatePrefix(org);
@@ -282,11 +282,17 @@ export function EstimateProvider({ children }) {
         .catch(err => console.error('[EstimateContext] GraphQL delete failed:', err));
     }
   }, [orgId, isDevAuth, deleteEstimateMutation]);
+  // ─── archiveEstimate ───────────────────────────────────────────────────────
+  const archiveEstimate = useCallback((id) => {
+    const now = new Date().toISOString();
+    setEstimates(prev => prev.filter(e => e.id !== id));
 
-  // ─── getEstimateById ────────────────────────────────────────────────────────
-  const getEstimateById = useCallback((id) => {
-    return estimates.find(e => e.id === id);
-  }, [estimates]);
+    if (orgId && !isDevAuth) {
+      updateEstimateMutation({
+        variables: { id, deletedAt: now, status: 'archived' },
+      }).catch(err => console.error('[EstimateContext] GraphQL archive failed:', err));
+    }
+  }, [updateEstimateMutation]);
 
   // ─── Context value ─────────────────────────────────────────────────────────
 
@@ -299,6 +305,7 @@ export function EstimateProvider({ children }) {
     addEstimate,
     updateEstimate,
     deleteEstimate,
+    archiveEstimate,
     getEstimateById,
     getNextEstimateNumber,
     estimateCount:     filteredEstimates.length,

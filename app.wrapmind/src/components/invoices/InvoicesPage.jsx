@@ -316,7 +316,17 @@ function InvoiceDetailPanel({ invoice, onClose, onRecordPayment, activityLog, on
 
               {/* Line Items */}
               <div>
-                <p className="text-xs font-semibold text-[#64748B] dark:text-[#7D93AE] uppercase tracking-wide mb-2">Line Items</p>
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs font-semibold text-[#64748B] dark:text-[#7D93AE] uppercase tracking-wide">Line Items</p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleEditLineItems}
+                    disabled={invoice.amountPaid > 0 || ['paid', 'voided'].includes(invoice.status)}
+                  >
+                    Edit Line Items
+                  </Button>
+                </div>
                 <table className="w-full text-xs">
                   <thead>
                     <tr className="text-[#64748B] dark:text-[#7D93AE]">
@@ -326,15 +336,51 @@ function InvoiceDetailPanel({ invoice, onClose, onRecordPayment, activityLog, on
                     </tr>
                   </thead>
                   <tbody>
-                    {invoice.lineItems.map(li => (
+                    {(isEditingLineItems ? tempLineItems : invoice.lineItems).map(li => (
                       <tr key={li.id} className="border-t border-gray-100 dark:border-[#243348]">
-                        <td className="py-1.5 text-[#0F1923] dark:text-[#F8FAFE] pr-2">{li.description}</td>
-                        <td className="py-1.5 text-center text-[#64748B] dark:text-[#7D93AE]">{li.qty}</td>
-                        <td className="py-1.5 text-right text-[#0F1923] dark:text-[#F8FAFE]">{fmt(li.total)}</td>
+                        {isEditingLineItems ? (
+                          <>
+                            <td className="py-1.5 pr-2">
+                              <input
+                                type="text"
+                                value={li.description}
+                                onChange={e => handleLineItemChange(li.id, 'description', e.target.value)}
+                                className="w-full px-2 py-1 text-xs bg-white dark:bg-[#0F1923] border border-gray-200 dark:border-[#243348] rounded text-[#0F1923] dark:text-[#F8FAFE] focus:outline-none focus:ring-1 focus:ring-[#2E8BF0]"
+                              />
+                            </td>
+                            <td className="py-1.5 text-center">
+                              <input
+                                type="number"
+                                min="0.01"
+                                step="0.01"
+                                value={li.qty}
+                                onChange={e => handleLineItemChange(li.id, 'qty', e.target.value)}
+                                className="w-16 px-2 py-1 text-xs bg-white dark:bg-[#0F1923] border border-gray-200 dark:border-[#243348] rounded text-center text-[#0F1923] dark:text-[#F8FAFE] focus:outline-none focus:ring-1 focus:ring-[#2E8BF0]"
+                              />
+                            </td>
+                            <td className="py-1.5 text-right text-[#0F1923] dark:text-[#F8FAFE]">{fmt(li.total)}</td>
+                          </>
+                        ) : (
+                          <>
+                            <td className="py-1.5 text-[#0F1923] dark:text-[#F8FAFE] pr-2">{li.description}</td>
+                            <td className="py-1.5 text-center text-[#64748B] dark:text-[#7D93AE]">{li.qty}</td>
+                            <td className="py-1.5 text-right text-[#0F1923] dark:text-[#F8FAFE]">{fmt(li.total)}</td>
+                          </>
+                        )}
                       </tr>
                     ))}
                   </tbody>
                 </table>
+                {isEditingLineItems && (
+                  <div className="flex justify-end gap-2 mt-3">
+                    <Button variant="outline" size="sm" onClick={handleCancelEdit}>
+                      Cancel
+                    </Button>
+                    <Button variant="primary" size="sm" onClick={handleSaveLineItems}>
+                      Save
+                    </Button>
+                  </div>
+                )}
               </div>
 
               {/* Totals */}
@@ -755,6 +801,8 @@ export default function InvoicesPage({ onNavigate, initialInvoiceId }) {
   const [archiveDrawer, setArchiveDrawer] = useState(null); // invoiceId with drawer open
   const [showCreate, setShowCreate] = useState(false);
   const [archiveConfirm, setArchiveConfirm] = useState(null); // invoiceId
+  const [isEditingLineItems, setIsEditingLineItems] = useState(false);
+  const [tempLineItems, setTempLineItems] = useState([]);
 
   // Update selected invoice reference when invoices change
   useEffect(() => {
@@ -926,6 +974,58 @@ export default function InvoicesPage({ onNavigate, initialInvoiceId }) {
     });
     setShowCreate(false);
   }, [actor, addLog, addInvoice, getNextInvoiceNumber]);
+
+  // ── Line Items Editing ──
+
+  const handleEditLineItems = useCallback(() => {
+    if (!selectedInvoice) return;
+    setTempLineItems(selectedInvoice.lineItems.map(li => ({ ...li })));
+    setIsEditingLineItems(true);
+  }, [selectedInvoice]);
+
+  const handleCancelEdit = useCallback(() => {
+    setIsEditingLineItems(false);
+    setTempLineItems([]);
+  }, []);
+
+  const handleLineItemChange = useCallback((id, field, value) => {
+    setTempLineItems(prev => prev.map(li => {
+      if (li.id !== id) return li;
+      const updated = { ...li, [field]: value };
+      if (field === 'qty') {
+        const qty = Number(value);
+        const unitPrice = Number(li.unitPrice);
+        updated.total = parseFloat((qty * unitPrice).toFixed(2));
+      }
+      return updated;
+    }));
+  }, []);
+
+  const handleSaveLineItems = useCallback(() => {
+    if (!selectedInvoice) return;
+    const { subtotal, taxAmount, total } = calcLineItems(tempLineItems);
+    updateInvoice(selectedInvoice.id, {
+      lineItems: JSON.stringify(tempLineItems),
+      subtotal,
+      taxAmount,
+      total,
+    });
+    setIsEditingLineItems(false);
+    setTempLineItems([]);
+    addNotification({
+      type: 'invoice',
+      title: 'Line Items Updated',
+      body: `${selectedInvoice.invoiceNumber} line items have been updated`,
+      link: 'invoices',
+      icon: 'edit',
+    });
+    addLog('INVOICE', 'LINE_ITEMS_UPDATED', {
+      severity: 'info',
+      actor: { role: actor, label: actor },
+      target: selectedInvoice.invoiceNumber,
+      details: { lineItemsCount: tempLineItems.length, subtotal, total },
+    });
+  }, [selectedInvoice, tempLineItems, updateInvoice, addNotification, addLog, actor]);
 
   // ── Filtering ──
 

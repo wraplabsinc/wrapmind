@@ -182,9 +182,9 @@ function EstimateDetailPanel({ est, onClose, onUpdateStatus, onConvert, onDuplic
             <div className="flex items-center gap-2">
               <span className="text-sm font-semibold text-[#0F1923] dark:text-[#F8FAFE]">{est.estimateNumber}</span>
               <StatusBadge status={est.status} />
-          <div>
+           </div>
             <div className="text-xs text-[#64748B] dark:text-[#7D93AE] mt-0.5">{est.customerName} · {est.vehicleLabel}</div>
-          </div>
+          
            {onEmail && (
              <button
                onClick={onEmail}
@@ -197,6 +197,7 @@ function EstimateDetailPanel({ est, onClose, onUpdateStatus, onConvert, onDuplic
               </svg>
               Email
             </button>
+          )}
           {onViewArchive && (
             <button
               onClick={onViewArchive}
@@ -220,6 +221,7 @@ function EstimateDetailPanel({ est, onClose, onUpdateStatus, onConvert, onDuplic
             </svg>
           </button>
         </div>
+      </div>
 
         {/* Tabs */}
         <div className="flex border-b border-gray-200 dark:border-[#243348] shrink-0">
@@ -530,14 +532,13 @@ function EstimateDetailPanel({ est, onClose, onUpdateStatus, onConvert, onDuplic
   );
 }
 
-// ─── Main component ───────────────────────────────────────────────────────────
 export default function EstimatesPage({ onNavigate, initialEstimateId }) {
   const { addLog } = useAuditLog();
   const { currentRole, can } = useRoles();
   const actor = currentRole;
 
   // ── Context hooks ────────────────────────────────────────────────────────────
-  const { estimates, addEstimate, updateEstimate, deleteEstimate, getNextEstimateNumber } = useEstimates();
+  const { estimates, addEstimate, updateEstimate, deleteEstimate, archiveEstimate: ctxArchiveEstimate, getNextEstimateNumber } = useEstimates();
   const { convertEstimateToInvoice } = useInvoices();
   const { addNotification } = useNotifications();
   const { appointments, addAppointment, technicians, SERVICE_DURATIONS } = useScheduling();
@@ -751,9 +752,9 @@ export default function EstimatesPage({ onNavigate, initialEstimateId }) {
   }, [estimates, addEstimate, getNextEstimateNumber, addLog, actor]);
 
   const archiveEstimate = useCallback((id) => {
-    updateEstimate(id, { status: 'archived' });
-    setSelectedEst(prev => prev?.id === id ? null : prev);
-  }, [updateEstimate]);
+    ctxArchiveEstimate(id);
+    if (selectedEst?.id === id) setSelectedEst(null);
+  }, [ctxArchiveEstimate, selectedEst]);
 
   const handleDeleteEstimate = useCallback((id) => {
     const est = estimates.find(e => e.id === id);
@@ -1173,7 +1174,7 @@ export default function EstimatesPage({ onNavigate, initialEstimateId }) {
           actor={actor}
           personality={selectedPersonality}
         />
-      )
+      )}
       {/* Archive Drawer */}
       {estimateArchiveDrawer && (
         <EstimateArchiveDrawer
@@ -1181,7 +1182,7 @@ export default function EstimatesPage({ onNavigate, initialEstimateId }) {
           estimateDocNumber={selectedEst?.estimateNumber}
           onClose={() => setEstimateArchiveDrawer(null)}
         />
-      )}}
+      )}
 
       {aiFollowUpEst && (
         <AIFollowUpModal

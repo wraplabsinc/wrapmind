@@ -31,6 +31,7 @@ export const ESTIMATE_FIELDS = gql`
     converted_to_invoice_id
     created_at
     updated_at
+    deleted_at
   }
 `;
 
@@ -45,6 +46,7 @@ export const LIST_ESTIMATES = gql`
     estimatesCollection(
       filter: {
         org_id: { eq: $orgId }
+        deleted_at: { is: null }
       }
       first: $first
       offset: $offset
@@ -190,6 +192,7 @@ export const UPDATE_ESTIMATE = gql`
     $declinedAt: TIMESTAMPTZ
     $convertedToInvoiceId: UUID
     $createdById: UUID
+    $deletedAt: TIMESTAMPTZ
   ) {
     updateestimatesCollection(
       filter: { id: { eq: $id } }
@@ -212,6 +215,7 @@ export const UPDATE_ESTIMATE = gql`
         declined_at: $declinedAt
         converted_to_invoice_id: $convertedToInvoiceId
         created_by_id: $createdById
+        deleted_at: $deletedAt
       }
     ) {
       returning {
@@ -293,6 +297,7 @@ export function normalizeEstimate(row = {}) {
     convertedToInvoiceId: row.converted_to_invoice_id,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    deletedAt: row.deleted_at,
   };
 }
 

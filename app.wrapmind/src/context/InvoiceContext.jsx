@@ -285,7 +285,7 @@ export function InvoiceProvider({ children }) {
 
     if (orgId && !isDevAuth) {
       updateInvoiceMutation({
-        variables: { id, deletedAt: now },
+        variables: { id, deletedAt: now, status: 'voided' },
       }).catch(err => console.error('[InvoiceContext] GraphQL archive failed:', err));
     }
   }, [orgId, isDevAuth, updateInvoiceMutation]);
