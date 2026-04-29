@@ -57,6 +57,24 @@ Deploy the WrapMind React SPA (`app.wrapmind/`) to Firebase Hosting with a custo
 
 ---
 
+---
+
+## Known Issues & Resolutions
+
+During implementation, the following blockers were discovered and resolved:
+
+| Issue | Root Cause | Fix |
+|-------|------------|-----|
+| `IntegrationsPage.jsx` parse error at line 1 | File had line-number prefixes (`     1|`) on every line (corruption from a bad editor operation) | Stripped all line-number prefixes using regex; restored valid JS syntax |
+| Wrong import paths (`../context/AuthContext`, `../api/settings.graphql.js`) | Relative path from `src/components/settings/` to `src/context/` and `src/api/` requires `../../` not `../` | Corrected both imports to `../../context/AuthContext` and `../../api/settings.graphql.js` |
+| Vite PWA plugin missing | Temporarily removed during debug; not re-added to config | Restored `VitePWA` plugin with manifest and workbox configuration |
+| Tailwind v4 CSS hash warnings (27×) | Tailwind JIT generates `[#xxxxxx]` arbitrary value classes that confuse esbuild's CSS parser | Non-fatal; suppressed via Tailwind config; harmless in production build |
+| `.gitignore` risk — `.env` tracked | Original `.gitignore` unignored `.env` (`!.env`), risking secret leaks | Hardened: now ignores all `.env*` files (including `.env.example`) |
+
+**Build status**: ✅ Local `vite build` passes (0 errors). CI/CD pending verification.
+
+---
+
 **Build-time (GitHub Secrets)**
 
 Vite-prefixed (exposed to browser):
@@ -223,6 +241,7 @@ See issue #121 for full monitoring backlog.
   - [ ] `FIREBASE_SERVICE_ACCOUNT_KEY`
 - [ ] GitHub Actions workflow `.github/workflows/deploy.yml` created and tested
 - [ ] `firebase.json` committed with correct `public: "dist"` and SPA rewrite
+- [ ] Build passes locally (`npm run build` → `dist/` with no errors)
 - [ ] First deploy to Firebase succeeds (`release` branch → production)
 - [ ] Homepage loads at `https://app.wrapmind.ai`
 - [ ] Supabase auth flow works (login/logout)
