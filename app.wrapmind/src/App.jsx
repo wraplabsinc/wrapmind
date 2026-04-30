@@ -1484,7 +1484,7 @@ function AuthGate() {
 
   // Public auth pages (no session required)
   if (path === '/forgot-password') {
-    return <ForgotPasswordPage />;
+    return <ForgotPasswordPage onBack={() => window.location.href = '/'} />;
   }
   if (path === '/update-password') {
     return <UpdatePasswordPage />;
