@@ -25,13 +25,26 @@ export default function UpdatePasswordPage() {
       }, 10000);
 
       try {
-        // Ensure Supabase client has finished initializing and processed the URL hash
-        await supabase.auth.initialize();
+        // Wait for Supabase's auto-initialization (triggered by first auth call) to complete.
+        // The client processes the recovery URL hash internally via detectSessionInUrl.
+        // We poll getSession() until it returns a definitive result or timeout.
+        let session = null;
+        let attempts = 0;
+        const maxAttempts = 30; // ~6 seconds at 200ms intervals
 
-        const { data: { session } } = await supabase.auth.getSession();
+        while (attempts < maxAttempts) {
+          const { data: { session: s } } = await supabase.auth.getSession();
+          if (s) {
+            session = s;
+            break;
+          }
+          // No session yet — wait and retry (URL hash still processing)
+          await new Promise(r => setTimeout(r, 200));
+          attempts++;
+        }
 
         if (!session) {
-          console.warn('No session after initialization — hash may be missing, expired, or already used');
+          console.warn('No session after polling — hash may be missing, expired, or already used');
           setRecoveryErr('Invalid or expired recovery link. Please request a new one.');
         } else {
           console.log('Recovery session established:', session.user?.email);

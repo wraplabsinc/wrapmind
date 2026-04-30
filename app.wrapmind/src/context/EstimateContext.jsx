@@ -294,6 +294,11 @@ const filteredEstimates = (activeLocationId === 'all' || !activeLocationId
     }
   }, [updateEstimateMutation]);
 
+  // ─── getEstimateById ───────────────────────────────────────────────────────────
+  const getEstimateById = useCallback((id) => {
+    return estimates.find(e => e.id === id);
+  }, [estimates]);
+
   // ─── Context value ─────────────────────────────────────────────────────────
 
   const value = {
