@@ -50,6 +50,12 @@ export function AuthProvider({ children }) {
   }, []);
 
   async function fetchProfileAndOrg(userId) {
+    // Skip profile fetch on password reset/forgot routes — not needed and can trigger RLS/406
+    const path = typeof window !== 'undefined' ? window.location.pathname : '';
+    if (path.startsWith('/update-password') || path.startsWith('/forgot-password')) {
+      setLoading(false);
+      return;
+    }
     try {
       // Fetch profile first (without join to avoid RLS/complexity issues)
       const { data: profileData } = await supabase
@@ -165,23 +171,21 @@ export function AuthProvider({ children }) {
 
   const updatePassword = useCallback(async (newPassword) => {
     if (DEV_AUTH) return { error: null };
-    // Ensure we have a valid session before updating password
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      return { error: { message: 'No active session. Please request a new password reset link.' } };
-    }
     // Brief delay to avoid lock contention with ongoing auth initialization
     await new Promise(resolve => setTimeout(resolve, 300));
-    // Retry once if lock contention occurs
+    // Retry up to 3 times if lock contention occurs
     let attempt = 0;
-    while (attempt < 2) {
+    const maxAttempts = 3;
+    while (attempt < maxAttempts) {
       const { error } = await supabase.auth.updateUser({ password: newPassword });
       if (!error) return { error: null };
       // Check if it's a lock error
       if (error.message?.includes('lock') || error.code === 'lock') {
         attempt++;
-        await new Promise(resolve => setTimeout(resolve, 200 * attempt)); // backoff
-        continue;
+        if (attempt < maxAttempts) {
+          await new Promise(resolve => setTimeout(resolve, 300 * attempt)); // increasing backoff
+          continue;
+        }
       }
       return { error };
     }
