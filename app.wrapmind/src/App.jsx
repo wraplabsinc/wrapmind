@@ -719,18 +719,6 @@ function AppInner() {
 
   // App-level navigation
   const [currentView, setCurrentView] = useState('dashboard');
-  // Map direct URL paths to internal views
-  useEffect(() => {
-    const path = window.location.pathname;
-    const pathViewMap = {
-      '/forgot-password': 'forgot-password',
-      '/update-password': 'update-password',
-    };
-    const mapped = pathViewMap[path];
-    if (mapped) {
-      setCurrentView(mapped);
-    }
-  }, []);
 
   const [navData, setNavData] = useState(null);
 
@@ -946,10 +934,6 @@ function AppInner() {
         <div key={currentView} className="wm-fade-in-up flex-1 flex flex-col min-w-0 overflow-hidden">
         {currentView === 'dashboard' ? (
           <Dashboard />
-        ) : currentView === 'forgot-password' ? (
-          <ForgotPasswordPage />
-        ) : currentView === 'update-password' ? (
-          <UpdatePasswordPage />
         ) : currentView === 'settings' ? (
           <Settings initialTab={navData?.settingsTab || 'profile'} />
         ) : currentView === 'performance' && xpEnabled ? (
@@ -1488,6 +1472,7 @@ function DataProviders({ children }) {
 
 function AuthGate() {
   const { isAuthenticated, loading } = useAuth();
+  const path = window.location.pathname;
 
   if (loading) {
     return (
@@ -1497,17 +1482,29 @@ function AuthGate() {
     );
   }
 
-  if (!isAuthenticated) return <AuthPage />;
+  // Public auth pages (no session required)
+  if (path === '/forgot-password') {
+    return <ForgotPasswordPage />;
+  }
+  if (path === '/update-password') {
+    return <UpdatePasswordPage />;
+  }
 
-  return (
-    <ConfigProviders>
-      <FeatureProviders>
-        <DataProviders>
-          <AppInner />
-        </DataProviders>
-      </FeatureProviders>
-    </ConfigProviders>
-  );
+  // Authenticated app
+  if (isAuthenticated) {
+    return (
+      <ConfigProviders>
+        <FeatureProviders>
+          <DataProviders>
+            <AppInner />
+          </DataProviders>
+        </FeatureProviders>
+      </ConfigProviders>
+    );
+  }
+
+  // Fallback: login / signup
+  return <AuthPage />;
 }
 
 function App() {

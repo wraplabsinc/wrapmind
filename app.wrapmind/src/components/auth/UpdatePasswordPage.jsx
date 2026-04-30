@@ -10,16 +10,40 @@ export default function UpdatePasswordPage() {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
   const [processingUrl, setProcessingUrl] = useState(true);
+  const [recoveryErr, setRecoveryErr] = useState(null);
 
   // Extract tokens from URL and establish session
   useEffect(() => {
     const process = async () => {
-      const { data, error: urlErr } = await supabase.auth.getSessionFromUrl();
-      if (urlErr) {
-        console.error('Session URL processing error:', urlErr);
-        // Still allow form to render; updatePassword will fail if no session
+      // Safety timeout: unblock spinner after 10s even if Supabase hangs
+      const timeout = setTimeout(() => {
+        console.warn('Password recovery: timeout after 10s — proceeding anyway');
+        setProcessingUrl(false);
+        setRecoveryErr('Recovery took too long. Try requesting a new reset link.');
+      }, 10000);
+
+      try {
+        const { data, error: urlErr } = await supabase.auth.getSessionFromUrl();
+
+        if (urlErr) {
+          console.error('Session URL processing error:', urlErr);
+          setRecoveryErr(urlErr.message);
+        }
+
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          console.warn('No session after getSessionFromUrl — hash may be missing, expired, or already used');
+          setRecoveryErr('Invalid or expired recovery link. Please request a new one.');
+        } else {
+          console.log('Recovery session established:', session.user?.email);
+        }
+      } catch (e) {
+        console.error('Unexpected error during password recovery setup:', e);
+        setRecoveryErr(e.message || 'Unexpected error during recovery');
+      } finally {
+        clearTimeout(timeout);
+        setProcessingUrl(false);
       }
-      setProcessingUrl(false);
     };
     process();
   }, []);
@@ -53,6 +77,29 @@ export default function UpdatePasswordPage() {
     return (
       <div className="min-h-screen bg-[#0B1220] flex items-center justify-center">
         <div className="w-10 h-10 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  // If recovery failed (no session, bad link, etc.)
+  if (recoveryErr && !success) {
+    return (
+      <div className="min-h-screen bg-[#0B1220] flex items-center justify-center px-4">
+        <div className="w-full max-w-md text-center">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-red-500 to-rose-400 flex items-center justify-center mx-auto mb-6">
+            <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-2">Invalid recovery link</h2>
+          <p className="text-[#7D93AE] mb-6">{recoveryErr}</p>
+          <button
+            onClick={() => window.location.href = '/'}
+            className="px-6 py-2.5 bg-gradient-to-r from-blue-500 to-cyan-400 text-white font-medium rounded-lg hover:opacity-90"
+          >
+            Back to login
+          </button>
+        </div>
       </div>
     );
   }

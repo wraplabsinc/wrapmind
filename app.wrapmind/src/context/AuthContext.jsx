@@ -149,6 +149,11 @@ export function AuthProvider({ children }) {
 
   const updatePassword = useCallback(async (newPassword) => {
     if (DEV_AUTH) return { error: null };
+    // Ensure we have a valid session before updating password
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      return { error: { message: 'No active session. Please request a new password reset link.' } };
+    }
     const { error } = await supabase.auth.updateUser({ password: newPassword });
     return { error };
   }, []);
