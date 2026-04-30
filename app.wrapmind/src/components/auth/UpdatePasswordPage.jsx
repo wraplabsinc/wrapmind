@@ -23,16 +23,17 @@ export default function UpdatePasswordPage() {
       }, 10000);
 
       try {
-        const { data, error: urlErr } = await supabase.auth.getSessionFromUrl();
+        console.log('Attempting to recover session from URL hash...');
+        const { data: recoverData, error: recoverErr } = await supabase.auth.recoverSession();
 
-        if (urlErr) {
-          console.error('Session URL processing error:', urlErr);
-          setRecoveryErr(urlErr.message);
+        if (recoverErr) {
+          console.error('Session recovery error:', recoverErr);
+          setRecoveryErr(recoverErr.message);
         }
 
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
-          console.warn('No session after getSessionFromUrl — hash may be missing, expired, or already used');
+          console.warn('No session after recoverSession — hash may be missing, expired, or already used');
           setRecoveryErr('Invalid or expired recovery link. Please request a new one.');
         } else {
           console.log('Recovery session established:', session.user?.email);
