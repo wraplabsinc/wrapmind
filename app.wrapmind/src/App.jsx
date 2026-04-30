@@ -60,6 +60,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { PresenceProvider } from './context/PresenceContext';
 import AuthPage from './components/auth/AuthPage';
 import ForgotPasswordPage from './components/auth/ForgotPasswordPage';
+import UpdatePasswordPage from './components/auth/UpdatePasswordPage';
 import LocationSwitcher from './components/ui/LocationSwitcher';
 import { logEvent, EVENT_TYPES, resetSession } from './lib/analytics';
 
@@ -718,6 +719,19 @@ function AppInner() {
 
   // App-level navigation
   const [currentView, setCurrentView] = useState('dashboard');
+  // Map direct URL paths to internal views
+  useEffect(() => {
+    const path = window.location.pathname;
+    const pathViewMap = {
+      '/forgot-password': 'forgot-password',
+      '/update-password': 'update-password',
+    };
+    const mapped = pathViewMap[path];
+    if (mapped) {
+      setCurrentView(mapped);
+    }
+  }, []);
+
   const [navData, setNavData] = useState(null);
 
   // Translated step labels — memoized so they don't rebuild on every render
@@ -934,6 +948,8 @@ function AppInner() {
           <Dashboard />
         ) : currentView === 'forgot-password' ? (
           <ForgotPasswordPage />
+        ) : currentView === 'update-password' ? (
+          <UpdatePasswordPage />
         ) : currentView === 'settings' ? (
           <Settings initialTab={navData?.settingsTab || 'profile'} />
         ) : currentView === 'performance' && xpEnabled ? (
