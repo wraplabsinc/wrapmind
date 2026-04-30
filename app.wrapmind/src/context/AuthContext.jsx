@@ -5,28 +5,15 @@ import { configureAnalytics } from '../lib/analytics';
 
 const AuthContext = createContext(null);
 
-// ── Dev-mode bypass ───────────────────────────────────────────────────────────
-// LOCAL_DEV=1 → prototype mode: skip Supabase auth, use localStorage seed data
-// LOCAL_DEV=0 → local Supabase auth (via VITE_SUPABASE_URL)
-// unset → production Supabase auth
-const DEV_AUTH = import.meta.env.VITE_LOCAL_DEV === '1';
-
-const DEV_USER    = { id: 'dev-user', email: 'dev@wrapmind.local' };
-const DEV_PROFILE = { id: 'dev-profile', role: 'owner', user_id: 'dev-user' };
-const DEV_ORG     = { id: 'dev-org', name: 'Dev Shop' };
-const DEV_SESSION = { user: DEV_USER };
-
 export function AuthProvider({ children }) {
-  const [session, setSession]   = useState(DEV_AUTH ? DEV_SESSION : null);
-  const [user, setUser]         = useState(DEV_AUTH ? DEV_USER    : null);
-  const [profile, setProfile]   = useState(DEV_AUTH ? DEV_PROFILE : null);
-  const [org, setOrg]           = useState(DEV_AUTH ? DEV_ORG     : null);
-  const [loading, setLoading]   = useState(!DEV_AUTH);
+  const [session, setSession]   = useState(null);
+  const [user, setUser]         = useState(null);
+  const [profile, setProfile]   = useState(null);
+  const [org, setOrg]           = useState(null);
+  const [loading, setLoading]   = useState(true);
 
   useEffect(() => {
-    if (DEV_AUTH) return; // skip Supabase entirely in dev mode
-
-    supabase.auth.getSession().then(({ data: { session: s } }) => {
+    getSession().then(s => {
       setSession(s);
       setUser(s?.user ?? null);
       if (s?.user) fetchProfileAndOrg(s.user.id);
@@ -92,17 +79,15 @@ export function AuthProvider({ children }) {
   }
 
   useEffect(() => {
-    if (DEV_AUTH) return;
-    configureAnalytics(org?.id);
-    if (user && org) {
-      Sentry.setUser({ id: user.id, email: user.email, org_id: org.id });
-    } else if (!user) {
+    if (user) {
+      Sentry.setUser({ id: user.id, email: user.email });
+      configureAnalytics(user.id);
+    } else {
       Sentry.setUser(null);
     }
-  }, [user, org]);
+  }, [user]);
 
   const signUp = useCallback(async (email, password, metadata = {}) => {
-    if (DEV_AUTH) return { data: null, error: null };
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -125,7 +110,6 @@ export function AuthProvider({ children }) {
   }
 
   const signIn = useCallback(async (email, password) => {
-    if (DEV_AUTH) return { data: null, error: null };
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -137,7 +121,6 @@ export function AuthProvider({ children }) {
   }, []);
 
   const signOut = useCallback(async () => {
-    if (DEV_AUTH) return { error: null };
     const { error } = await supabase.auth.signOut();
     if (!error) {
       setSession(null);
@@ -150,19 +133,16 @@ export function AuthProvider({ children }) {
 
   // ── Extended auth methods (Phase 1) ──────────────────────────────────────
   const signInWithMagicLink = useCallback(async (email) => {
-    if (DEV_AUTH) return { data: null, error: null };
     const { data, error } = await supabase.auth.signInWithOtp({ email });
     return { data, error };
   }, []);
 
   const signInWithOAuth = useCallback(async (provider) => {
-    if (DEV_AUTH) return { data: null, error: null };
     const { data, error } = await supabase.auth.signInWithOAuth({ provider });
     return { data, error };
   }, []);
 
   const resetPassword = useCallback(async (email) => {
-    if (DEV_AUTH) return { error: null };
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: 'https://app.wrapmind.ai/update-password',
     });
@@ -170,7 +150,6 @@ export function AuthProvider({ children }) {
   }, []);
 
   const updatePassword = useCallback(async (newPassword) => {
-    if (DEV_AUTH) return { error: null };
     // Brief delay to avoid lock contention with ongoing auth initialization
     await new Promise(resolve => setTimeout(resolve, 300));
     // Retry up to 3 times if lock contention occurs
@@ -198,7 +177,7 @@ export function AuthProvider({ children }) {
     profile,
     profileId: profile?.id ?? null,
     org,
-    orgId: DEV_AUTH ? null : (org?.id ?? null),
+    orgId: (org?.id ?? null),
     loading,
     signUp,
     signIn,
@@ -207,7 +186,7 @@ export function AuthProvider({ children }) {
     signInWithOAuth,
     resetPassword,
     updatePassword,
-    isAuthenticated: DEV_AUTH ? true : !!session,
+    isAuthenticated: !!session,
     role: profile?.role ?? null,
   };
 

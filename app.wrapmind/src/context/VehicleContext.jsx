@@ -1,11 +1,7 @@
 import { createContext, useContext, useState, useMemo, useCallback, useEffect } from 'react';
 import { useAuth } from './AuthContext.jsx';
 import {
-  USE_VEHICLES,
-  USE_VEHICLES_BY_CUSTOMER,
-  USE_CREATE_VEHICLE,
-  USE_UPDATE_VEHICLE,
-  USE_DELETE_VEHICLE,
+  USE_VEHICLES, USE_VEHICLES_BY_CUSTOMER, USE_CREATE_VEHICLE, USE_UPDATE_VEHICLE, USE_DELETE_VEHICLE,
 } from '../api/vehicles.graphql.js';
 
 // ─── Context ──────────────────────────────────────────────────────────────────
@@ -24,7 +20,7 @@ export function useVehicleContext() {
 const LS_KEY = 'wm-vehicle-overrides-v1';
 
 function loadOverrides() {
-  if (import.meta.env.VITE_LOCAL_DEV === '1') return {};
+  
   try {
     const raw = localStorage.getItem(LS_KEY);
     return raw ? JSON.parse(raw) : {};
@@ -57,7 +53,6 @@ export function VehicleProvider({ children }) {
   useEffect(() => { saveOverrides(overrides); }, [overrides]);
 
   // ── Seed / Apollo data routing ──────────────────────────────────────────────
-  const isDevAuth   = import.meta.env.VITE_LOCAL_DEV === '1';
   const hasApolloData = !apolloLoading && !apolloError && apolloVehicles.length > 0;
 
   const baseVehicles = useMemo(() => {
@@ -70,33 +65,17 @@ export function VehicleProvider({ children }) {
     return baseVehicles.map(vehicle => {
       const override = overrides[vehicle.id] || {};
       return {
-        ...vehicle,
-        ...override,
-        id:           vehicle.id,
-        year:         override.year         ?? vehicle.year,
-        make:         override.make         ?? vehicle.make,
-        model:        override.model        ?? vehicle.model,
-        trim:         override.trim         ?? vehicle.trim,
-        vin:          override.vin          ?? vehicle.vin,
-        vehicleType:  override.vehicleType  ?? vehicle.vehicleType ?? vehicle.type,
-        color:        override.color        ?? vehicle.color,
-        wrapStatus:   override.wrapStatus   ?? vehicle.wrapStatus,
-        wrapColor:    override.wrapColor    ?? vehicle.wrapColor,
-        tags:         override.tags         ?? vehicle.tags ?? [],
-        notes:        override.notes        ?? vehicle.notes ?? '',
-      };
+        ...vehicle, ...override, id:           vehicle.id, year:         override.year         ?? vehicle.year, make:         override.make         ?? vehicle.make, model:        override.model        ?? vehicle.model, trim:         override.trim         ?? vehicle.trim, vin:          override.vin          ?? vehicle.vin, vehicleType:  override.vehicleType  ?? vehicle.vehicleType ?? vehicle.type, color:        override.color        ?? vehicle.color, wrapStatus:   override.wrapStatus   ?? vehicle.wrapStatus, wrapColor:    override.wrapColor    ?? vehicle.wrapColor, tags:         override.tags         ?? vehicle.tags ?? [], notes:        override.notes        ?? vehicle.notes ?? '', };
     });
   }, [baseVehicles, overrides]);
 
   // ── Lookup helpers ──────────────────────────────────────────────────────────
 
   const getById = useCallback((id) =>
-    enrichedVehicles.find(v => v.id === id) || null,
-  [enrichedVehicles]);
+    enrichedVehicles.find(v => v.id === id) || null, [enrichedVehicles]);
 
   const getByCustomer = useCallback((customerId) =>
-    enrichedVehicles.filter(v => v.customerId === customerId),
-  [enrichedVehicles]);
+    enrichedVehicles.filter(v => v.customerId === customerId), [enrichedVehicles]);
 
   const searchVehicles = useCallback((query, limit = 20) => {
     if (!query) return enrichedVehicles.slice(0, limit);
@@ -121,35 +100,14 @@ export function VehicleProvider({ children }) {
       // Prototype mode: store in overrides
       const tempId = `new-${Date.now()}`;
       setOverrides(prev => ({
-        ...prev,
-        [tempId]: { ...input, id: tempId, createdAt: new Date().toISOString() },
-      }));
+        ...prev, [tempId]: { ...input, id: tempId, createdAt: new Date().toISOString() }, }));
       return { id: tempId };
     }
 
     try {
       const { data, errors } = await createVehicleMutation({
         variables: {
-          orgId,
-          customerId: input.customerId,
-          year:       input.year       ?? null,
-          make:       input.make       ?? null,
-          model:      input.model      ?? null,
-          trim:       input.trim       ?? null,
-          vin:        input.vin        ?? null,
-          vehicleType: input.vehicleType ?? null,
-          color:      input.color      ?? null,
-          lengthMm:   input.lengthMm   ?? null,
-          widthMm:    input.widthMm    ?? null,
-          heightMm:   input.heightMm   ?? null,
-          wheelbaseMm: input.wheelbaseMm ?? null,
-          curbWeightKg: input.curbWeightKg ?? null,
-          wrapStatus: input.wrapStatus ?? 'bare',
-          wrapColor:  input.wrapColor  ?? null,
-          tags:       input.tags       ?? [],
-          notes:      input.notes      ?? null,
-        },
-      });
+          orgId, customerId: input.customerId, year:       input.year       ?? null, make:       input.make       ?? null, model:      input.model      ?? null, trim:       input.trim       ?? null, vin:        input.vin        ?? null, vehicleType: input.vehicleType ?? null, color:      input.color      ?? null, lengthMm:   input.lengthMm   ?? null, widthMm:    input.widthMm    ?? null, heightMm:   input.heightMm   ?? null, wheelbaseMm: input.wheelbaseMm ?? null, curbWeightKg: input.curbWeightKg ?? null, wrapStatus: input.wrapStatus ?? 'bare', wrapColor:  input.wrapColor  ?? null, tags:       input.tags       ?? [], notes:      input.notes      ?? null, }, });
 
       if (errors?.length) {
         console.error('[VehicleContext] GraphQL create error:', errors);
@@ -159,9 +117,7 @@ export function VehicleProvider({ children }) {
       const newVehicle = data?.vehicleInsert?.edges?.[0]?.node;
       if (newVehicle) {
         setOverrides(prev => ({
-          ...prev,
-          [newVehicle.id]: { ...newVehicle },
-        }));
+          ...prev, [newVehicle.id]: { ...newVehicle }, }));
       }
 
       return { data: newVehicle, error: null };
@@ -226,30 +182,13 @@ export function VehicleProvider({ children }) {
       .map(([make, count]) => ({ make, count }));
 
     return {
-      total:      active.length,
-      wrapped,
-      scheduled,
-      bare,
-      byMake,
-      topMakes,
-    };
+      total:      active.length, wrapped, scheduled, bare, byMake, topMakes, };
   }, [enrichedVehicles]);
 
   // ── Context value ──────────────────────────────────────────────────────────
 
   const value = {
-    vehicles:    enrichedVehicles,
-    stats,
-    loading:    apolloLoading && !isDevAuth,
-    error:      apolloError,
-    refetch,
-    getById,
-    getByCustomer,
-    searchVehicles,
-    createVehicle,
-    updateVehicle,
-    deleteVehicle,
-  };
+    vehicles:    enrichedVehicles, stats, loading:    apolloLoading, error:      apolloError, refetch, getById, getByCustomer, searchVehicles, createVehicle, updateVehicle, deleteVehicle, };
 
   return (
     <VehicleContext.Provider value={value}>

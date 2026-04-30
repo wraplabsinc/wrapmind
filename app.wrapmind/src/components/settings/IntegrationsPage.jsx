@@ -78,26 +78,6 @@ const INTEGRATIONS = [
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function loadStoredConnections() {
-  try {
-    return JSON.parse(localStorage.getItem('wm-integrations') || '{}');
-  } catch {
-    return {};
-  }
-}
-
-function saveIntegration(integrationId, fields) {
-  const stored = loadStoredConnections();
-  stored[integrationId] = { ...fields, connectedAt: new Date().toISOString() };
-  localStorage.setItem('wm-integrations', JSON.stringify(stored));
-}
-
-function disconnectIntegration(integrationId) {
-  const stored = loadStoredConnections();
-  delete stored[integrationId];
-  localStorage.setItem('wm-integrations', JSON.stringify(stored));
-}
-
 function resolveStatus(integration, stored) {
   if (stored[integration.id]) return 'active';
   return integration.status;
@@ -182,37 +162,29 @@ export default function IntegrationsPage() {
   const prevFocusRef = useRef(null);
 
   // Detect dev mode
-  const isDevMode = import.meta.env.VITE_LOCAL_DEV === '1';
-
-  // Auth context
+    // Auth context
   const { orgId } = useAuth();
 
   // Local storage fallback for dev
-  const [localStored, setLocalStored] = useState(() => loadStoredConnections());
 
   // Production DB state
-  const { settings: orgSettings, refetch: refetchOrgSettings } = USE_ORGANIZATION_SETTINGS(isDevMode ? null : orgId);
+  const { settings: orgSettings, refetch: refetchOrgSettings } = USE_ORGANIZATION_SETTINGS(orgId);
   const [upsertOrgSettings] = USE_UPSERT_ORGANIZATION_SETTINGS();
   const [dbConnections, setDbConnections] = useState({});
 
   // Sync DB connections on load
   useEffect(() => {
-    if (!isDevMode && orgSettings?.config?.integrations) {
+    if (orgSettings?.config?.integrations) {
       setDbConnections(orgSettings.config.integrations);
     }
-  }, [orgSettings, isDevMode]);
+  }, [orgSettings]);
 
   // Effective connections (dev uses localStorage, prod uses DB)
-  const connections = isDevMode ? localStored : dbConnections;
+  const connections = dbConnections;
 
   // Save handler
   const handleSaveConfig = async (integrationId, fields) => {
     const updated = { ...connections, [integrationId]: { ...fields, connectedAt: new Date().toISOString() } };
-
-    if (isDevMode) {
-      saveIntegration(integrationId, fields);
-      setLocalStored(updated);
-    } else {
       // Optimistic update
       setDbConnections(updated);
       try {
@@ -228,42 +200,31 @@ export default function IntegrationsPage() {
         });
       } catch (err) {
         console.error('Failed to save integration:', err);
-      }
-    }
+}
   };
 
   // Disconnect handler
   const handleDisconnectConfig = (integrationId) => {
     const updated = { ...connections };
     delete updated[integrationId];
-
-    if (isDevMode) {
-      disconnectIntegration(integrationId);
-      setLocalStored(updated);
-    } else {
-      setDbConnections(updated);
-      const newConfig = { ...(orgSettings?.config || {}), integrations: updated };
-      upsertOrgSettings({
-        variables: {
-          orgId,
-          defaultServiceDurations: orgSettings?.default_service_durations,
-          defaultPackages: orgSettings?.default_packages,
-          defaultModifiers: orgSettings?.default_modifiers,
-          config: newConfig,
-        },
-      }).catch(console.error);
-    }
+    setDbConnections(updated);
+    const newConfig = { ...(orgSettings?.config || {}), integrations: updated };
+    upsertOrgSettings({
+      variables: {
+        orgId,
+        defaultServiceDurations: orgSettings?.default_service_durations,
+        defaultPackages: orgSettings?.default_packages,
+        defaultModifiers: orgSettings?.default_modifiers,
+        config: newConfig,
+      },
+    }).catch(console.error);
   };
 
   // Close handler
   const handleSlideOverClose = () => {
     setSelected(null);
-    if (isDevMode) {
-      setLocalStored(loadStoredConnections());
-    } else {
       // Refresh from DB to catch任何外部更新 (e.g., from another tab)
       refetchOrgSettings();
-    }
     prevFocusRef.current?.focus();
     prevFocusRef.current = null;
   };

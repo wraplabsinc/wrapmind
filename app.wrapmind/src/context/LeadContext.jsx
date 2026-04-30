@@ -4,15 +4,10 @@ import { useLocations } from './LocationContext.jsx';
 import { uuid } from '../lib/uuid.js';
 import { supabase } from '../lib/supabase.js';
 import {
-  USE_LEADS,
-  USE_CREATE_LEAD,
-  USE_UPDATE_LEAD,
-  USE_DELETE_LEAD,
+  USE_LEADS, USE_CREATE_LEAD, USE_UPDATE_LEAD, USE_DELETE_LEAD,
 } from '../api/leads.graphql.js';
 import {
-  LEAD_STATUSES,
-  LEAD_SOURCES,
-  PRIORITIES,
+  LEAD_STATUSES, LEAD_SOURCES, PRIORITIES,
 } from '../components/leadhub/leadData.js';
 
 // ─── Storage helpers ─────────────────────────────────────────────────────────
@@ -39,9 +34,7 @@ export function LeadProvider({ children }) {
   const { orgId } = useAuth();
   const { activeLocationId: locationId } = useLocations() ?? {};
 
-  const isDevAuth = import.meta.env.VITE_LOCAL_DEV === '1';
-
-  // Apollo data
+    // Apollo data
   const { leads: apolloLeads, loading: apolloLoading, error: apolloError, refetch } =
     USE_LEADS({ orgId, first: 200 });
 
@@ -61,24 +54,24 @@ export function LeadProvider({ children }) {
   // Sync Apollo data once available
   const initRef = useRef(false);
   useEffect(() => {
-    if (isDevAuth) return;
+
     if (!initRef.current && hasApolloData) {
       initRef.current = true;
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setLeads(apolloLeads);
     }
-  }, [hasApolloData, apolloLeads, isDevAuth]);
+  }, [hasApolloData, apolloLeads]);
 
   // Persist when not in dev mode
   useEffect(() => {
-    if (!isDevAuth && leads.length > 0) saveToStorage(leads);
-  }, [leads, isDevAuth]);
+    if (leads.length > 0) saveToStorage(leads);
+  }, [leads]);
 
   // ── Realtime subscriptions (patch layer — Apollo remains primary source) ────
   const [realtimeConnected, setRealtimeConnected] = useState(false);
 
   useEffect(() => {
-    if (!orgId || isDevAuth) return;
+    if (!orgId) return;
 
     // Reset connection status when (re)connecting
     setRealtimeConnected(false);
@@ -88,22 +81,7 @@ export function LeadProvider({ children }) {
     channel
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'leads', filter: `org_id=eq.${orgId}` }, (payload) => {
         const newLead = {
-          id: payload.new.id,
-          name: payload.new.name,
-          phone: payload.new.phone,
-          email: payload.new.email,
-          source: payload.new.source,
-          serviceInterest: payload.new.service_interest,
-          budget: payload.new.budget,
-          priority: payload.new.priority,
-          status: payload.new.status,
-          assigneeId: payload.new.assignee_id,
-          customerId: payload.new.customer_id,
-          notes: payload.new.notes,
-          locationId: payload.new.location_id,
-          createdAt: payload.new.created_at,
-          updatedAt: payload.new.updated_at,
-        };
+          id: payload.new.id, name: payload.new.name, phone: payload.new.phone, email: payload.new.email, source: payload.new.source, serviceInterest: payload.new.service_interest, budget: payload.new.budget, priority: payload.new.priority, status: payload.new.status, assigneeId: payload.new.assignee_id, customerId: payload.new.customer_id, notes: payload.new.notes, locationId: payload.new.location_id, createdAt: payload.new.created_at, updatedAt: payload.new.updated_at, };
         setLeads(prev => {
           if (prev.some(l => l.id === newLead.id)) return prev;
           return [newLead, ...prev];
@@ -113,22 +91,7 @@ export function LeadProvider({ children }) {
         setLeads(prev =>
           prev.map(l => l.id === payload.new.id
             ? {
-                ...l,
-                name: payload.new.name,
-                phone: payload.new.phone,
-                email: payload.new.email,
-                source: payload.new.source,
-                serviceInterest: payload.new.service_interest,
-                budget: payload.new.budget,
-                priority: payload.new.priority,
-                status: payload.new.status,
-                assigneeId: payload.new.assignee_id,
-                customerId: payload.new.customer_id,
-                notes: payload.new.notes,
-                locationId: payload.new.location_id,
-                createdAt: payload.new.created_at,
-                updatedAt: payload.new.updated_at,
-              }
+                ...l, name: payload.new.name, phone: payload.new.phone, email: payload.new.email, source: payload.new.source, serviceInterest: payload.new.service_interest, budget: payload.new.budget, priority: payload.new.priority, status: payload.new.status, assigneeId: payload.new.assignee_id, customerId: payload.new.customer_id, notes: payload.new.notes, locationId: payload.new.location_id, createdAt: payload.new.created_at, updatedAt: payload.new.updated_at, }
             : l
           )
         );
@@ -144,7 +107,7 @@ export function LeadProvider({ children }) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [orgId, isDevAuth]);
+  }, [orgId]);
 
   // ── Actions ───────────────────────────────────────────────────────────────
 
@@ -154,41 +117,17 @@ export function LeadProvider({ children }) {
    */
   const addLead = useCallback((data = {}) => {
     const newLead = {
-      id: uuid(),
-      status: 'new',
-      priority: 'warm',
-      source: 'manual',
-      assigneeId: null,
-      customerId: null,
-      budget: null,
-      serviceInterest: '',
-      notes: '',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      ...data,
-    };
+      id: uuid(), status: 'new', priority: 'warm', source: 'manual', assigneeId: null, customerId: null, budget: null, serviceInterest: '', notes: '', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), ...data, };
     setLeads(prev => [newLead, ...prev]);
 
-    if (orgId && !isDevAuth) {
+    if (orgId) {
       createLeadMutation({
         variables: {
-          orgId,
-          locationId: locationId || null,
-          name:       newLead.name,
-          phone:      newLead.phone       || null,
-          email:      newLead.email        || null,
-          source:     newLead.source       || null,
-          serviceInterest: newLead.serviceInterest || null,
-          budget:     newLead.budget       || null,
-          priority:   newLead.priority    || null,
-          status:     newLead.status       || 'new',
-          notes:      newLead.notes        || null,
-        },
-      }).catch(err => console.error('[LeadContext] createLead failed:', err));
+          orgId, locationId: locationId || null, name:       newLead.name, phone:      newLead.phone       || null, email:      newLead.email        || null, source:     newLead.source       || null, serviceInterest: newLead.serviceInterest || null, budget:     newLead.budget       || null, priority:   newLead.priority    || null, status:     newLead.status       || 'new', notes:      newLead.notes        || null, }, }).catch(err => console.error('[LeadContext] createLead failed:', err));
     }
 
     return newLead;
-  }, [orgId, locationId, isDevAuth, createLeadMutation]);
+  }, [orgId, locationId, createLeadMutation]);
 
   /**
    * Update an existing lead (full replace).
@@ -198,25 +137,12 @@ export function LeadProvider({ children }) {
       prev.map(l => l.id === id ? { ...l, ...changes, updatedAt: new Date().toISOString() } : l)
     );
 
-    if (orgId && !isDevAuth) {
+    if (orgId) {
       updateLeadMutation({
         variables: {
-          id,
-          name:          changes.name          || null,
-          phone:         changes.phone         || null,
-          email:         changes.email         || null,
-          source:        changes.source        || null,
-          serviceInterest: changes.serviceInterest || null,
-          budget:        changes.budget        || null,
-          priority:      changes.priority      || null,
-          status:        changes.status        || null,
-          assigneeId:    changes.assigneeId    || null,
-          customerId:    changes.customerId    || null,
-          notes:         changes.notes         || null,
-        },
-      }).catch(err => console.error('[LeadContext] updateLead failed:', err));
+          id, name:          changes.name          || null, phone:         changes.phone         || null, email:         changes.email         || null, source:        changes.source        || null, serviceInterest: changes.serviceInterest || null, budget:        changes.budget        || null, priority:      changes.priority      || null, status:        changes.status        || null, assigneeId:    changes.assigneeId    || null, customerId:    changes.customerId    || null, notes:         changes.notes         || null, }, }).catch(err => console.error('[LeadContext] updateLead failed:', err));
     }
-  }, [orgId, isDevAuth, updateLeadMutation]);
+  }, [orgId, updateLeadMutation]);
 
   /**
    * Delete a lead by ID.
@@ -224,11 +150,11 @@ export function LeadProvider({ children }) {
   const deleteLead = useCallback((id) => {
     setLeads(prev => prev.filter(l => l.id !== id));
 
-    if (orgId && !isDevAuth) {
+    if (orgId) {
       deleteLeadMutation({ variables: { id } })
         .catch(err => console.error('[LeadContext] deleteLead failed:', err));
     }
-  }, [orgId, isDevAuth, deleteLeadMutation]);
+  }, [orgId, deleteLeadMutation]);
 
   /**
    * Convert a lead to won status.
@@ -242,19 +168,7 @@ export function LeadProvider({ children }) {
   // ── Context value ─────────────────────────────────────────────────────────
 
   const value = {
-    leads,
-    loading:  !isDevAuth && apolloLoading,
-    error:    apolloError,
-    refetch,
-    addLead,
-    updateLead,
-    deleteLead,
-    convertLeadToWon,
-    statuses:  LEAD_STATUSES,
-    sources:   LEAD_SOURCES,
-    priorities: PRIORITIES,
-    realtimeConnected,
-  };
+    leads, loading:  apolloLoading, error:    apolloError, refetch, addLead, updateLead, deleteLead, convertLeadToWon, statuses:  LEAD_STATUSES, sources:   LEAD_SOURCES, priorities: PRIORITIES, realtimeConnected, };
 
   return (
     <LeadContext.Provider value={value}>

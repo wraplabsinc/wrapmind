@@ -6,19 +6,10 @@ import { useScheduling } from './SchedulingContext.jsx';
 import { useAuth } from './AuthContext.jsx';
 import { analyzeCustomerPersonality } from '../lib/personalityEngine.js';
 import {
-  estimatesForCustomer,
-  invoicesForCustomer,
-  wonEstimates,
-  pendingEstimates,
-  lifetimeValue,
-  searchCustomerList,
+  estimatesForCustomer, invoicesForCustomer, wonEstimates, pendingEstimates, lifetimeValue, searchCustomerList,
 } from '../lib/customerLookup.js';
 import {
-  USE_CUSTOMERS,
-  USE_CUSTOMER,
-  USE_CREATE_CUSTOMER,
-  USE_UPDATE_CUSTOMER,
-  USE_DELETE_CUSTOMER,
+  USE_CUSTOMERS, USE_CUSTOMER, USE_CREATE_CUSTOMER, USE_UPDATE_CUSTOMER, USE_DELETE_CUSTOMER,
 } from '../api/customers.graphql.js';
 
 // ─── Context ──────────────────────────────────────────────────────────────────
@@ -38,7 +29,6 @@ const LS_KEY = 'wm-customer-overrides-v1';
 const MIGRATION_KEY = 'wm-customers-migrated';
 
 function loadOverrides() {
-  if (import.meta.env.VITE_LOCAL_DEV === '1') return {};
   try {
     const raw = localStorage.getItem(LS_KEY);
     return raw ? JSON.parse(raw) : {};
@@ -60,9 +50,7 @@ function vehiclesForCustomer(customerId) {
 
 function computeLastActivity(estimates, appointments) {
   const dates = [
-    ...estimates.map(e => e.approvedAt || e.createdAt),
-    ...appointments.map(a => a.date ? a.date + 'T00:00:00Z' : null).filter(Boolean),
-  ].filter(Boolean);
+    ...estimates.map(e => e.approvedAt || e.createdAt), ...appointments.map(a => a.date ? a.date + 'T00:00:00Z' : null).filter(Boolean), ].filter(Boolean);
   if (!dates.length) return null;
   return dates.sort().at(-1);
 }
@@ -72,20 +60,7 @@ function computeLastActivity(estimates, appointments) {
 function syntheticCustomerFromEstimates(name, custEstimates) {
   const first = custEstimates[0] || {};
   return {
-    id:        first.customerId || `live-${name.toLowerCase().replace(/\s+/g, '-')}`,
-    name,
-    phone:     first.customerPhone || '',
-    email:     first.customerEmail || '',
-    company:   first.customerCompany || '',
-    address:   '',
-    tags:      [],
-    source:    'estimate',
-    assignee:  first.createdBy || null,
-    notes:     '',
-    status:    'active',
-    createdAt: first.createdAt || new Date().toISOString(),
-    _synthetic: true,
-  };
+    id:        first.customerId || `live-${name.toLowerCase().replace(/\s+/g, '-')}`, name, phone:     first.customerPhone || '', email:     first.customerEmail || '', company:   first.customerCompany || '', address:   '', tags:      [], source:    'estimate', assignee:  first.createdBy || null, notes:     '', status:    'active', createdAt: first.createdAt || new Date().toISOString(), _synthetic: true, };
 }
 
 // ─── Provider ─────────────────────────────────────────────────────────────────
@@ -103,7 +78,6 @@ export function CustomerProvider({ children }) {
 
   // Live leads from LeadHubPage (wm-leads-v1)
   const [liveLeads, setLiveLeads] = useState(() => {
-    if (import.meta.env.VITE_LOCAL_DEV === '1') return [];
     try { return JSON.parse(localStorage.getItem('wm-leads-v1') || '[]'); } catch { return []; }
   });
 
@@ -134,10 +108,9 @@ export function CustomerProvider({ children }) {
   // ── Seed / Apollo data routing ──────────────────────────────────────────────
   // Priority:
   //   1. Apollo GraphQL data (live from Supabase via pg_graphql)
-  //   2. Seed data (VITE_LOCAL_DEV prototype mode)
+  //   (seed data removed — now uses Supabase exclusively)
   //   3. Seed data (fallback if Apollo fails)
 
-  const isDevAuth   = import.meta.env.VITE_LOCAL_DEV === '1';
   const hasApolloData = !apolloLoading && !apolloError && apolloCustomers.length > 0;
 
   const baseCustomers = useMemo(() => {
@@ -147,7 +120,7 @@ export function CustomerProvider({ children }) {
     return [];
   }, [hasApolloData, apolloCustomers]);
 
-  const graphqlLoading = apolloLoading && !isDevAuth;
+  const graphqlLoading = apolloLoading;
 
   // ── Build enriched customer list ────────────────────────────────────────────
   const enrichedCustomers = useMemo(() => {
@@ -181,49 +154,14 @@ export function CustomerProvider({ children }) {
 
       // Personality profile
       const personality = analyzeCustomerPersonality(
-        { ...base, ...override },
-        cEstimates,
-        cInvoices,
-        cAppointments,
-      );
+        { ...base, ...override }, cEstimates, cInvoices, cAppointments, );
 
       // Communication history (stub — extended by Communications module later)
       const communicationHistory = override.communicationHistory || [];
 
       // Merge and return full profile
       return {
-        ...base,
-        ...override,
-        id:           base.id,
-        name:         override.name         || base.name,
-        phone:        override.phone        || base.phone,
-        email:        override.email        || base.email,
-        company:      override.company      || base.company,
-        address:      override.address      || base.address,
-        tags:         override.tags         || base.tags         || [],
-        source:       override.source       || base.source,
-        assignee:     override.assignee     || base.assignee,
-        notes:        override.notes        || base.notes        || '',
-        status:       override.status       || base.status       || 'active',
-        createdAt:    base.createdAt,
-        lastActivityAt,
-
-        vehicles:           cVehicles,
-        estimates:          cEstimates,
-        invoices:           cInvoices,
-        appointments:       cAppointments,
-        communicationHistory,
-
-        totalSpent,
-        openBalance,
-        estimateCount,
-        convertedCount,
-        conversionRate,
-        avgJobValue,
-        pendingValue,
-
-        personality,
-      };
+        ...base, ...override, id:           base.id, name:         override.name         || base.name, phone:        override.phone        || base.phone, email:        override.email        || base.email, company:      override.company      || base.company, address:      override.address      || base.address, tags:         override.tags         || base.tags         || [], source:       override.source       || base.source, assignee:     override.assignee     || base.assignee, notes:        override.notes        || base.notes        || '', status:       override.status       || base.status       || 'active', createdAt:    base.createdAt, lastActivityAt, vehicles:           cVehicles, estimates:          cEstimates, invoices:           cInvoices, appointments:       cAppointments, communicationHistory, totalSpent, openBalance, estimateCount, convertedCount, conversionRate, avgJobValue, pendingValue, personality, };
     });
 
     // ── 2. Build synthetic customers from estimates not matching any base ─────
@@ -253,13 +191,7 @@ export function CustomerProvider({ children }) {
       const personality    = analyzeCustomerPersonality({ ...base, ...override }, ests, cInvoices, cAppts);
 
       return {
-        ...base, ...override,
-        vehicles: [],
-        estimates: ests, invoices: cInvoices, appointments: cAppts,
-        communicationHistory: override.communicationHistory || [],
-        totalSpent, openBalance, estimateCount, convertedCount,
-        conversionRate, avgJobValue, pendingValue, lastActivityAt, personality,
-      };
+        ...base, ...override, vehicles: [], estimates: ests, invoices: cInvoices, appointments: cAppts, communicationHistory: override.communicationHistory || [], totalSpent, openBalance, estimateCount, convertedCount, conversionRate, avgJobValue, pendingValue, lastActivityAt, personality, };
     });
 
     // ── 3. Build synthetic customers from unconverted leads not in base ─────────
@@ -271,30 +203,10 @@ export function CustomerProvider({ children }) {
       })
       .map(lead => {
         const base     = {
-          id:        `lead-${lead.id || lead.name.toLowerCase().replace(/\s+/g, '-')}`,
-          name:      lead.name,
-          phone:     lead.phone || '',
-          email:     lead.email || '',
-          company:   '',
-          address:   '',
-          tags:      lead.status === 'converted' ? ['Converted'] : [],
-          source:    lead.source || 'lead',
-          assignee:  lead.assignedTo || null,
-          notes:     lead.notes || '',
-          status:    'active',
-          createdAt: lead.createdAt || new Date().toISOString(),
-          _synthetic: true,
-          _fromLead:  true,
-        };
+          id:        `lead-${lead.id || lead.name.toLowerCase().replace(/\s+/g, '-')}`, name:      lead.name, phone:     lead.phone || '', email:     lead.email || '', company:   '', address:   '', tags:      lead.status === 'converted' ? ['Converted'] : [], source:    lead.source || 'lead', assignee:  lead.assignedTo || null, notes:     lead.notes || '', status:    'active', createdAt: lead.createdAt || new Date().toISOString(), _synthetic: true, _fromLead:  true, };
         const personality = analyzeCustomerPersonality(base, [], [], []);
         return {
-          ...base,
-          vehicles: [], estimates: [], invoices: [], appointments: [],
-          communicationHistory: [],
-          totalSpent: 0, openBalance: 0, estimateCount: 0, convertedCount: 0,
-          conversionRate: null, avgJobValue: null, pendingValue: 0,
-          lastActivityAt: null, personality,
-        };
+          ...base, vehicles: [], estimates: [], invoices: [], appointments: [], communicationHistory: [], totalSpent: 0, openBalance: 0, estimateCount: 0, convertedCount: 0, conversionRate: null, avgJobValue: null, pendingValue: 0, lastActivityAt: null, personality, };
       });
 
     return [...enrichedBase, ...syntheticFromEstimates, ...liveLeadCustomers];
@@ -303,8 +215,7 @@ export function CustomerProvider({ children }) {
   // ── Lookup helpers ─────────────────────────────────────────────────────────
 
   const getById = useCallback((id) =>
-    enrichedCustomers.find(c => c.id === id) || null,
-  [enrichedCustomers]);
+    enrichedCustomers.find(c => c.id === id) || null, [enrichedCustomers]);
 
   const getByName = useCallback((name) => {
     if (!name) return null;
@@ -319,8 +230,7 @@ export function CustomerProvider({ children }) {
   }, [enrichedCustomers]);
 
   const searchCustomers = useCallback((query, limit = 10) =>
-    searchCustomerList(enrichedCustomers, query, limit),
-  [enrichedCustomers]);
+    searchCustomerList(enrichedCustomers, query, limit), [enrichedCustomers]);
 
   // ── Mutations ────────────────────────────────────────────────────────────────
 
@@ -333,28 +243,14 @@ export function CustomerProvider({ children }) {
       // Fallback: store in overrides for prototype mode
       const tempId = `new-${Date.now()}`;
       setOverrides(prev => ({
-        ...prev,
-        [tempId]: { ...input, id: tempId, createdAt: new Date().toISOString() },
-      }));
+        ...prev, [tempId]: { ...input, id: tempId, createdAt: new Date().toISOString() }, }));
       return { id: tempId };
     }
 
     try {
       const { data, errors } = await createCustomerMutation({
         variables: {
-          orgId,
-          name:     input.name,
-          email:    input.email     || null,
-          phone:    input.phone     || null,
-          company:  input.company   || null,
-          address:  input.address   || null,
-          tags:     input.tags      || [],
-          source:   input.source    || 'manual',
-          assigneeId: input.assigneeId || null,
-          notes:    input.notes     || null,
-          status:   input.status    || 'active',
-        },
-      });
+          orgId, name:     input.name, email:    input.email     || null, phone:    input.phone     || null, company:  input.company   || null, address:  input.address   || null, tags:     input.tags      || [], source:   input.source    || 'manual', assigneeId: input.assigneeId || null, notes:    input.notes     || null, status:   input.status    || 'active', }, });
 
       if (errors?.length) {
         console.error('[CustomerContext] GraphQL create error:', errors);
@@ -366,9 +262,7 @@ export function CustomerProvider({ children }) {
       if (newCustomer) {
         // Store server-assigned fields in overrides (orgId, id, createdAt, etc.)
         setOverrides(prev => ({
-          ...prev,
-          [newCustomer.id]: { ...newCustomer },
-        }));
+          ...prev, [newCustomer.id]: { ...newCustomer }, }));
       }
 
       return { data: newCustomer, error: null };
@@ -427,12 +321,8 @@ export function CustomerProvider({ children }) {
     setOverrides(prev => {
       const existing = prev[customerId]?.communicationHistory || [];
       return {
-        ...prev,
-        [customerId]: {
-          ...(prev[customerId] || {}),
-          communicationHistory: [...existing, newEntry],
-        },
-      };
+        ...prev, [customerId]: {
+          ...(prev[customerId] || {}), communicationHistory: [...existing, newEntry], }, };
     });
 
     // Note: communication inserts go directly to Supabase (communications table
@@ -460,34 +350,13 @@ export function CustomerProvider({ children }) {
       .map(c => ({ id: c.id, name: c.name, totalSpent: c.totalSpent, conversionRate: c.conversionRate }));
 
     return {
-      total:       active.length,
-      totalLTV,
-      avgLTV,
-      vipCount,
-      repeatCount,
-      typeBreakdown,
-      topByLTV,
-    };
+      total:       active.length, totalLTV, avgLTV, vipCount, repeatCount, typeBreakdown, topByLTV, };
   }, [enrichedCustomers]);
 
   // ── Context value ───────────────────────────────────────────────────────────
 
   const value = {
-    customers:     enrichedCustomers,
-    stats,
-    loading:       graphqlLoading,
-    error:         apolloError,
-    refetch,
-    getById,
-    getByName,
-    getByEmail,
-    searchCustomers,
-    createCustomer,
-    updateCustomer,
-    deleteCustomer,
-    addCustomerNote,
-    addCommunication,
-  };
+    customers:     enrichedCustomers, stats, loading:       graphqlLoading, error:         apolloError, refetch, getById, getByName, getByEmail, searchCustomers, createCustomer, updateCustomer, deleteCustomer, addCustomerNote, addCommunication, };
 
   return (
     <CustomerContext.Provider value={value}>

@@ -35,9 +35,7 @@ export function ReportsProvider({ children }) {
   const { orgId } = useAuth();
   const { activeLocationId } = useLocations();
 
-  const isDevAuth = import.meta.env.VITE_LOCAL_DEV === '1';
-
-  // Date range filter state
+    // Date range filter state
   const [dateRange, setDateRange] = useState(defaultRange);
   const [locationId, setLocationId] = useState(activeLocationId === 'all' ? null : activeLocationId);
 

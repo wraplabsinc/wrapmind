@@ -4,16 +4,10 @@ import { useAuth } from './AuthContext.jsx';
 import { uuid } from '../lib/uuid.js';
 import { supabase } from '../lib/supabase.js';
 import {
-  USE_APPOINTMENTS,
-  USE_CREATE_APPOINTMENT,
-  USE_UPDATE_APPOINTMENT,
-  USE_DELETE_APPOINTMENT,
+  USE_APPOINTMENTS, USE_CREATE_APPOINTMENT, USE_UPDATE_APPOINTMENT, USE_DELETE_APPOINTMENT,
 } from '../api/appointments.graphql.js';
 import {
-  USE_EMPLOYEES,
-  USE_CREATE_EMPLOYEE,
-  USE_UPDATE_EMPLOYEE,
-  USE_DELETE_EMPLOYEE,
+  USE_EMPLOYEES, USE_CREATE_EMPLOYEE, USE_UPDATE_EMPLOYEE, USE_DELETE_EMPLOYEE,
 } from '../api/gamification.graphql.js';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -26,13 +20,7 @@ const TOKEN_KEY    = 'wm-booking-token';
 // Service duration presets in minutes
 // eslint-disable-next-line react-refresh/only-export-components
 export const SERVICE_DURATIONS = {
-  'Full Wrap':        480,
-  'Partial Wrap':     240,
-  'Hood & Roof':      120,
-  'PPF - Full Front': 180,
-  'PPF - Full Body':  600,
-  'Window Tint':       90,
-  'Ceramic Coating':  180,
+  'Full Wrap':        480, 'Partial Wrap':     240, 'Hood & Roof':      120, 'PPF - Full Front': 180, 'PPF - Full Body':  600, 'Window Tint':       90, 'Ceramic Coating':  180,
 };
 
 function addMinutes(timeStr, mins) {
@@ -81,9 +69,7 @@ export function SchedulingProvider({ children }) {
   const { orgId } = useAuth();
   const { activeLocationId } = useLocations();
 
-  const isDevAuth = import.meta.env.VITE_LOCAL_DEV === '1';
-
-  // Apollo: all appointments for the org
+    // Apollo: all appointments for the org
   const { appointments: apolloAppointments, loading: apolloLoading, error: apolloError, refetch } =
     USE_APPOINTMENTS({ orgId, first: 300 });
 
@@ -96,23 +82,23 @@ export function SchedulingProvider({ children }) {
   // Sync Apollo data once (guard with ref)
   const initRef = useRef(false);
   useEffect(() => {
-    if (isDevAuth) return;
+
     if (!initRef.current && !apolloLoading && !apolloError && apolloAppointments.length > 0) {
       initRef.current = true;
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setAppointments(apolloAppointments);
     }
-  }, [apolloLoading, apolloError, apolloAppointments, isDevAuth]);
+  }, [apolloLoading, apolloError, apolloAppointments]);
 
   // Write-through persistence
   useEffect(() => {
-    if (!isDevAuth) saveToStorage(STORAGE_KEY, appointments);
-  }, [appointments, isDevAuth]);
+    saveToStorage(STORAGE_KEY, appointments);
+  }, [appointments]);
   // ── Realtime subscriptions (patch layer — Apollo remains primary source) ────
   const [realtimeConnected, setRealtimeConnected] = useState(false);
 
   useEffect(() => {
-    if (!orgId || isDevAuth) return;
+    if (!orgId) return;
 
     // Reset connection status when (re)connecting
     setRealtimeConnected(false);
@@ -121,73 +107,26 @@ export function SchedulingProvider({ children }) {
 
     channel
       .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'appointments',
-        filter: `org_id=eq.${orgId}`,
-      }, (payload) => {
+        event: 'INSERT', schema: 'public', table: 'appointments', filter: `org_id=eq.${orgId}`, }, (payload) => {
         const newAppt = {
-          id: payload.new.id,
-          orgId: payload.new.org_id,
-          locationId: payload.new.location_id,
-          customerId: payload.new.customer_id,
-          vehicleId: payload.new.vehicle_id,
-          technicianId: payload.new.technician_id,
-          estimateId: payload.new.estimate_id,
-          service: payload.new.service,
-          date: payload.new.date,
-          startTime: payload.new.start_time,
-          endTime: payload.new.end_time,
-          status: payload.new.status,
-          notes: payload.new.notes,
-          reminderAt: payload.new.reminder_at,
-          reminderSent: payload.new.reminder_sent,
-          reminderQueued: payload.new.reminder_queued,
-          createdAt: payload.new.created_at,
-          updatedAt: payload.new.updated_at,
-        };
+          id: payload.new.id, orgId: payload.new.org_id, locationId: payload.new.location_id, customerId: payload.new.customer_id, vehicleId: payload.new.vehicle_id, technicianId: payload.new.technician_id, estimateId: payload.new.estimate_id, service: payload.new.service, date: payload.new.date, startTime: payload.new.start_time, endTime: payload.new.end_time, status: payload.new.status, notes: payload.new.notes, reminderAt: payload.new.reminder_at, reminderSent: payload.new.reminder_sent, reminderQueued: payload.new.reminder_queued, createdAt: payload.new.created_at, updatedAt: payload.new.updated_at, };
         setAppointments(prev => {
           if (prev.some(a => a.id === newAppt.id)) return prev;
           return [newAppt, ...prev];
         });
       })
       .on('postgres_changes', {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'appointments',
-        filter: `org_id=eq.${orgId}`,
-      }, (payload) => {
+        event: 'UPDATE', schema: 'public', table: 'appointments', filter: `org_id=eq.${orgId}`, }, (payload) => {
         setAppointments(prev =>
           prev.map(a => a.id === payload.new.id
             ? {
-                ...a,
-                orgId: payload.new.org_id,
-                locationId: payload.new.location_id,
-                customerId: payload.new.customer_id,
-                vehicleId: payload.new.vehicle_id,
-                technicianId: payload.new.technician_id,
-                estimateId: payload.new.estimate_id,
-                service: payload.new.service,
-                date: payload.new.date,
-                startTime: payload.new.start_time,
-                endTime: payload.new.end_time,
-                status: payload.new.status,
-                notes: payload.new.notes,
-                reminderAt: payload.new.reminder_at,
-                reminderSent: payload.new.reminder_sent,
-                reminderQueued: payload.new.reminder_queued,
-                updatedAt: payload.new.updated_at,
-              }
+                ...a, orgId: payload.new.org_id, locationId: payload.new.location_id, customerId: payload.new.customer_id, vehicleId: payload.new.vehicle_id, technicianId: payload.new.technician_id, estimateId: payload.new.estimate_id, service: payload.new.service, date: payload.new.date, startTime: payload.new.start_time, endTime: payload.new.end_time, status: payload.new.status, notes: payload.new.notes, reminderAt: payload.new.reminder_at, reminderSent: payload.new.reminder_sent, reminderQueued: payload.new.reminder_queued, updatedAt: payload.new.updated_at, }
             : a
           )
         );
       })
       .on('postgres_changes', {
-        event: 'DELETE',
-        schema: 'public',
-        table: 'appointments',
-        filter: `org_id=eq.${orgId}`,
-      }, (payload) => {
+        event: 'DELETE', schema: 'public', table: 'appointments', filter: `org_id=eq.${orgId}`, }, (payload) => {
         setAppointments(prev => prev.filter(a => a.id !== payload.old.id));
       })
       .subscribe((status) => {
@@ -198,7 +137,7 @@ export function SchedulingProvider({ children }) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [orgId, isDevAuth]);
+  }, [orgId]);
 
   // ── Technicians (from employees table via Apollo) ──────────────────────────
   const { employees: dbEmployees } = USE_EMPLOYEES({ orgId, first: 100 });
@@ -210,11 +149,7 @@ export function SchedulingProvider({ children }) {
   const employeesFromDb = dbEmployees ?? [];
 
   const technicians = employeesFromDb.map(e => ({
-    id: e.id,
-    name: e.name,
-    active: e.isActive,
-    color: e.color ?? '#6B7280',
-  }));
+    id: e.id, name: e.name, active: e.isActive, color: e.color ?? '#6B7280', }));
 
   const addTechnician = useCallback((data = {}) => {
     createEmployeeMutation({ variables: { orgId, name: data.name ?? 'New Tech', role: 'technician', isActive: true, color: data.color ?? '#6B7280' } });
@@ -223,11 +158,7 @@ export function SchedulingProvider({ children }) {
   const updateTechnician = useCallback((id, patch) => {
     updateEmployeeMutation({
       variables: {
-        id,
-        isActive: patch.active !== undefined ? patch.active : undefined,
-        color: patch.color,
-      },
-    });
+        id, isActive: patch.active !== undefined ? patch.active : undefined, color: patch.color, }, });
   }, [updateEmployeeMutation]);
 
   const deleteTechnician = useCallback((id) => {
@@ -265,64 +196,38 @@ export function SchedulingProvider({ children }) {
     const apptDate   = new Date(`${data.date}T${startTime}`);
     const reminderAt = new Date(apptDate.getTime() - 24 * 60 * 60 * 1000).toISOString();
     const appt = {
-      id: uuid(),
-      locationId: activeLocationId === 'all' ? 'loc-001' : activeLocationId,
-      type: 'appointment',
-      status: 'scheduled',
-      createdAt: new Date().toISOString(),
-      reminderQueued: true,
-      reminderSent: false,
-      reminderAt,
-      ...data,
-      startTime,
-      endTime,
-    };
+      id: uuid(), locationId: activeLocationId === 'all' ? 'loc-001' : activeLocationId, type: 'appointment', status: 'scheduled', createdAt: new Date().toISOString(), reminderQueued: true, reminderSent: false, reminderAt, ...data, startTime, endTime, };
 
     setAppointments(prev => [appt, ...prev]);
 
-    if (orgId && !isDevAuth) {
+    if (orgId) {
       createAppointmentMutation({
         variables: {
-          orgId,
-          locationId:   appt.locationId,
-          technicianId: appt.technicianId ?? null,
-          estimateId:   appt.estimateId   ?? null,
-          customerId:   appt.customerId   ?? null,
-          vehicleId:    appt.vehicleId    ?? null,
-          service:      appt.service,
-          date:         appt.date,
-          startTime:    appt.startTime,
-          endTime:      appt.endTime      ?? null,
-          status:       appt.status,
-          reminderQueued: appt.reminderQueued,
-          reminderAt:   appt.reminderAt,
-          notes:        appt.notes        ?? null,
-        },
-      }).catch(err => console.error('[SchedulingContext] GraphQL create failed:', err));
+          orgId, locationId:   appt.locationId, technicianId: appt.technicianId ?? null, estimateId:   appt.estimateId   ?? null, customerId:   appt.customerId   ?? null, vehicleId:    appt.vehicleId    ?? null, service:      appt.service, date:         appt.date, startTime:    appt.startTime, endTime:      appt.endTime      ?? null, status:       appt.status, reminderQueued: appt.reminderQueued, reminderAt:   appt.reminderAt, notes:        appt.notes        ?? null, }, }).catch(err => console.error('[SchedulingContext] GraphQL create failed:', err));
     }
 
     return appt;
-  }, [activeLocationId, orgId, isDevAuth, createAppointmentMutation]);
+  }, [activeLocationId, orgId, createAppointmentMutation]);
 
   const updateAppointment = useCallback((id, patch) => {
     setAppointments(prev =>
       prev.map(a => a.id === id ? { ...a, ...patch, updatedAt: new Date().toISOString() } : a)
     );
 
-    if (orgId && !isDevAuth) {
+    if (orgId) {
       updateAppointmentMutation({ variables: { id, ...patch } })
         .catch(err => console.error('[SchedulingContext] GraphQL update failed:', err));
     }
-  }, [orgId, isDevAuth, updateAppointmentMutation]);
+  }, [orgId, updateAppointmentMutation]);
 
   const deleteAppointment = useCallback((id) => {
     setAppointments(prev => prev.filter(a => a.id !== id));
 
-    if (orgId && !isDevAuth) {
+    if (orgId) {
       deleteAppointmentMutation({ variables: { id } })
         .catch(err => console.error('[SchedulingContext] GraphQL delete failed:', err));
     }
-  }, [orgId, isDevAuth, deleteAppointmentMutation]);
+  }, [orgId, deleteAppointmentMutation]);
 
   const getAppointmentsByDate = useCallback((date) => {
     return appointments.filter(a => a.date === date);
@@ -338,13 +243,7 @@ export function SchedulingProvider({ children }) {
 
   const addBlockedTime = useCallback((data = {}) => {
     const block = {
-      id: uuid(),
-      locationId: activeLocationId === 'all' ? 'loc-001' : activeLocationId,
-      type: 'blocked',
-      label: data.label || 'Blocked',
-      createdAt: new Date().toISOString(),
-      ...data,
-    };
+      id: uuid(), locationId: activeLocationId === 'all' ? 'loc-001' : activeLocationId, type: 'blocked', label: data.label || 'Blocked', createdAt: new Date().toISOString(), ...data, };
     setBlockedTimes(prev => [...prev, block]);
     return block;
   }, [activeLocationId]);
@@ -372,30 +271,7 @@ export function SchedulingProvider({ children }) {
   // ── Context value ─────────────────────────────────────────────────────────
 
   const value = {
-    appointments:       filteredAppointments,
-    allAppointments:   appointments,
-    loading:           !isDevAuth && apolloLoading,
-    error:             apolloError,
-    refetch,
-    addAppointment,
-    updateAppointment,
-    deleteAppointment,
-    getAppointmentsByDate,
-    dismissReminder,
-    technicians,
-    blockedTimes:      filteredBlockedTimes,
-    allBlockedTimes:   blockedTimes,
-    addTechnician,
-    updateTechnician,
-    deleteTechnician,
-    addBlockedTime,
-    updateBlockedTime,
-    deleteBlockedTime,
-    getBookingToken,
-    calcEndTime,
-    SERVICE_DURATIONS,
-    realtimeConnected,
-  };
+    appointments:       filteredAppointments, allAppointments:   appointments, loading:           apolloLoading, error:             apolloError, refetch, addAppointment, updateAppointment, deleteAppointment, getAppointmentsByDate, dismissReminder, technicians, blockedTimes:      filteredBlockedTimes, allBlockedTimes:   blockedTimes, addTechnician, updateTechnician, deleteTechnician, addBlockedTime, updateBlockedTime, deleteBlockedTime, getBookingToken, calcEndTime, SERVICE_DURATIONS, realtimeConnected, };
 
   return (
     <SchedulingContext.Provider value={value}>

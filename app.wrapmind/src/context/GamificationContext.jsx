@@ -2,42 +2,21 @@ import { createContext, useContext, useReducer, useEffect, useState, useCallback
 import { useAuth } from './AuthContext.jsx';
 import { uuid } from '../lib/uuid.js';
 import {
-  USE_EMPLOYEES,
-  USE_ACHIEVEMENT_EVENTS,
-  USE_CREATE_EMPLOYEE,
-  USE_UPDATE_EMPLOYEE,
-  USE_DELETE_EMPLOYEE,
-  USE_AWARD_ACHIEVEMENT,
+  USE_EMPLOYEES, USE_ACHIEVEMENT_EVENTS, USE_CREATE_EMPLOYEE, USE_UPDATE_EMPLOYEE, USE_DELETE_EMPLOYEE, USE_AWARD_ACHIEVEMENT,
 } from '../api/gamification.graphql.js';
 
 // ─── Achievement definitions ─────────────────────────────────────────────────
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const ACHIEVEMENTS = [
-  { id: 'estimate_created',   label: 'Estimate Created',        xp: 10,  category: 'sales',       icon: 'clipboard',       description: 'New estimate written up' },
-  { id: 'estimate_approved',  label: 'Estimate Approved',       xp: 25,  category: 'sales',       icon: 'check-circle',    description: 'Customer approved the estimate' },
-  { id: 'lead_converted',    label: 'Lead Converted',          xp: 75,  category: 'sales',       icon: 'target',          description: 'Lead turned into a paying job' },
-  { id: 'upsell_closed',     label: 'Upsell Closed',           xp: 100, category: 'sales',       icon: 'up-arrow',        description: 'Additional service sold to existing customer' },
-  { id: 'full_wrap_sold',    label: 'Full Wrap Sold',          xp: 150, category: 'sales',       icon: 'truck',           description: 'Full vehicle wrap sold' },
-  { id: 'revenue_milestone', label: 'Revenue Milestone ($5k)', xp: 200, category: 'sales',       icon: 'banknotes',       description: 'Crossed $5k revenue in a single day' },
-  { id: 'five_star_review',  label: '5-Star Review',           xp: 150, category: 'customer',    icon: 'star',            description: 'Customer left a 5-star review' },
-  { id: 'referral',          label: 'Customer Referral',        xp: 50,  category: 'customer',    icon: 'hand-raised',     description: 'Referred a new customer' },
-  { id: 'perfect_week',      label: 'Perfect Week',            xp: 200, category: 'performance', icon: 'trophy',          description: 'Zero missed deadlines for the week' },
-  { id: 'ten_estimates_week',label: '10 Estimates / Week',     xp: 100, category: 'performance', icon: 'arrow-trending-up', description: '10 or more estimates written in one week' },
-  { id: 'first_job_day',    label: 'First Job of the Day',   xp: 5,   category: 'performance', icon: 'sun',             description: 'First estimate logged before 9 AM' },
-  { id: 'manual_bonus',     label: 'Owner Bonus',             xp: 0,   category: 'special',     icon: 'gift',            description: 'Discretionary reward from the shop owner', variableXP: true },
+  { id: 'estimate_created', label: 'Estimate Created', xp: 10, category: 'sales', icon: 'clipboard', description: 'New estimate written up' }, { id: 'estimate_approved', label: 'Estimate Approved', xp: 25, category: 'sales', icon: 'check-circle', description: 'Customer approved the estimate' }, { id: 'lead_converted', label: 'Lead Converted', xp: 75, category: 'sales', icon: 'target', description: 'Lead turned into a paying job' }, { id: 'upsell_closed', label: 'Upsell Closed', xp: 100, category: 'sales', icon: 'up-arrow', description: 'Additional service sold to existing customer' }, { id: 'full_wrap_sold', label: 'Full Wrap Sold', xp: 150, category: 'sales', icon: 'truck', description: 'Full vehicle wrap sold' }, { id: 'revenue_milestone', label: 'Revenue Milestone ($5k)', xp: 200, category: 'sales', icon: 'banknotes', description: 'Crossed $5k revenue in a single day' }, { id: 'five_star_review', label: '5-Star Review', xp: 150, category: 'customer', icon: 'star', description: 'Customer left a 5-star review' }, { id: 'referral', label: 'Customer Referral', xp: 50, category: 'customer', icon: 'hand-raised', description: 'Referred a new customer' }, { id: 'perfect_week', label: 'Perfect Week', xp: 200, category: 'performance', icon: 'trophy', description: 'Zero missed deadlines for the week' }, { id: 'ten_estimates_week',label: '10 Estimates / Week', xp: 100, category: 'performance', icon: 'arrow-trending-up', description: '10 or more estimates written in one week' }, { id: 'first_job_day', label: 'First Job of the Day', xp: 5, category: 'performance', icon: 'sun', description: 'First estimate logged before 9 AM' }, { id: 'manual_bonus', label: 'Owner Bonus', xp: 0, category: 'special', icon: 'gift', description: 'Discretionary reward from the shop owner', variableXP: true },
 ];
 
 // ─── Level tiers ─────────────────────────────────────────────────────────────
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const LEVELS = [
-  { level: 1, title: 'Rookie',     minXP: 0,     color: '#94A3B8' },
-  { level: 2, title: 'Apprentice', minXP: 500,   color: '#22C55E' },
-  { level: 3, title: 'Specialist', minXP: 1500,  color: '#2E8BF0' },
-  { level: 4, title: 'Expert',     minXP: 3500,  color: '#8B5CF6' },
-  { level: 5, title: 'Master',     minXP: 7000,  color: '#F59E0B' },
-  { level: 6, title: 'Legend',     minXP: 12000, color: '#EF4444' },
+  { level: 1, title: 'Rookie', minXP: 0, color: '#94A3B8' }, { level: 2, title: 'Apprentice', minXP: 500, color: '#22C55E' }, { level: 3, title: 'Specialist', minXP: 1500, color: '#2E8BF0' }, { level: 4, title: 'Expert', minXP: 3500, color: '#8B5CF6' }, { level: 5, title: 'Master', minXP: 7000, color: '#F59E0B' }, { level: 6, title: 'Legend', minXP: 12000, color: '#EF4444' },
 ];
 
 // ─── Seed data ────────────────────────────────────────────────────────────────
@@ -89,8 +68,7 @@ function startOfMonth() {
 // ─── Reducer ──────────────────────────────────────────────────────────────────
 
 const initialState = {
-  employees: [],
-  events: [],
+  employees: [], events: [],
 };
 
 function reducer(state, action) {
@@ -103,22 +81,13 @@ function reducer(state, action) {
 
     case 'REMOVE_EMPLOYEE':
       return {
-        ...state,
-        employees: state.employees.map(e =>
+        ...state, employees: state.employees.map(e =>
           e.id === action.id ? { ...e, removed: true } : e
-        ),
-      };
+        ), };
 
     case 'AWARD_XP': {
       const newEvent = {
-        id: uuid(),
-        employeeId: action.payload.employeeId,
-        achievementId: action.payload.achievementId,
-        xp: action.payload.xp,
-        note: action.payload.note || '',
-        awardedBy: action.payload.awardedBy || 'system',
-        timestamp: new Date().toISOString(),
-      };
+        id: uuid(), employeeId: action.payload.employeeId, achievementId: action.payload.achievementId, xp: action.payload.xp, note: action.payload.note || '', awardedBy: action.payload.awardedBy || 'system', timestamp: new Date().toISOString(), };
       return { ...state, events: [newEvent, ...state.events] };
     }
 
@@ -168,9 +137,7 @@ const GamificationContext = createContext(null);
 export function GamificationProvider({ children }) {
   const { orgId } = useAuth();
 
-  const isDevAuth = import.meta.env.VITE_LOCAL_DEV === '1';
-
-  // Apollo data
+    // Apollo data
   const { employees: apolloEmployees, loading: empLoading, error: empError } =
     USE_EMPLOYEES({ orgId, first: 100 });
 
@@ -194,7 +161,7 @@ export function GamificationProvider({ children }) {
   // Init: seed or localStorage, then sync Apollo once loaded
   const initRef = useRef(false);
   useEffect(() => {
-    if (isDevAuth) return;
+
     if (!initRef.current) {
       initRef.current = true;
       if (hasApolloEmp) {
@@ -203,27 +170,27 @@ export function GamificationProvider({ children }) {
         dispatch({ type: 'INIT', employees: loadEmployees(), events: loadEvents() });
       }
     }
-  }, [isDevAuth, hasApolloEmp, hasApolloEvt, apolloEmployees, apolloEvents]);
+  }, [hasApolloEmp, hasApolloEvt, apolloEmployees, apolloEvents]);
 
   // If Apollo data arrives after init, do a one-time sync
   useEffect(() => {
-    if (isDevAuth) return;
+
     if (!initRef.current) return;
     if (hasApolloEmp) {
       dispatch({ type: 'INIT', employees: apolloEmployees, events: hasApolloEvt ? apolloEvents : state.events });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasApolloEmp, hasApolloEvt, apolloEmployees, apolloEvents, isDevAuth]);
+  }, [hasApolloEmp, hasApolloEvt, apolloEmployees, apolloEvents]);
 
   // Persist employees when not in dev mode
   useEffect(() => {
-    if (!isDevAuth && state.employees.length > 0) saveEmployees(state.employees);
-  }, [state.employees, isDevAuth]);
+    if (state.employees.length > 0) saveEmployees(state.employees);
+  }, [state.employees]);
 
   // Persist events when not in dev mode
   useEffect(() => {
-    if (!isDevAuth && state.events.length > 0) saveEvents(state.events);
-  }, [state.events, isDevAuth]);
+    if (state.events.length > 0) saveEvents(state.events);
+  }, [state.events]);
 
   // ── Current employee selection ───────────────────────────────────────────
   const [currentEmployeeId, setCurrentEmployeeIdState] = useState(
@@ -239,55 +206,37 @@ export function GamificationProvider({ children }) {
 
   const addEmployee = useCallback((data = {}) => {
     const newEmp = {
-      id: uuid(),
-      isActive: true,
-      color: '#6366F1',
-      ...data,
-    };
+      id: uuid(), isActive: true, color: '#6366F1', ...data, };
     dispatch({ type: 'ADD_EMPLOYEE', employee: newEmp });
 
-    if (orgId && !isDevAuth) {
+    if (orgId) {
       createEmployeeMutation({
         variables: {
-          orgId,
-          name:    newEmp.name,
-          initials: newEmp.initials ?? null,
-          role:    newEmp.role    ?? 'Lead Installer',
-          color:   newEmp.color   ?? '#6366F1',
-          isActive: newEmp.isActive,
-        },
-      }).catch(err => console.error('[GamificationContext] createEmployee failed:', err));
+          orgId, name:    newEmp.name, initials: newEmp.initials ?? null, role:    newEmp.role    ?? 'Lead Installer', color:   newEmp.color   ?? '#6366F1', isActive: newEmp.isActive, }, }).catch(err => console.error('[GamificationContext] createEmployee failed:', err));
     }
 
     return newEmp;
-  }, [orgId, isDevAuth, createEmployeeMutation]);
+  }, [orgId, createEmployeeMutation]);
 
   const removeEmployee = useCallback((id) => {
     dispatch({ type: 'REMOVE_EMPLOYEE', id });
 
-    if (orgId && !isDevAuth) {
+    if (orgId) {
       deleteEmployeeMutation({ variables: { id } })
         .catch(err => console.error('[GamificationContext] deleteEmployee failed:', err));
     }
-  }, [orgId, isDevAuth, deleteEmployeeMutation]);
+  }, [orgId, deleteEmployeeMutation]);
 
   const awardXP = useCallback(({ employeeId, achievementId, xp, note, awardedBy }) => {
     const payload = { employeeId, achievementId, xp, note, awardedBy };
     dispatch({ type: 'AWARD_XP', payload });
 
-    if (orgId && !isDevAuth) {
+    if (orgId) {
       awardAchievementMutation({
         variables: {
-          orgId,
-          employeeId,
-          achievementId,
-          xp: xp || 0,
-          note: note || null,
-          awardedBy: awardedBy || 'system',
-        },
-      }).catch(err => console.error('[GamificationContext] awardXP failed:', err));
+          orgId, employeeId, achievementId, xp: xp || 0, note: note || null, awardedBy: awardedBy || 'system', }, }).catch(err => console.error('[GamificationContext] awardXP failed:', err));
     }
-  }, [orgId, isDevAuth, awardAchievementMutation]);
+  }, [orgId, awardAchievementMutation]);
 
   // ── Computed ───────────────────────────────────────────────────────────────
 
@@ -314,20 +263,7 @@ export function GamificationProvider({ children }) {
   // ── Context value ─────────────────────────────────────────────────────────
 
   const value = {
-    employees: state.employees.filter(e => !e.removed),
-    events:    state.events,
-    achievements: ACHIEVEMENTS,
-    levels:    LEVELS,
-    currentEmployeeId,
-    setCurrentEmployee,
-    addEmployee,
-    removeEmployee,
-    awardXP,
-    getEmployeeStats,
-    getRankedEmployees,
-    loading: !isDevAuth && (empLoading || evtLoading),
-    error:   empError || evtError,
-  };
+    employees: state.employees.filter(e => !e.removed), events:    state.events, achievements: ACHIEVEMENTS, levels:    LEVELS, currentEmployeeId, setCurrentEmployee, addEmployee, removeEmployee, awardXP, getEmployeeStats, getRankedEmployees, loading: empLoading || evtLoading, error:   empError || evtError, };
 
   return (
     <GamificationContext.Provider value={value}>

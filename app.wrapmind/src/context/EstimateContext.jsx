@@ -4,12 +4,7 @@ import { useLocations } from './LocationContext';
 import { useAuth } from './AuthContext.jsx';
 import { uuid } from '../lib/uuid.js';
 import {
-  USE_ESTIMATES,
-  USE_ESTIMATE,
-  USE_CREATE_ESTIMATE,
-  USE_UPDATE_ESTIMATE,
-  USE_DELETE_ESTIMATE,
-  normalizeEstimate,
+  USE_ESTIMATES, USE_ESTIMATE, USE_CREATE_ESTIMATE, USE_UPDATE_ESTIMATE, USE_DELETE_ESTIMATE, normalizeEstimate,
 } from '../api/estimates.graphql.js';
 
 const STORAGE_KEY = 'wm-estimates-v1';
@@ -38,20 +33,18 @@ export function EstimateProvider({ children }) {
   // Track estimate outcomes for learning agent
   const recordedRef = useRef(new Set());
 
-  const isDevAuth = import.meta.env.VITE_LOCAL_DEV === '1';
-  const hasApolloData = !apolloLoading && !apolloError && apolloEstimates.length > 0;
+    const hasApolloData = !apolloLoading && !apolloError && apolloEstimates.length > 0;
 
   // Apollo owns the list once data arrives; dev mode always uses seed
   const [estimates, setEstimates] = useState(() => {
-    if (isDevAuth) return [];
-    if (hasApolloData) return apolloEstimates;
+        if (hasApolloData) return apolloEstimates;
     return [];
   });
 
   // Sync Apollo data into state once available
   const initRef = useRef(false);
   useEffect(() => {
-    if (isDevAuth) return;
+
     if (!initRef.current && hasApolloData) {
       initRef.current = true;
       // Normalize snake_case DB rows → camelCase app shape
@@ -59,14 +52,14 @@ export function EstimateProvider({ children }) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setEstimates(normalized);
     }
-  }, [hasApolloData, apolloEstimates, isDevAuth]);
+  }, [hasApolloData, apolloEstimates]);
 
   // Write-through: persist local state changes to localStorage
   useEffect(() => {
-    if (!isDevAuth && estimates.length > 0) {
+    if (estimates.length > 0) {
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify(estimates)); } catch {}
     }
-  }, [estimates, isDevAuth]);
+  }, [estimates]);
 
   // Learning agent: record terminal-state outcomes
   useEffect(() => {
@@ -85,98 +78,33 @@ export function EstimateProvider({ children }) {
   const [realtimeConnected, setRealtimeConnected] = useState(false);
 
   useEffect(() => {
-    if (!orgId || isDevAuth) return;
+    if (!orgId) return;
 
     setRealtimeConnected(false);
     const channel = supabase.channel('estimates-realtime');
 
     channel
       .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'estimates',
-        filter: `org_id=eq.${orgId}`,
-      }, (payload) => {
+        event: 'INSERT', schema: 'public', table: 'estimates', filter: `org_id=eq.${orgId}`, }, (payload) => {
         const newEst = {
-          id: payload.new.id,
-          orgId: payload.new.org_id,
-          locationId: payload.new.location_id,
-          estimateNumber: payload.new.estimate_number,
-          status: payload.new.status,
-          customerId: payload.new.customer_id,
-          vehicleId: payload.new.vehicle_id,
-          package: payload.new.package,
-          material: payload.new.material,
-          materialColor: payload.new.material_color,
-          laborHours: payload.new.labor_hours,
-          basePrice: payload.new.base_price,
-          laborCost: payload.new.labor_cost,
-          materialCost: payload.new.material_cost,
-          discount: payload.new.discount,
-          total: payload.new.total,
-          notes: payload.new.notes,
-          createdById: payload.new.created_by_id,
-          assignedToId: payload.new.assigned_to_id,
-          sentAt: payload.new.sent_at,
-          expiresAt: payload.new.expires_at,
-          approvedAt: payload.new.approved_at,
-          declinedAt: payload.new.declined_at,
-          convertedToInvoiceId: payload.new.converted_to_invoice_id,
-          createdAt: payload.new.created_at,
-          updatedAt: payload.new.updated_at,
-          deletedAt: payload.new.deleted_at,
-        };
+          id: payload.new.id, orgId: payload.new.org_id, locationId: payload.new.location_id, estimateNumber: payload.new.estimate_number, status: payload.new.status, customerId: payload.new.customer_id, vehicleId: payload.new.vehicle_id, package: payload.new.package, material: payload.new.material, materialColor: payload.new.material_color, laborHours: payload.new.labor_hours, basePrice: payload.new.base_price, laborCost: payload.new.labor_cost, materialCost: payload.new.material_cost, discount: payload.new.discount, total: payload.new.total, notes: payload.new.notes, createdById: payload.new.created_by_id, assignedToId: payload.new.assigned_to_id, sentAt: payload.new.sent_at, expiresAt: payload.new.expires_at, approvedAt: payload.new.approved_at, declinedAt: payload.new.declined_at, convertedToInvoiceId: payload.new.converted_to_invoice_id, createdAt: payload.new.created_at, updatedAt: payload.new.updated_at, deletedAt: payload.new.deleted_at, };
         setEstimates(prev => {
           if (prev.some(e => e.id === newEst.id)) return prev;
           return [newEst, ...prev];
         });
       })
       .on('postgres_changes', {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'estimates',
-        filter: `org_id=eq.${orgId}`,
-      }, (payload) => {
+        event: 'UPDATE', schema: 'public', table: 'estimates', filter: `org_id=eq.${orgId}`, }, (payload) => {
         setEstimates(prev =>
           prev.map(e => e.id === payload.new.id
             ? {
-                ...e,
-                orgId: payload.new.org_id,
-                locationId: payload.new.location_id,
-                estimateNumber: payload.new.estimate_number,
-                status: payload.new.status,
-                customerId: payload.new.customer_id,
-                vehicleId: payload.new.vehicle_id,
-                package: payload.new.package,
-                material: payload.new.material,
-                materialColor: payload.new.material_color,
-                laborHours: payload.new.labor_hours,
-                basePrice: payload.new.base_price,
-                laborCost: payload.new.labor_cost,
-                materialCost: payload.new.material_cost,
-                discount: payload.new.discount,
-                total: payload.new.total,
-                notes: payload.new.notes,
-                createdById: payload.new.created_by_id,
-                assignedToId: payload.new.assigned_to_id,
-                sentAt: payload.new.sent_at,
-                expiresAt: payload.new.expires_at,
-                approvedAt: payload.new.approved_at,
-                declinedAt: payload.new.declined_at,
-                convertedToInvoiceId: payload.new.converted_to_invoice_id,
-                deletedAt: payload.new.deleted_at,
-                updatedAt: payload.new.updated_at,
-              }
+                ...e, orgId: payload.new.org_id, locationId: payload.new.location_id, estimateNumber: payload.new.estimate_number, status: payload.new.status, customerId: payload.new.customer_id, vehicleId: payload.new.vehicle_id, package: payload.new.package, material: payload.new.material, materialColor: payload.new.material_color, laborHours: payload.new.labor_hours, basePrice: payload.new.base_price, laborCost: payload.new.labor_cost, materialCost: payload.new.material_cost, discount: payload.new.discount, total: payload.new.total, notes: payload.new.notes, createdById: payload.new.created_by_id, assignedToId: payload.new.assigned_to_id, sentAt: payload.new.sent_at, expiresAt: payload.new.expires_at, approvedAt: payload.new.approved_at, declinedAt: payload.new.declined_at, convertedToInvoiceId: payload.new.converted_to_invoice_id, deletedAt: payload.new.deleted_at, updatedAt: payload.new.updated_at, }
             : e
           )
         );
       })
       .on('postgres_changes', {
-        event: 'DELETE',
-        schema: 'public',
-        table: 'estimates',
-        filter: `org_id=eq.${orgId}`,
-      }, (payload) => {
+        event: 'DELETE', schema: 'public', table: 'estimates', filter: `org_id=eq.${orgId}`, }, (payload) => {
         setEstimates(prev => prev.filter(e => e.id !== payload.old.id));
       })
       .subscribe((status) => {
@@ -187,7 +115,7 @@ export function EstimateProvider({ children }) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [orgId, isDevAuth]);
+  }, [orgId]);
 const filteredEstimates = (activeLocationId === 'all' || !activeLocationId
     ? estimates
     : estimates.filter(e => !e.locationId || e.locationId === activeLocationId)
@@ -220,44 +148,19 @@ const filteredEstimates = (activeLocationId === 'all' || !activeLocationId
     })();
 
     const newEst = {
-      id: uuid(),
-      estimateNumber: nextNumber,
-      locationId: activeLocationId === 'all' ? 'loc-001' : activeLocationId,
-      createdAt: new Date().toISOString(),
-      status: 'draft',
-      convertedToInvoice: false,
-      invoiceId: null,
-      ...estimateData,
-    };
+      id: uuid(), estimateNumber: nextNumber, locationId: activeLocationId === 'all' ? null : activeLocationId, createdAt: new Date().toISOString(), status: 'draft', convertedToInvoice: false, invoiceId: null, ...estimateData, };
 
     // Optimistic update
     setEstimates(prev => [newEst, ...prev]);
 
-    if (orgId && !isDevAuth) {
+    if (orgId) {
       createEstimateMutation({
         variables: {
-          orgId,
-          locationId:  newEst.locationId,
-          customerId: newEst.customerId,
-          estimateId: newEst.estimateNumber,
-          status:      newEst.status,
-          package:     newEst.package     ?? null,
-          material:    newEst.material    ?? null,
-          materialColor: newEst.materialColor ?? null,
-          laborHours:  newEst.laborHours  ?? 0,
-          basePrice:   newEst.basePrice   ?? 0,
-          laborCost:   newEst.laborCost   ?? 0,
-          materialCost: newEst.materialCost ?? 0,
-          discount:    newEst.discount    ?? 0,
-          total:       newEst.total       ?? 0,
-          notes:       newEst.notes       ?? null,
-          assignedToId: newEst.assignedToId ?? null,
-        },
-      }).catch(err => console.error('[EstimateContext] GraphQL create failed:', err));
+          orgId, locationId:  newEst.locationId, customerId: newEst.customerId, estimateId: newEst.estimateNumber, status:      newEst.status, package:     newEst.package     ?? null, material:    newEst.material    ?? null, materialColor: newEst.materialColor ?? null, laborHours:  newEst.laborHours  ?? 0, basePrice:   newEst.basePrice   ?? 0, laborCost:   newEst.laborCost   ?? 0, materialCost: newEst.materialCost ?? 0, discount:    newEst.discount    ?? 0, total:       newEst.total       ?? 0, notes:       newEst.notes       ?? null, assignedToId: newEst.assignedToId ?? null, }, }).catch(err => console.error('[EstimateContext] GraphQL create failed:', err));
     }
 
     return newEst;
-  }, [estimates, activeLocationId, orgId, org, isDevAuth, createEstimateMutation]);
+  }, [estimates, activeLocationId, orgId, org, createEstimateMutation]);
 
   // ─── updateEstimate ─────────────────────────────────────────────────────────
   const updateEstimate = useCallback((id, patch) => {
@@ -266,31 +169,30 @@ const filteredEstimates = (activeLocationId === 'all' || !activeLocationId
       prev.map(e => (e.id === id ? { ...e, ...patch, updatedAt: new Date().toISOString() } : e))
     );
 
-    if (orgId && !isDevAuth) {
+    if (orgId) {
       updateEstimateMutation({ variables: { id, ...patch } })
         .catch(err => console.error('[EstimateContext] GraphQL update failed:', err));
     }
-  }, [orgId, isDevAuth, updateEstimateMutation]);
+  }, [orgId, updateEstimateMutation]);
 
   // ─── deleteEstimate ────────────────────────────────────────────────────────
   const deleteEstimate = useCallback((id) => {
     // Optimistic remove
     setEstimates(prev => prev.filter(e => e.id !== id));
 
-    if (orgId && !isDevAuth) {
+    if (orgId) {
       deleteEstimateMutation({ variables: { id } })
         .catch(err => console.error('[EstimateContext] GraphQL delete failed:', err));
     }
-  }, [orgId, isDevAuth, deleteEstimateMutation]);
+  }, [orgId, deleteEstimateMutation]);
   // ─── archiveEstimate ───────────────────────────────────────────────────────
   const archiveEstimate = useCallback((id) => {
     const now = new Date().toISOString();
     setEstimates(prev => prev.filter(e => e.id !== id));
 
-    if (orgId && !isDevAuth) {
+    if (orgId) {
       updateEstimateMutation({
-        variables: { id, deletedAt: now, status: 'archived' },
-      }).catch(err => console.error('[EstimateContext] GraphQL archive failed:', err));
+        variables: { id, deletedAt: now, status: 'archived' }, }).catch(err => console.error('[EstimateContext] GraphQL archive failed:', err));
     }
   }, [updateEstimateMutation]);
 
@@ -302,20 +204,9 @@ const filteredEstimates = (activeLocationId === 'all' || !activeLocationId
   // ─── Context value ─────────────────────────────────────────────────────────
 
   const value = {
-    estimates:         filteredEstimates,   // scoped to active location
-    allEstimates:      estimates,          // full list for aggregate views
-    loading:           !isDevAuth && apolloLoading,
-    error:             apolloError,
-    refetch,
-    addEstimate,
-    updateEstimate,
-    deleteEstimate,
-    archiveEstimate,
-    getEstimateById,
-    getNextEstimateNumber,
-    estimateCount:     filteredEstimates.length,
-    realtimeConnected,
-  };
+    estimates:         filteredEstimates, // scoped to active location
+    allEstimates:      estimates, // full list for aggregate views
+    loading:           apolloLoading, error:             apolloError, refetch, addEstimate, updateEstimate, deleteEstimate, archiveEstimate, getEstimateById, getNextEstimateNumber, estimateCount:     filteredEstimates.length, realtimeConnected, };
 
   return (
     <EstimateContext.Provider value={value}>

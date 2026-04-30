@@ -42,9 +42,7 @@ const LocationContext = createContext(null);
 export function LocationProvider({ children }) {
   const { profile } = useAuth();
   const orgId = profile?.org_id;
-  const isDevAuth = import.meta.env.VITE_LOCAL_DEV === '1';
-
-  // Dev mode: localStorage-backed state
+    // Dev mode: localStorage-backed state
   const [devLocations, setDevLocations] = useState(loadDevLocations);
 
   // Prod mode: Apollo GraphQL
@@ -55,10 +53,9 @@ export function LocationProvider({ children }) {
 
   // Unified locations list
   const locations = useMemo(() => {
-    if (isDevAuth) return devLocations;
-    if (!loading && !error && apolloLocations.length > 0) return apolloLocations;
+        if (!loading && !error && apolloLocations.length > 0) return apolloLocations;
     return loadDevLocations();
-  }, [isDevAuth, devLocations, loading, error, apolloLocations]);
+  }, []);
 
   // Active location (persisted to localStorage)
   const [rawActiveId, setRawActiveId] = useState(() => loadActiveId(locations));
@@ -74,53 +71,22 @@ export function LocationProvider({ children }) {
   }, []);
 
   const addLocation = useCallback(async (data) => {
-    if (isDevAuth) {
-      const newLoc = {
-        id: `loc-${Date.now()}`,
-        createdAt: new Date().toISOString(),
-        color: '#2E8BF0',
-        ...data,
-      };
-      setDevLocations(prev => {
-        const next = [...prev, newLoc];
-        saveDevLocations(next);
-        return next;
-      });
-      return newLoc;
-    }
+    
     const { data: result } = await createLocationMutation({
       variables: { orgId, ...data },
     });
     return result?.locationInsert?.edges?.[0]?.node ?? null;
-  }, [isDevAuth, orgId, createLocationMutation]);
+  }, []);
 
   const updateLocation = useCallback(async (id, patch) => {
-    if (isDevAuth) {
-      setDevLocations(prev => {
-        const next = prev.map(l => (l.id === id ? { ...l, ...patch } : l));
-        saveDevLocations(next);
-        return next;
-      });
-      return;
-    }
+    
     await updateLocationMutation({ variables: { id, ...patch } });
-  }, [isDevAuth, updateLocationMutation]);
+  }, []);
 
   const deleteLocation = useCallback(async (id) => {
-    if (isDevAuth) {
-      setDevLocations(prev => {
-        const next = prev.filter(l => l.id !== id);
-        saveDevLocations(next);
-        if (activeLocationId === id) {
-          const fallback = next[0]?.id || 'all';
-          setActiveLocation(fallback);
-        }
-        return next;
-      });
-      return;
-    }
+    
     await deleteLocationMutation({ variables: { id } });
-  }, [isDevAuth, activeLocationId, setActiveLocation, deleteLocationMutation]);
+  }, []);
 
   const activeLocation = activeLocationId === 'all'
     ? null
@@ -138,9 +104,9 @@ export function LocationProvider({ children }) {
       addLocation,
       updateLocation,
       deleteLocation,
-      loading: isDevAuth ? false : loading,
-      error: isDevAuth ? null : error,
-      refetch: isDevAuth ? () => {} : refetch,
+      loading: loading,
+      error: error,
+      refetch: refetch,
     }}>
       {children}
     </LocationContext.Provider>
