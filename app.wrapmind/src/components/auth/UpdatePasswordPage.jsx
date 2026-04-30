@@ -13,6 +13,8 @@ export default function UpdatePasswordPage() {
   const [recoveryErr, setRecoveryErr] = useState(null);
 
   // Extract tokens from URL and establish session
+  // With detectSessionInUrl: true, Supabase auto-processes the recovery hash on client init.
+  // We just need to wait a moment and check getSession().
   useEffect(() => {
     const process = async () => {
       // Safety timeout: unblock spinner after 10s even if Supabase hangs
@@ -23,17 +25,13 @@ export default function UpdatePasswordPage() {
       }, 10000);
 
       try {
-        console.log('Attempting to recover session from URL hash...');
-        const { data: recoverData, error: recoverErr } = await supabase.auth.recoverSession();
-
-        if (recoverErr) {
-          console.error('Session recovery error:', recoverErr);
-          setRecoveryErr(recoverErr.message);
-        }
+        // Ensure Supabase client has finished initializing and processed the URL hash
+        await supabase.auth.initialize();
 
         const { data: { session } } = await supabase.auth.getSession();
+
         if (!session) {
-          console.warn('No session after recoverSession — hash may be missing, expired, or already used');
+          console.warn('No session after initialization — hash may be missing, expired, or already used');
           setRecoveryErr('Invalid or expired recovery link. Please request a new one.');
         } else {
           console.log('Recovery session established:', session.user?.email);
