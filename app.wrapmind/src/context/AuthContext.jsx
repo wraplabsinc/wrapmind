@@ -61,14 +61,19 @@ export function AuthProvider({ children }) {
 
       if (profileData) {
         setProfile(profileData);
-        // Fetch org separately if org_id exists
+        // Fetch org separately if org_id exists (best-effort, RLS may block)
         if (profileData.org_id) {
-          const { data: orgData } = await supabase
-            .from('organizations')
-            .select('*')
-            .eq('id', profileData.org_id)
-            .single();
-          setOrg(orgData ?? null);
+          try {
+            const { data: orgData } = await supabase
+              .from('organizations')
+              .select('*')
+              .eq('id', profileData.org_id)
+              .single();
+            setOrg(orgData ?? null);
+          } catch (orgErr) {
+            console.warn('[AuthContext] Could not fetch org:', orgErr);
+            setOrg(null);
+          }
         } else {
           setOrg(null);
         }
