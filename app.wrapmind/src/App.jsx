@@ -929,6 +929,7 @@ function AppInner() {
         <TopBar onNavigate={handleNavigate} onLogout={() => { resetSession(); signOut(); }} />
         {!focusMode && <Ticker />}
 
+        <div key={currentView} className="wm-fade-in-up flex-1 flex flex-col min-w-0 overflow-hidden">
         {currentView === 'dashboard' ? (
           <Dashboard />
         ) : currentView === 'forgot-password' ? (
