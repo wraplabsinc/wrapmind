@@ -51,16 +51,27 @@ export function AuthProvider({ children }) {
 
   async function fetchProfileAndOrg(userId) {
     try {
+      // Fetch profile first (without join to avoid RLS/complexity issues)
       const { data: profileData } = await supabase
         .from('profiles')
-        .select('*, organizations(*)')
+        .select('*')
         .eq('user_id', userId)
         .eq('is_active', true)
         .single();
 
       if (profileData) {
         setProfile(profileData);
-        setOrg(profileData.organizations ?? null);
+        // Fetch org separately if org_id exists
+        if (profileData.org_id) {
+          const { data: orgData } = await supabase
+            .from('organizations')
+            .select('*')
+            .eq('id', profileData.org_id)
+            .single();
+          setOrg(orgData ?? null);
+        } else {
+          setOrg(null);
+        }
       }
     } catch {
       // Profile may not exist yet (first login before migration runs)
@@ -154,8 +165,22 @@ export function AuthProvider({ children }) {
     if (!session) {
       return { error: { message: 'No active session. Please request a new password reset link.' } };
     }
-    const { error } = await supabase.auth.updateUser({ password: newPassword });
-    return { error };
+    // Brief delay to avoid lock contention with ongoing auth initialization
+    await new Promise(resolve => setTimeout(resolve, 300));
+    // Retry once if lock contention occurs
+    let attempt = 0;
+    while (attempt < 2) {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (!error) return { error: null };
+      // Check if it's a lock error
+      if (error.message?.includes('lock') || error.code === 'lock') {
+        attempt++;
+        await new Promise(resolve => setTimeout(resolve, 200 * attempt)); // backoff
+        continue;
+      }
+      return { error };
+    }
+    return { error: { message: 'Failed to update password due to lock contention. Please try again.' } };
   }, []);
 
   const value = {
